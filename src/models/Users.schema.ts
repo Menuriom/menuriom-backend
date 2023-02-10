@@ -1,4 +1,5 @@
 import { Document, Schema } from "mongoose";
+import { Translation } from "src/interfaces/Translation.interface";
 export type UserDocument = User & Document;
 
 export const UsersSchema = new Schema({
@@ -16,11 +17,6 @@ export const UsersSchema = new Schema({
         type: Date,
         default: new Date(Date.now()),
     },
-    // brand: { type: Schema.Types.ObjectId, ref: "Tag" },
-    // categories: new Schema({
-    //     icon: { type: String, required: true },
-    //     name: { type: String, required: true },
-    // }),
     updatedAt: {
         type: Date,
         default: new Date(Date.now()),
@@ -47,13 +43,5 @@ export interface User {
     status?: string;
     createdAt: Date;
     updatedAt: Date;
-    translation: {
-        ir: unknown;
-        en: unknown;
-        it: unknown;
-        de: unknown;
-        tr: unknown;
-        jp: unknown;
-        cn: unknown;
-    };
+    translation: Translation;
 }

@@ -1,5 +1,6 @@
 import { Document, Schema } from "mongoose";
-export type UserDocument = BrandPlans & Document;
+import { Translation } from "src/interfaces/Translation.interface";
+export type BrandPlanDocument = BrandPlan & Document;
 
 export const BrandPlansSchema = new Schema({
     name: { type: String, required: true },
@@ -10,7 +11,7 @@ export const BrandPlansSchema = new Schema({
         default: new Date(Date.now()),
     },
     nextInvoice: {
-        type: String,
+        type: Date,
     },
     createdAt: {
         type: Date,
@@ -28,7 +29,7 @@ export const BrandPlansSchema = new Schema({
     }),
 });
 
-export interface BrandPlans {
+export interface BrandPlan {
     _id: Schema.Types.ObjectId;
     name: string;
     brand: Schema.Types.ObjectId;
@@ -36,13 +37,5 @@ export interface BrandPlans {
     startTime: Date;
     nextInvoice: string;
     createdAt: Date;
-    translation: {
-        ir: unknown;
-        en: unknown;
-        it: unknown;
-        de: unknown;
-        tr: unknown;
-        jp: unknown;
-        cn: unknown;
-    };
+    translation: Translation;
 }

@@ -1,5 +1,6 @@
 import { Document, Schema } from "mongoose";
-export type UserDocument = Analytics & Document;
+import { Translation } from "src/interfaces/Translation.interface";
+export type AnalyticDocument = Analytic & Document;
 
 export const AnalyticsSchema = new Schema({
     brand: { type: Schema.Types.ObjectId, ref: "Brands", required: true },
@@ -33,7 +34,7 @@ export const AnalyticsSchema = new Schema({
     }),
 });
 
-export interface Analytics {
+export interface Analytic {
     _id: Schema.Types.ObjectId;
     name: string;
     address: string;
@@ -42,13 +43,5 @@ export interface Analytics {
     brand: Schema.Types.ObjectId;
     gallery?: string[];
     createdAt: Date;
-    translation: {
-        ir: unknown;
-        en: unknown;
-        it: unknown;
-        de: unknown;
-        tr: unknown;
-        jp: unknown;
-        cn: unknown;
-    };
+    translation: Translation;
 }

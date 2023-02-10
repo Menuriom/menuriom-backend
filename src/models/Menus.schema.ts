@@ -1,7 +1,8 @@
 import { Document, Schema } from "mongoose";
-export type UserDocument = Menues & Document;
+import { Translation } from "src/interfaces/Translation.interface";
+export type MenuDocument = Menu & Document;
 
-export const MenuesSchema = new Schema({
+export const MenusSchema = new Schema({
     name: { type: String, required: true },
     branch: { type: Schema.Types.ObjectId, ref: "Branches", required: true },
     type: { type: String, required: true },
@@ -28,7 +29,7 @@ export const MenuesSchema = new Schema({
     }),
 });
 
-export interface Menues {
+export interface Menu {
     _id: Schema.Types.ObjectId;
     name: string;
     branch: Schema.Types.ObjectId;
@@ -36,13 +37,5 @@ export interface Menues {
     categories: object;
     colors: object;
     createdAt: Date;
-    translation: {
-        ir: unknown;
-        en: unknown;
-        it: unknown;
-        de: unknown;
-        tr: unknown;
-        jp: unknown;
-        cn: unknown;
-    };
+    translation: Translation;
 }

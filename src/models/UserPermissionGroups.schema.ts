@@ -1,9 +1,11 @@
 import { Document, Schema } from "mongoose";
-import { UserPermissions } from "./UserPermissions.schema";
-export type UserDocument = BrandTypes & Document;
+import { Translation } from "src/interfaces/Translation.interface";
+import { UserPermission } from "./UserPermissions.schema";
+export type UserPermissionGroupDocument = UserPermissionGroup & Document;
 
-export const BrandTypesSchema = new Schema({
+export const UserPermissionGroupsSchema = new Schema({
     name: { type: String, required: true },
+    permissions: [{ type: String }],
     createdAt: {
         type: Date,
         default: new Date(Date.now()),
@@ -19,17 +21,10 @@ export const BrandTypesSchema = new Schema({
     }),
 });
 
-export interface BrandTypes {
+export interface UserPermissionGroup {
     _id: Schema.Types.ObjectId;
     name: string;
+    permissions?: UserPermission[] | string[];
     createdAt: Date;
-    translation: {
-        ir: unknown;
-        en: unknown;
-        it: unknown;
-        de: unknown;
-        tr: unknown;
-        jp: unknown;
-        cn: unknown;
-    };
+    translation: Translation;
 }

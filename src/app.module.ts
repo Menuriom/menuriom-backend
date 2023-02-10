@@ -3,22 +3,22 @@ import { AppController } from "./app.controller";
 import { ConfigModule } from "@nestjs/config";
 import { MongooseModule } from "@nestjs/mongoose";
 import { AppService } from "./app.service";
-import { AnalyticsSchema } from "./models/AnalyticsSchema";
-import { BranchesSchema } from "./models/BranchesSchema";
-import { BrandPlansSchema } from "./models/BrandPlansSchema";
-import { BrandsSchema } from "./models/BrandsSchema";
-import { BrandTypesSchema } from "./models/BrandTypesSchema";
-import { DefaultUserPermissionGroupsSchema } from "./models/DefaultUserPermissionGroupsSchema";
-import { InvoicePaymentsSchema } from "./models/InvoicePaymentsSchema";
-import { MenuesItemsSchema } from "./models/MenueItemsSchema";
-import { MenuesSchema } from "./models/MenuesSchema";
-import { OrdersSchema } from "./models/OrdersSchema";
-import { PlanLimitationsSchema } from "./models/PlansLimitationsSchema";
-import { PlansSchema } from "./models/PlansSchema";
-import { QrCodesSchema } from "./models/QrCodesSchema";
-import { TablesSchema } from "./models/TablesSchema";
-import { UserBranchPermissionsSchema } from "./models/UserBranchPermissionsSchema";
-import { UserPermissionGroupsSchema } from "./models/UserPermissionGroupsSchema";
+import { AnalyticsSchema } from "./models/Analytics.schema";
+import { BranchesSchema } from "./models/Branches.schema";
+import { BrandPlansSchema } from "./models/BrandPlans.schema";
+import { BrandsSchema } from "./models/Brands.schema";
+import { BrandTypesSchema } from "./models/BrandTypes.schema";
+import { DefaultUserPermissionGroupsSchema } from "./models/DefaultUserPermissionGroups.schema";
+import { InvoicePaymentsSchema } from "./models/InvoicePayments.schema";
+import { MenuItemsSchema } from "./models/MenuItems.schema";
+import { MenusSchema } from "./models/Menus.schema";
+import { OrdersSchema } from "./models/Orders.schema";
+import { PlanLimitationsSchema } from "./models/PlansLimitations.schema";
+import { PlansSchema } from "./models/Plans.schema";
+import { QrCodesSchema } from "./models/QrCodes.schema";
+import { TablesSchema } from "./models/Tables.schema";
+import { UserBranchPermissionsSchema } from "./models/UserBranchPermissions.schema";
+import { UserPermissionGroupsSchema } from "./models/UserPermissionGroups.schema";
 import { UserPermissionsSchema } from "./models/UserPermissions.schema";
 import { UsersSchema } from "./models/users.schema";
 
@@ -34,8 +34,8 @@ import { UsersSchema } from "./models/users.schema";
             { name: "BrandTypes", schema: BrandTypesSchema },
             { name: "DefaultUserPermissionGroups", schema: DefaultUserPermissionGroupsSchema },
             { name: "InvoicePayments", schema: InvoicePaymentsSchema },
-            { name: "MenuesItems", schema: MenuesItemsSchema },
-            { name: "Menues", schema: MenuesSchema },
+            { name: "MenuesItems", schema: MenuItemsSchema },
+            { name: "Menues", schema: MenusSchema },
             { name: "Orders", schema: OrdersSchema },
             { name: "PlanLimitations", schema: PlanLimitationsSchema },
             { name: "Plans", schema: PlansSchema },

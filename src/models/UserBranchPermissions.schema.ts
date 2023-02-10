@@ -1,5 +1,6 @@
 import { Document, Schema } from "mongoose";
-export type UserDocument = UserBranchPermissions & Document;
+import { Translation } from "src/interfaces/Translation.interface";
+export type UserBranchPermissionDocument = UserBranchPermission & Document;
 
 export const UserBranchPermissionsSchema = new Schema({
     user: { type: Schema.Types.ObjectId, ref: "Users", required: true },
@@ -20,19 +21,11 @@ export const UserBranchPermissionsSchema = new Schema({
     }),
 });
 
-export interface UserBranchPermissions {
+export interface UserBranchPermission {
     _id: Schema.Types.ObjectId;
     user: Schema.Types.ObjectId;
     brand: Schema.Types.ObjectId;
     permissionGroup: Schema.Types.ObjectId;
     createdAt: Date;
-    translation: {
-        ir: unknown;
-        en: unknown;
-        it: unknown;
-        de: unknown;
-        tr: unknown;
-        jp: unknown;
-        cn: unknown;
-    };
+    translation: Translation;
 }

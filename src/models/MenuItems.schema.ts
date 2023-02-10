@@ -1,9 +1,11 @@
 import { Document, Schema } from "mongoose";
-export type UserDocument = MenuesItems & Document;
+import { Translation } from "src/interfaces/Translation.interface";
+export type MenuItemDocument = MenuItem & Document;
 
-export const MenuesItemsSchema = new Schema({
+export const MenuItemsSchema = new Schema({
     menu: { type: Schema.Types.ObjectId, ref: "Menues", required: true },
-    category: { type: String, required: true },
+    category: { type: Schema.Types.ObjectId, ref: "Menues", required: true },
+
     images: [{ type: String }],
     name: { type: String, required: true },
     description: { type: String, required: true },
@@ -31,10 +33,10 @@ export const MenuesItemsSchema = new Schema({
     }),
 });
 
-export interface MenuesItems {
+export interface MenuItem {
     _id: Schema.Types.ObjectId;
     menu: Schema.Types.ObjectId;
-    category: string;
+    category: Schema.Types.ObjectId;
     images: string[];
     name: string;
     description: string;
@@ -45,13 +47,5 @@ export interface MenuesItems {
     subItems: object;
     likes: number;
     createdAt: Date;
-    translation: {
-        ir: unknown;
-        en: unknown;
-        it: unknown;
-        de: unknown;
-        tr: unknown;
-        jp: unknown;
-        cn: unknown;
-    };
+    translation: Translation;
 }

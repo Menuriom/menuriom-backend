@@ -1,5 +1,6 @@
 import { Document, Schema } from "mongoose";
-export type UserDocument = PlanLimitations & Document;
+import { Translation } from "src/interfaces/Translation.interface";
+export type PlanLimitationDocument = PlanLimitation & Document;
 
 export const PlanLimitationsSchema = new Schema({
     name: { type: String, required: true },
@@ -19,18 +20,10 @@ export const PlanLimitationsSchema = new Schema({
     }),
 });
 
-export interface PlanLimitations {
+export interface PlanLimitation {
     _id: Schema.Types.ObjectId;
     name: string;
     description: string;
     createdAt: Date;
-    translation: {
-        ir: unknown;
-        en: unknown;
-        it: unknown;
-        de: unknown;
-        tr: unknown;
-        jp: unknown;
-        cn: unknown;
-    };
+    translation: Translation;
 }

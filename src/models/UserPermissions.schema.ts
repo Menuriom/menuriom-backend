@@ -1,5 +1,6 @@
 import { Document, Schema } from "mongoose";
-export type UserPermissionsDocument = UserPermissions & Document;
+import { Translation } from "src/interfaces/Translation.interface";
+export type UserPermissionDocument = UserPermission & Document;
 
 export const UserPermissionsSchema = new Schema({
     _id: {
@@ -23,19 +24,11 @@ export const UserPermissionsSchema = new Schema({
     }),
 });
 
-export interface UserPermissions {
+export interface UserPermission {
     _id: Schema.Types.ObjectId;
     label: string;
     group: string;
     groupLabel: string;
     createdAt: Date;
-    translation: {
-        ir: unknown;
-        en: unknown;
-        it: unknown;
-        de: unknown;
-        tr: unknown;
-        jp: unknown;
-        cn: unknown;
-    };
+    translation: Translation;
 }

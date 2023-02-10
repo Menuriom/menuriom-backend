@@ -1,5 +1,6 @@
 import { Document, Schema } from "mongoose";
-export type UserDocument = Branches & Document;
+import { Translation } from "src/interfaces/Translation.interface";
+export type BranchDocument = Branch & Document;
 
 export const BranchesSchema = new Schema({
     name: { type: String, required: true },
@@ -23,7 +24,7 @@ export const BranchesSchema = new Schema({
     }),
 });
 
-export interface Branches {
+export interface Branch {
     _id: Schema.Types.ObjectId;
     name: string;
     address: string;
@@ -32,13 +33,5 @@ export interface Branches {
     brand: Schema.Types.ObjectId;
     gallery?: string[];
     createdAt: Date;
-    translation: {
-        ir: unknown;
-        en: unknown;
-        it: unknown;
-        de: unknown;
-        tr: unknown;
-        jp: unknown;
-        cn: unknown;
-    };
+    translation: Translation;
 }

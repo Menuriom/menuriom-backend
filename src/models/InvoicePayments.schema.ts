@@ -1,5 +1,6 @@
 import { Document, Schema } from "mongoose";
-export type UserDocument = InvoicePayments & Document;
+import { Translation } from "src/interfaces/Translation.interface";
+export type InvoicePaymentDocument = InvoicePayment & Document;
 
 export const InvoicePaymentsSchema = new Schema({
     brand: { type: Schema.Types.ObjectId, ref: "Brands", required: true },
@@ -35,7 +36,7 @@ export const InvoicePaymentsSchema = new Schema({
     }),
 });
 
-export interface InvoicePayments {
+export interface InvoicePayment {
     _id: Schema.Types.ObjectId;
     brand: Schema.Types.ObjectId;
     brandPlan: Schema.Types.ObjectId;
@@ -47,13 +48,5 @@ export interface InvoicePayments {
     status: string;
     ipAddress: string;
     createdAt: Date;
-    translation: {
-        ir: unknown;
-        en: unknown;
-        it: unknown;
-        de: unknown;
-        tr: unknown;
-        jp: unknown;
-        cn: unknown;
-    };
+    translation: Translation;
 }

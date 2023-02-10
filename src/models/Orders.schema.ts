@@ -1,5 +1,6 @@
 import { Document, Schema } from "mongoose";
-export type UserDocument = Orders & Document;
+import { Translation } from "src/interfaces/Translation.interface";
+export type OrderDocument = Order & Document;
 
 export const OrdersSchema = new Schema({
     orderNumber: { type: Number, required: true },
@@ -27,19 +28,11 @@ export const OrdersSchema = new Schema({
     }),
 });
 
-export interface Orders {
+export interface Order {
     _id: Schema.Types.ObjectId;
     image: string;
     link: string;
     menu: Schema.Types.ObjectId;
     createdAt: Date;
-    translation: {
-        ir: unknown;
-        en: unknown;
-        it: unknown;
-        de: unknown;
-        tr: unknown;
-        jp: unknown;
-        cn: unknown;
-    };
+    translation: Translation;
 }

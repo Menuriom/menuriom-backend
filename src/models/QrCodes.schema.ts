@@ -1,5 +1,6 @@
 import { Document, Schema } from "mongoose";
-export type UserDocument = QrCodes & Document;
+import { Translation } from "src/interfaces/Translation.interface";
+export type QrCodeDocument = QrCode & Document;
 
 export const QrCodesSchema = new Schema({
     image: { type: String, required: true },
@@ -20,19 +21,11 @@ export const QrCodesSchema = new Schema({
     }),
 });
 
-export interface QrCodes {
+export interface QrCode {
     _id: Schema.Types.ObjectId;
     image: string;
     link: string;
     menu: Schema.Types.ObjectId;
     createdAt: Date;
-    translation: {
-        ir: unknown;
-        en: unknown;
-        it: unknown;
-        de: unknown;
-        tr: unknown;
-        jp: unknown;
-        cn: unknown;
-    };
+    translation: Translation;
 }

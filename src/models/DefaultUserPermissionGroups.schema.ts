@@ -1,6 +1,7 @@
 import { Document, Schema } from "mongoose";
-import { UserPermissions } from "./UserPermissions.schema";
-export type UserDocument = DefaultUserPermissionGroups & Document;
+import { Translation } from "src/interfaces/Translation.interface";
+import { UserPermission } from "./UserPermissions.schema";
+export type DefaultUserPermissionGroupDocument = DefaultUserPermissionGroup & Document;
 
 export const DefaultUserPermissionGroupsSchema = new Schema({
     name: { type: String, required: true },
@@ -20,18 +21,10 @@ export const DefaultUserPermissionGroupsSchema = new Schema({
     }),
 });
 
-export interface DefaultUserPermissionGroups {
+export interface DefaultUserPermissionGroup {
     _id: Schema.Types.ObjectId;
     name: string;
-    permissions?: UserPermissions[] | string[];
+    permissions?: UserPermission[] | string[];
     createdAt: Date;
-    translation: {
-        ir: unknown;
-        en: unknown;
-        it: unknown;
-        de: unknown;
-        tr: unknown;
-        jp: unknown;
-        cn: unknown;
-    };
+    translation: Translation;
 }

@@ -1,5 +1,6 @@
 import { Document, Schema } from "mongoose";
-export type UserDocument = Plans & Document;
+import { Translation } from "src/interfaces/Translation.interface";
+export type PlanDocument = Plan & Document;
 
 export const PlansSchema = new Schema({
     name: { type: String, required: true },
@@ -22,7 +23,7 @@ export const PlansSchema = new Schema({
     }),
 });
 
-export interface Plans {
+export interface Plan {
     _id: Schema.Types.ObjectId;
     name: string;
     limitations: Schema.Types.ObjectId[];
@@ -30,13 +31,5 @@ export interface Plans {
     halfYearPice: number;
     yearlyPrice: number;
     createdAt: Date;
-    translation: {
-        ir: unknown;
-        en: unknown;
-        it: unknown;
-        de: unknown;
-        tr: unknown;
-        jp: unknown;
-        cn: unknown;
-    };
+    translation: Translation;
 }

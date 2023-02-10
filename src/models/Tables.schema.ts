@@ -1,5 +1,6 @@
 import { Document, Schema } from "mongoose";
-export type UserDocument = Tables & Document;
+import { Translation } from "src/interfaces/Translation.interface";
+export type TableDocument = Table & Document;
 
 export const TablesSchema = new Schema({
     brand: { type: Schema.Types.ObjectId, ref: "Brands", required: true },
@@ -22,7 +23,7 @@ export const TablesSchema = new Schema({
     }),
 });
 
-export interface Tables {
+export interface Table {
     _id: Schema.Types.ObjectId;
     brand: Schema.Types.ObjectId;
     branch: Schema.Types.ObjectId;
@@ -30,13 +31,5 @@ export interface Tables {
     server: Schema.Types.ObjectId;
     tableNumber: number;
     createdAt: Date;
-    translation: {
-        ir: unknown;
-        en: unknown;
-        it: unknown;
-        de: unknown;
-        tr: unknown;
-        jp: unknown;
-        cn: unknown;
-    };
+    translation: Translation;
 }
