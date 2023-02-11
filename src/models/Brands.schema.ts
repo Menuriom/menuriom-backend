@@ -1,18 +1,22 @@
 import { Document, Schema } from "mongoose";
 import { Translation } from "src/interfaces/Translation.interface";
+import { BrandType } from "./BrandTypes.schema";
+import { User } from "./users.schema";
 export type BrandDocument = Brand & Document;
 
 export const BrandsSchema = new Schema({
-    brandType: { type: Schema.Types.ObjectId, ref: "BrandTypes" },
+    brandType: { type: Schema.Types.ObjectId, ref: "BrandType" },
 
     logo: { type: String, required: true },
     name: { type: String, required: true },
     slogan: { type: String, required: true },
-    creator: { type: Schema.Types.ObjectId, ref: "Users" },
-    socials: new Schema({
-        name: { type: String, required: true },
-        link: { type: String, required: true },
-    }),
+    creator: { type: Schema.Types.ObjectId, ref: "User" },
+    socials: [
+        new Schema({
+            name: { type: String, required: true },
+            link: { type: String, required: true },
+        }),
+    ],
     createdAt: {
         type: Date,
         default: new Date(Date.now()),
@@ -30,11 +34,11 @@ export const BrandsSchema = new Schema({
 
 export interface Brand {
     _id: Schema.Types.ObjectId;
-    brandType: Schema.Types.ObjectId;
+    brandType: BrandType | Schema.Types.ObjectId;
     logo: string;
     name: string;
     slogan: string;
-    creator: Schema.Types.ObjectId;
+    creator: User | Schema.Types.ObjectId;
     socials: Social[];
     createdAt: Date;
     translation: Translation;

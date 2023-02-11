@@ -1,11 +1,14 @@
 import { Document, Schema } from "mongoose";
 import { Translation } from "src/interfaces/Translation.interface";
+import { Branch } from "./Branches.schema";
+import { UserPermissionGroup } from "./UserPermissionGroups.schema";
+import { User } from "./users.schema";
 export type UserBranchPermissionDocument = UserBranchPermission & Document;
 
 export const UserBranchPermissionsSchema = new Schema({
-    user: { type: Schema.Types.ObjectId, ref: "Users", required: true },
-    branch: { type: Schema.Types.ObjectId, ref: "Branches", required: true },
-    permissionGroup: { type: Schema.Types.ObjectId, ref: "UserPermissionGroups", required: true },
+    user: { type: Schema.Types.ObjectId, ref: "User", required: true },
+    branch: { type: Schema.Types.ObjectId, ref: "Branch", required: true },
+    permissionGroup: { type: Schema.Types.ObjectId, ref: "UserPermissionGroup", required: true },
     createdAt: {
         type: Date,
         default: new Date(Date.now()),
@@ -23,9 +26,9 @@ export const UserBranchPermissionsSchema = new Schema({
 
 export interface UserBranchPermission {
     _id: Schema.Types.ObjectId;
-    user: Schema.Types.ObjectId;
-    brand: Schema.Types.ObjectId;
-    permissionGroup: Schema.Types.ObjectId;
+    user: User | Schema.Types.ObjectId;
+    branch: Branch | Schema.Types.ObjectId;
+    permissionGroup: UserPermissionGroup | Schema.Types.ObjectId;
     createdAt: Date;
     translation: Translation;
 }

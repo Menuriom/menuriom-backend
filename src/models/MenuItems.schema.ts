@@ -1,10 +1,11 @@
 import { Document, Schema } from "mongoose";
 import { Translation } from "src/interfaces/Translation.interface";
+import { Menu } from "./Menus.schema";
 export type MenuItemDocument = MenuItem & Document;
 
 export const MenuItemsSchema = new Schema({
-    menu: { type: Schema.Types.ObjectId, ref: "Menues", required: true },
-    category: { type: Schema.Types.ObjectId, ref: "Menues", required: true },
+    menu: { type: Schema.Types.ObjectId, ref: "Menu", required: true },
+    category: { type: Schema.Types.ObjectId, ref: "Menu", required: true },
 
     images: [{ type: String }],
     name: { type: String, required: true },
@@ -35,8 +36,8 @@ export const MenuItemsSchema = new Schema({
 
 export interface MenuItem {
     _id: Schema.Types.ObjectId;
-    menu: Schema.Types.ObjectId;
-    category: Schema.Types.ObjectId;
+    menu: Menu | Schema.Types.ObjectId;
+    category: Menu | Schema.Types.ObjectId;
     images: string[];
     name: string;
     description: string;

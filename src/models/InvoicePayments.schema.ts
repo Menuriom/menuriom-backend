@@ -1,11 +1,14 @@
 import { Document, Schema } from "mongoose";
 import { Translation } from "src/interfaces/Translation.interface";
+import { BrandPlan } from "./BrandPlans.schema";
+import { Brand } from "./Brands.schema";
+import { User } from "./users.schema";
 export type InvoicePaymentDocument = InvoicePayment & Document;
 
 export const InvoicePaymentsSchema = new Schema({
-    brand: { type: Schema.Types.ObjectId, ref: "Brands", required: true },
-    brandPlan: { type: Schema.Types.ObjectId, ref: "BrandPlans", required: true },
-    payedByUser: { type: Schema.Types.ObjectId, ref: "Users", required: true },
+    brand: { type: Schema.Types.ObjectId, ref: "Brand", required: true },
+    brandPlan: { type: Schema.Types.ObjectId, ref: "BrandPlan", required: true },
+    payedByUser: { type: Schema.Types.ObjectId, ref: "User", required: true },
     authority: { type: String, required: true },
     transactionCode: { type: String, required: true },
     amount: { type: Number, required: true },
@@ -38,9 +41,9 @@ export const InvoicePaymentsSchema = new Schema({
 
 export interface InvoicePayment {
     _id: Schema.Types.ObjectId;
-    brand: Schema.Types.ObjectId;
-    brandPlan: Schema.Types.ObjectId;
-    payedByUser: Schema.Types.ObjectId;
+    brand: Brand | Schema.Types.ObjectId;
+    brandPlan: BrandPlan | Schema.Types.ObjectId;
+    payedByUser: User | Schema.Types.ObjectId;
     authority: string;
     transactionCode: string;
     amount: number;

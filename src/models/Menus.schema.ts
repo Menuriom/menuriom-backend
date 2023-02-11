@@ -1,10 +1,11 @@
 import { Document, Schema } from "mongoose";
 import { Translation } from "src/interfaces/Translation.interface";
+import { Branch } from "./Branches.schema";
 export type MenuDocument = Menu & Document;
 
 export const MenusSchema = new Schema({
     name: { type: String, required: true },
-    branch: { type: Schema.Types.ObjectId, ref: "Branches", required: true },
+    branch: { type: Schema.Types.ObjectId, ref: "Branch", required: true },
     type: { type: String, required: true },
     categories: new Schema({
         icon: { type: String, required: true },
@@ -32,7 +33,7 @@ export const MenusSchema = new Schema({
 export interface Menu {
     _id: Schema.Types.ObjectId;
     name: string;
-    branch: Schema.Types.ObjectId;
+    branch: Branch | Schema.Types.ObjectId;
     type: string;
     categories: object;
     colors: object;

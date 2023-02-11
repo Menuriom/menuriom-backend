@@ -1,5 +1,6 @@
 import { Document, Schema } from "mongoose";
 import { Translation } from "src/interfaces/Translation.interface";
+import { Brand } from "./Brands.schema";
 export type BranchDocument = Branch & Document;
 
 export const BranchesSchema = new Schema({
@@ -7,7 +8,7 @@ export const BranchesSchema = new Schema({
     address: { type: String, required: true },
     telephoneNumber: { type: String, required: true },
     postalCode: { type: String, required: true },
-    brand: { type: Schema.Types.ObjectId, ref: "Brands", required: true },
+    brand: { type: Schema.Types.ObjectId, ref: "Brand", required: true },
     gallery: [{ type: String }],
     createdAt: {
         type: Date,
@@ -30,7 +31,7 @@ export interface Branch {
     address: string;
     telephoneNumber: string;
     postalCode: string;
-    brand: Schema.Types.ObjectId;
+    brand: Brand | Schema.Types.ObjectId;
     gallery?: string[];
     createdAt: Date;
     translation: Translation;

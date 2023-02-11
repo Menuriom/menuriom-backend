@@ -1,10 +1,11 @@
 import { Document, Schema } from "mongoose";
 import { Translation } from "src/interfaces/Translation.interface";
+import { PlanLimitation } from "./PlansLimitations.schema";
 export type PlanDocument = Plan & Document;
 
 export const PlansSchema = new Schema({
     name: { type: String, required: true },
-    limitations: [{ type: Schema.Types.ObjectId, ref: "Limitations", required: true }],
+    limitations: [{ type: Schema.Types.ObjectId, ref: "PlanLimitation", required: true }],
     monthlyPrice: { type: Number, required: true },
     halfYearPice: { type: Number, required: true },
     yearlyPrice: { type: Number, required: true },
@@ -26,7 +27,7 @@ export const PlansSchema = new Schema({
 export interface Plan {
     _id: Schema.Types.ObjectId;
     name: string;
-    limitations: Schema.Types.ObjectId[];
+    limitations: PlanLimitation | Schema.Types.ObjectId[];
     monthlyPrice: number;
     halfYearPice: number;
     yearlyPrice: number;

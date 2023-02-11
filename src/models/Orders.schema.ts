@@ -1,11 +1,13 @@
 import { Document, Schema } from "mongoose";
 import { Translation } from "src/interfaces/Translation.interface";
+import { Menu } from "./Menus.schema";
+import { Table } from "./Tables.schema";
 export type OrderDocument = Order & Document;
 
 export const OrdersSchema = new Schema({
     orderNumber: { type: Number, required: true },
-    table: { type: Schema.Types.ObjectId, ref: "Tables", required: true },
-    list: [{ type: Schema.Types.ObjectId, ref: "Menues", required: true }],
+    table: { type: Schema.Types.ObjectId, ref: "Table", required: true },
+    list: [{ type: Schema.Types.ObjectId, ref: "Menu", required: true }],
     date: {
         type: Date,
         default: new Date(Date.now()),
@@ -30,7 +32,9 @@ export const OrdersSchema = new Schema({
 
 export interface Order {
     _id: Schema.Types.ObjectId;
-    image: string;
+    orderNumber: number;
+    table: Table | Schema.Types.ObjectId;
+    list: Menu | Schema.Types.ObjectId;
     link: string;
     menu: Schema.Types.ObjectId;
     createdAt: Date;
