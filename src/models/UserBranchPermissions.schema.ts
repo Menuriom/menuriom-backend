@@ -1,5 +1,5 @@
 import { Document, Schema } from "mongoose";
-import { Brand } from "./Brands.schema";
+import { Branch } from "./Branches.schema";
 import { UserPermissionGroup } from "./UserPermissionGroups.schema";
 import { User } from "./Users.schema";
 export type UserBranchPermissionDocument = UserBranchPermission & Document;
@@ -17,7 +17,7 @@ export const UserBranchPermissionsSchema = new Schema({
 export interface UserBranchPermission {
     _id: Schema.Types.ObjectId;
     user: User | Schema.Types.ObjectId;
-    brand: Brand | Schema.Types.ObjectId;
+    branch: Branch | Schema.Types.ObjectId;
     permissionGroup: UserPermissionGroup | Schema.Types.ObjectId;
     createdAt: Date;
 }

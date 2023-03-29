@@ -10,10 +10,10 @@ export const BrandsSchema = new Schema({
     type: { type: Schema.Types.ObjectId, ref: "BrandType" },
     slogan: { type: String },
     creator: { type: Schema.Types.ObjectId, ref: "User" },
-    socials: new Schema({
+    socials: [new Schema({
         name: { type: String, required: true },
         link: { type: String, required: true },
-    }),
+    })],
     createdAt: {
         type: Date,
         default: new Date(Date.now()),
