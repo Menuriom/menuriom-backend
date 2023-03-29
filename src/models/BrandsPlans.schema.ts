@@ -1,11 +1,10 @@
 import { Document, Schema } from "mongoose";
-import { Translation } from "src/interfaces/Translation.interface";
+import { Translation, TranslationSchema } from "src/interfaces/Translation.interface";
 import { Brand } from "./Brands.schema";
 import { Plan } from "./Plans.schema";
-export type BrandPlanDocument = BrandPlan & Document;
+export type BrandsPlanDocument = BrandsPlan & Document;
 
-export const BrandPlansSchema = new Schema({
-    name: { type: String, required: true },
+export const BrandsPlansSchema = new Schema({
     brand: { type: Schema.Types.ObjectId, ref: "Brand", required: true },
     currentPlan: { type: Schema.Types.ObjectId, ref: "Plan", required: true },
     startTime: {
@@ -19,25 +18,15 @@ export const BrandPlansSchema = new Schema({
         type: Date,
         default: new Date(Date.now()),
     },
-
-    translation: new Schema({
-        ir: { type: Object },
-        en: { type: Object },
-        it: { type: Object },
-        de: { type: Object },
-        tr: { type: Object },
-        jp: { type: Object },
-        cn: { type: Object },
-    }),
+    translation: TranslationSchema,
 });
 
-export interface BrandPlan {
+export interface BrandsPlan {
     _id: Schema.Types.ObjectId;
-    name: string;
     brand: Brand | Schema.Types.ObjectId;
     currentPlan: Plan | Schema.Types.ObjectId;
     startTime: Date;
-    nextInvoice: string;
+    nextInvoice: Date;
     createdAt: Date;
     translation: Translation;
 }

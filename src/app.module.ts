@@ -1,11 +1,16 @@
-import { Module } from "@nestjs/common";
+import { Module, NestModule, MiddlewareConsumer, RequestMethod } from "@nestjs/common";
 import { AppController } from "./app.controller";
 import { ConfigModule } from "@nestjs/config";
 import { MongooseModule } from "@nestjs/mongoose";
+// middlewares
+import { serverOnly } from "./middlewares/server.middleware";
+import { AuthCheckMiddleware, GuestMiddleware } from "./middlewares/auth.middleware";
+// services
 import { AppService } from "./app.service";
+// schemas
 import { AnalyticsSchema } from "./models/Analytics.schema";
 import { BranchesSchema } from "./models/Branches.schema";
-import { BrandPlansSchema } from "./models/BrandPlans.schema";
+import { BrandsPlansSchema } from "./models/BrandsPlans.schema";
 import { BrandsSchema } from "./models/Brands.schema";
 import { BrandTypesSchema } from "./models/BrandTypes.schema";
 import { DefaultUserPermissionGroupsSchema } from "./models/DefaultUserPermissionGroups.schema";
@@ -29,7 +34,7 @@ import { UsersSchema } from "./models/users.schema";
         MongooseModule.forFeature([
             { name: "Analytics", schema: AnalyticsSchema },
             { name: "Branches", schema: BranchesSchema },
-            { name: "BrandPlans", schema: BrandPlansSchema },
+            { name: "BrandPlans", schema: BrandsPlansSchema },
             { name: "Brands", schema: BrandsSchema },
             { name: "BrandTypes", schema: BrandTypesSchema },
             { name: "DefaultUserPermissionGroups", schema: DefaultUserPermissionGroupsSchema },
@@ -50,4 +55,25 @@ import { UsersSchema } from "./models/users.schema";
     controllers: [AppController],
     providers: [AppService],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+    configure(consumer: MiddlewareConsumer) {
+        consumer.apply(serverOnly).forRoutes({ path: "*", method: RequestMethod.ALL });
+
+        consumer.apply(AuthCheckMiddleware).forRoutes(
+            { path: "auth/refresh", method: RequestMethod.POST },
+            { path: "auth/check-if-role/*", method: RequestMethod.POST },
+
+            { path: "admin/*", method: RequestMethod.ALL },
+            { path: "user/*", method: RequestMethod.ALL },
+
+            { path: "users/info", method: RequestMethod.ALL },
+        );
+
+        consumer.apply(GuestMiddleware).forRoutes(
+            { path: "auth/send-code", method: RequestMethod.ALL },
+            { path: "auth/verify", method: RequestMethod.ALL },
+            { path: "auth/register", method: RequestMethod.ALL },
+            { path: "auth/continue-with-google", method: RequestMethod.ALL },
+        );
+    }
+}

@@ -1,55 +1,46 @@
 import { Document, Schema } from "mongoose";
-import { Translation } from "src/interfaces/Translation.interface";
-import { BrandPlan } from "./BrandPlans.schema";
 import { Brand } from "./Brands.schema";
-import { User } from "./users.schema";
+import { BrandsPlan } from "./BrandsPlans.schema";
+import { User } from "./Users.schema";
 export type InvoicePaymentDocument = InvoicePayment & Document;
 
 export const InvoicePaymentsSchema = new Schema({
     brand: { type: Schema.Types.ObjectId, ref: "Brand", required: true },
-    brandPlan: { type: Schema.Types.ObjectId, ref: "BrandPlan", required: true },
+    brandsPlan: { type: Schema.Types.ObjectId, ref: "BrandsPlan", required: true },
     payedByUser: { type: Schema.Types.ObjectId, ref: "User", required: true },
+
     authority: { type: String, required: true },
-    transactionCode: { type: String, required: true },
+    transactionCode: { type: String },
     amount: { type: Number, required: true },
-    date: {
-        type: Date,
-        default: new Date(Date.now()),
-    },
+
+    ipAddress: { type: String },
     status: {
         type: String,
         enum: ["ok", "cancel", "error"],
+        default: "cancel",
     },
-    ipAddress: {
-        type: String,
+    date: {
+        type: Date,
+        default: new Date(Date.now()),
     },
     createdAt: {
         type: Date,
         default: new Date(Date.now()),
     },
-
-    translation: new Schema({
-        ir: { type: Object },
-        en: { type: Object },
-        it: { type: Object },
-        de: { type: Object },
-        tr: { type: Object },
-        jp: { type: Object },
-        cn: { type: Object },
-    }),
 });
 
 export interface InvoicePayment {
     _id: Schema.Types.ObjectId;
     brand: Brand | Schema.Types.ObjectId;
-    brandPlan: BrandPlan | Schema.Types.ObjectId;
+    brandsPlan: BrandsPlan | Schema.Types.ObjectId;
     payedByUser: User | Schema.Types.ObjectId;
+
     authority: string;
-    transactionCode: string;
+    transactionCode?: string;
     amount: number;
-    date: Date;
+
+    ipAddress?: string;
     status: string;
-    ipAddress: string;
+    date: Date;
     createdAt: Date;
-    translation: Translation;
 }

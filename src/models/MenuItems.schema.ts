@@ -1,52 +1,56 @@
 import { Document, Schema } from "mongoose";
-import { Translation } from "src/interfaces/Translation.interface";
+import { Translation, TranslationSchema } from "src/interfaces/Translation.interface";
 import { Menu } from "./Menus.schema";
 export type MenuItemDocument = MenuItem & Document;
 
 export const MenuItemsSchema = new Schema({
     menu: { type: Schema.Types.ObjectId, ref: "Menu", required: true },
-    category: { type: Schema.Types.ObjectId, ref: "Menu", required: true },
+    category: { type: String, required: true },
 
     images: [{ type: String }],
     name: { type: String, required: true },
-    description: { type: String, required: true },
-    soldOut: { type: Boolean, required: true },
-    specialItem: { type: Boolean, required: true },
-    showAsNew: { type: Boolean, required: true },
-    price: { type: Number, required: true },
+    description: { type: String },
+
+    soldOut: { type: Boolean, default: false },
+    specialItem: { type: Boolean, default: false },
+    showAsNew: { type: Boolean, default: false },
+
+    price: { type: Number, default: 0, required: true }, // in toman
+
     subItems: new Schema({
         name: { type: String, required: true },
-        extraCost: { type: String, required: true },
+        extraCost: { type: Number, default: 0, required: true }, // in toman
     }),
-    likes: { type: Number, required: true },
+    likes: { type: Number, default: 0, required: true },
     createdAt: {
         type: Date,
         default: new Date(Date.now()),
     },
-    translation: new Schema({
-        ir: { type: Object },
-        en: { type: Object },
-        it: { type: Object },
-        de: { type: Object },
-        tr: { type: Object },
-        jp: { type: Object },
-        cn: { type: Object },
-    }),
+    translation: TranslationSchema,
 });
 
 export interface MenuItem {
     _id: Schema.Types.ObjectId;
     menu: Menu | Schema.Types.ObjectId;
-    category: Menu | Schema.Types.ObjectId;
+    category: string;
+
     images: string[];
     name: string;
-    description: string;
+    description?: string;
+
     soldOut: boolean;
     specialItem: boolean;
     showAsNew: boolean;
+
     price: number;
-    subItems: object;
+
+    subItems: SubItem[];
     likes: number;
     createdAt: Date;
     translation: Translation;
+}
+
+export interface SubItem {
+    name: string;
+    extraCost: number;
 }

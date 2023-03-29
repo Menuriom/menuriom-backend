@@ -1,5 +1,8 @@
 import { Document, Schema } from "mongoose";
+<<<<<<< HEAD
+=======
 import { Translation } from "src/interfaces/Translation.interface";
+>>>>>>> 1a549d87a38b764761913332225bb7295e5a6d36
 import { Branch } from "./Branches.schema";
 import { Brand } from "./Brands.schema";
 import { Menu } from "./Menus.schema";
@@ -16,36 +19,30 @@ export const AnalyticsSchema = new Schema({
     forGroup: {
         type: String,
         enum: ["total", "brand", "branch", "menu"],
+        required: true,
     },
     type: {
         type: String,
         enum: ["daily", "monthly"],
+        required: true,
     },
     count: { type: Number },
+    date: { type: Date },
     createdAt: {
         type: Date,
         default: new Date(Date.now()),
     },
-    translation: new Schema({
-        ir: { type: Object },
-        en: { type: Object },
-        it: { type: Object },
-        de: { type: Object },
-        tr: { type: Object },
-        jp: { type: Object },
-        cn: { type: Object },
-    }),
 });
 
 export interface Analytic {
     _id: Schema.Types.ObjectId;
-    brand: Brand | Schema.Types.ObjectId;
-    branch: Branch | Schema.Types.ObjectId;
-    menu: Menu | Schema.Types.ObjectId;
+    brand?: Brand | Schema.Types.ObjectId;
+    branch?: Branch | Schema.Types.ObjectId;
+    menu?: Menu | Schema.Types.ObjectId;
     name: string;
     forGroup: string;
     type: string;
     count: number;
+    date: Date;
     createdAt: Date;
-    translation: Translation;
 }

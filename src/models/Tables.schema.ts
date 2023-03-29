@@ -1,9 +1,8 @@
 import { Document, Schema } from "mongoose";
-import { Translation } from "src/interfaces/Translation.interface";
 import { Branch } from "./Branches.schema";
 import { Brand } from "./Brands.schema";
 import { QrCode } from "./QrCodes.schema";
-import { User } from "./users.schema";
+import { User } from "./Users.schema";
 export type TableDocument = Table & Document;
 
 export const TablesSchema = new Schema({
@@ -16,15 +15,6 @@ export const TablesSchema = new Schema({
         type: Date,
         default: new Date(Date.now()),
     },
-    translation: new Schema({
-        ir: { type: Object },
-        en: { type: Object },
-        it: { type: Object },
-        de: { type: Object },
-        tr: { type: Object },
-        jp: { type: Object },
-        cn: { type: Object },
-    }),
 });
 
 export interface Table {
@@ -35,5 +25,4 @@ export interface Table {
     server: User | Schema.Types.ObjectId;
     tableNumber: number;
     createdAt: Date;
-    translation: Translation;
 }
