@@ -1,38 +1,56 @@
 import { Document, Schema } from "mongoose";
-import { Translation } from "src/interfaces/Translation.interface";
+import { Translation, TranslationSchema } from "src/interfaces/Translation.interface";
+import { SubItem } from "./MenuItems.schema";
+import { Menu } from "./Menus.schema";
+import { Table } from "./Tables.schema";
 export type OrderDocument = Order & Document;
 
 export const OrdersSchema = new Schema({
-    orderNumber: { type: Number, required: true },
-    table: { type: Schema.Types.ObjectId, ref: "Tables", required: true },
-    list: [{ type: Schema.Types.ObjectId, ref: "Menues", required: true }],
+    orderNumber: { type: String, required: true },
+    table: { type: Schema.Types.ObjectId, ref: "Table", required: true },
+    list: [
+        new Schema({
+            menu: { type: Schema.Types.ObjectId, ref: "Menu", required: true },
+            name: { type: String, required: true },
+            description: { type: String },
+            price: { type: Number, default: 0, required: true }, // in toman
+            subItems: new Schema({
+                name: { type: String, required: true },
+                extraCost: { type: Number, default: 0, required: true }, // in toman
+            }),
+        }),
+    ],
     date: {
         type: Date,
         default: new Date(Date.now()),
     },
     status: {
         type: String,
+        enum: ["newOrder", "preparing", "delivered", "canceled"],
+        default: "",
     },
     createdAt: {
         type: Date,
         default: new Date(Date.now()),
     },
-    translation: new Schema({
-        ir: { type: Object },
-        en: { type: Object },
-        it: { type: Object },
-        de: { type: Object },
-        tr: { type: Object },
-        jp: { type: Object },
-        cn: { type: Object },
-    }),
+    translation: TranslationSchema,
 });
 
 export interface Order {
     _id: Schema.Types.ObjectId;
-    image: string;
-    link: string;
-    menu: Schema.Types.ObjectId;
+    orderNumber: string;
+    table: Table | Schema.Types.ObjectId;
+    list: List;
+    date: Date;
+    status: string;
     createdAt: Date;
     translation: Translation;
+}
+
+export interface List {
+    menu: Menu | Schema.Types.ObjectId;
+    name: string;
+    description: string;
+    price: number;
+    subItems: SubItem;
 }

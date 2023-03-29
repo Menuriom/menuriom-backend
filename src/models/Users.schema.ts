@@ -1,17 +1,32 @@
 import { Document, Schema } from "mongoose";
-import { Translation } from "src/interfaces/Translation.interface";
 export type UserDocument = User & Document;
 
 export const UsersSchema = new Schema({
     avatar: { type: String },
     name: { type: String },
     family: { type: String },
-    email: { type: String, required: true },
-    emailLoginCode: { type: String, required: true },
-    phoneNumber: { type: String },
+
+    email: { type: String, lowercase: true },
+    emailVerifiedAt: { type: Date },
+    emailVerificationCode: { type: String },
+
+    mobile: { type: String },
+    mobileVerifiedAt: { type: Date },
+    mobileVerificationCode: { type: String },
+
+    googleId: { type: String },
+    verficationCodeSentAt: { type: Date },
+
+    role: {
+        type: String,
+        enum: ["admin", "user"],
+        default: "user",
+        required: true,
+    },
     status: {
         type: String,
-        enum: ["active", "disabled", "suspend"],
+        enum: ["active", "deactive", "banned"],
+        default: "deactive",
     },
     createdAt: {
         type: Date,
@@ -21,15 +36,6 @@ export const UsersSchema = new Schema({
         type: Date,
         default: new Date(Date.now()),
     },
-    translation: new Schema({
-        ir: { type: Object },
-        en: { type: Object },
-        it: { type: Object },
-        de: { type: Object },
-        tr: { type: Object },
-        jp: { type: Object },
-        cn: { type: Object },
-    }),
 });
 
 export interface User {
@@ -37,11 +43,20 @@ export interface User {
     avatar?: string;
     name?: string;
     family?: string;
+
     email: string;
-    emailLoginCode: string;
-    phoneNumber?: string;
-    status?: string;
+    emailVerifiedAt?: Date;
+    emailVerificationCode?: string;
+
+    mobile?: string;
+    mobileVerifiedAt?: Date;
+    mobileVerificationCode?: string;
+
+    googleId?: string;
+    verficationCodeSentAt?: Date;
+
+    role: string;
+    status: string;
     createdAt: Date;
     updatedAt: Date;
-    translation: Translation;
 }

@@ -1,15 +1,19 @@
 import { Document, Schema } from "mongoose";
 import { Translation, TranslationSchema } from "src/interfaces/Translation.interface";
 import { Brand } from "./Brands.schema";
-export type BranchDocument = Branch & Document;
+import { Plan } from "./Plans.schema";
+export type BrandsPlanDocument = BrandsPlan & Document;
 
-export const BranchesSchema = new Schema({
+export const BrandsPlansSchema = new Schema({
     brand: { type: Schema.Types.ObjectId, ref: "Brand", required: true },
-    name: { type: String, required: true },
-    address: { type: String, required: true },
-    telephoneNumber: { type: String },
-    postalCode: { type: String },
-    gallery: [{ type: String }],
+    currentPlan: { type: Schema.Types.ObjectId, ref: "Plan", required: true },
+    startTime: {
+        type: Date,
+        default: new Date(Date.now()),
+    },
+    nextInvoice: {
+        type: Date,
+    },
     createdAt: {
         type: Date,
         default: new Date(Date.now()),
@@ -17,14 +21,12 @@ export const BranchesSchema = new Schema({
     translation: TranslationSchema,
 });
 
-export interface Branch {
+export interface BrandsPlan {
     _id: Schema.Types.ObjectId;
     brand: Brand | Schema.Types.ObjectId;
-    name: string;
-    address: string;
-    telephoneNumber?: string;
-    postalCode?: string;
-    gallery: string[];
+    currentPlan: Plan | Schema.Types.ObjectId;
+    startTime: Date;
+    nextInvoice: Date;
     createdAt: Date;
     translation: Translation;
 }
