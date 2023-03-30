@@ -26,6 +26,7 @@ import { UserBranchPermissionsSchema } from "./models/UserBranchPermissions.sche
 import { UserPermissionGroupsSchema } from "./models/UserPermissionGroups.schema";
 import { UserPermissionsSchema } from "./models/UserPermissions.schema";
 import { UsersSchema } from "./models/users.schema";
+import { AuthService } from "./services/auth.service";
 
 @Module({
     imports: [
@@ -53,7 +54,7 @@ import { UsersSchema } from "./models/users.schema";
         ]),
     ],
     controllers: [AppController],
-    providers: [AppService],
+    providers: [AppService, AuthService],
 })
 export class AppModule implements NestModule {
     configure(consumer: MiddlewareConsumer) {
@@ -69,11 +70,13 @@ export class AppModule implements NestModule {
             { path: "users/info", method: RequestMethod.ALL },
         );
 
-        consumer.apply(GuestMiddleware).forRoutes(
-            { path: "auth/send-code", method: RequestMethod.ALL },
-            { path: "auth/verify", method: RequestMethod.ALL },
-            { path: "auth/register", method: RequestMethod.ALL },
-            { path: "auth/continue-with-google", method: RequestMethod.ALL },
-        );
+        consumer
+            .apply(GuestMiddleware)
+            .forRoutes(
+                { path: "auth/send-code", method: RequestMethod.ALL },
+                { path: "auth/verify", method: RequestMethod.ALL },
+                { path: "auth/register", method: RequestMethod.ALL },
+                { path: "auth/continue-with-google", method: RequestMethod.ALL },
+            );
     }
 }

@@ -40,7 +40,7 @@ export interface InvoicePayment {
     amount: number;
 
     ipAddress?: string;
-    status: string;
+    status: "ok" | "cancel" | "error";
     date: Date;
     createdAt: Date;
 }

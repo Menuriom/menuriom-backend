@@ -42,7 +42,7 @@ export interface Order {
     table: Table | Schema.Types.ObjectId;
     list: List;
     date: Date;
-    status: string;
+    status: "newOrder" | "preparing" | "delivered" | "canceled";
     createdAt: Date;
     translation: Translation;
 }

@@ -1,8 +1,4 @@
 import { Document, Schema } from "mongoose";
-<<<<<<< HEAD
-=======
-import { Translation } from "src/interfaces/Translation.interface";
->>>>>>> 1a549d87a38b764761913332225bb7295e5a6d36
 import { Branch } from "./Branches.schema";
 import { Brand } from "./Brands.schema";
 import { Menu } from "./Menus.schema";
@@ -39,9 +35,9 @@ export interface Analytic {
     brand?: Brand | Schema.Types.ObjectId;
     branch?: Branch | Schema.Types.ObjectId;
     menu?: Menu | Schema.Types.ObjectId;
-    name: string;
-    forGroup: string;
-    type: string;
+    name: "QrScans" | "orders" | "likes";
+    forGroup: "total" | "brand" | "branch" | "menu";
+    type: "daily" | "monthly";
     count: number;
     date: Date;
     createdAt: Date;
