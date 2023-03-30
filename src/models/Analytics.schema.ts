@@ -35,9 +35,9 @@ export interface Analytic {
     brand?: Brand | Schema.Types.ObjectId;
     branch?: Branch | Schema.Types.ObjectId;
     menu?: Menu | Schema.Types.ObjectId;
-    name: string;
-    forGroup: string;
-    type: string;
+    name: "QrScans" | "orders" | "likes";
+    forGroup: "total" | "brand" | "branch" | "menu";
+    type: "daily" | "monthly";
     count: number;
     date: Date;
     createdAt: Date;

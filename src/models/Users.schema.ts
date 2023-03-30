@@ -25,14 +25,10 @@ export const UsersSchema = new Schema({
     },
     status: {
         type: String,
-        enum: ["active", "deactive", "banned"],
-        default: "deactive",
+        enum: ["active", "inactive", "banned"],
+        default: "inactive",
     },
     createdAt: {
-        type: Date,
-        default: new Date(Date.now()),
-    },
-    updatedAt: {
         type: Date,
         default: new Date(Date.now()),
     },
@@ -55,8 +51,7 @@ export interface User {
     googleId?: string;
     verficationCodeSentAt?: Date;
 
-    role: string;
-    status: string;
+    role: "admin" | "user";
+    status: "active" | "inactive" | "banned";
     createdAt: Date;
-    updatedAt: Date;
 }

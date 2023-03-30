@@ -10,8 +10,12 @@ export const SessionsSchema = new Schema({
     userAgent: { type: String, required: true },
     ip: { type: String, required: true },
     accessTokenFamily: [{ type: String }],
-    lastUsedToken: { type: String },
-    currentlyInUseToken: { type: String, required: true },
+    currentlyInUseToken: { type: String },
+    status: {
+        type: String,
+        enum: ["active", "revoked", "ready-to-delete"],
+        default: "active",
+    },
     expireAt: {
         type: Date,
         required: true,
@@ -31,9 +35,9 @@ export interface Session {
     user: User | Schema.Types.ObjectId;
     userAgent: string;
     ip: string;
-    accessTokenFamily: string[];
-    lastUsedToken: string;
-    currentlyInUseToken: string;
+    accessTokenFamily?: string[];
+    currentlyInUseToken?: string;
+    status: "active" | "revoked" | "ready-to-delete";
     expireAt: Date;
     createdAt: Date;
     updatedAt: Date;
