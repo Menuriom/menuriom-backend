@@ -68,6 +68,7 @@ export class AppModule implements NestModule {
 
         consumer.apply(AuthCheckMiddleware).forRoutes(
             { path: "auth/refresh", method: RequestMethod.POST },
+            { path: "auth/logout", method: RequestMethod.POST },
             { path: "auth/check-if-role/*", method: RequestMethod.POST },
 
             { path: "admin/*", method: RequestMethod.ALL },

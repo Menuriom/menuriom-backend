@@ -47,7 +47,7 @@ export class AuthService {
                 expireAt: new Date(Date.now() + parseInt(process.env.SESSION_EXPIRE_TIME) * 1000),
                 updatedAt: new Date(Date.now()),
             },
-        );
+        ).exec();
     }
 
     async generateToken(req: Request, sessionID: string, userID: string): Promise<string> {

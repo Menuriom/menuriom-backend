@@ -29,7 +29,7 @@ export class AuthCheckMiddleware implements NestMiddleware {
         if (typeof payload["userID"] === "undefined" || typeof payload["sessionID"] === "undefined") throw new UnauthorizedException(-2);
 
         // get the session
-        const session = await this.SessionModel.findOne({ _id: payload["sessionID"], user: payload["userID"], status: "active" });
+        const session = await this.SessionModel.findOne({ _id: payload["sessionID"], user: payload["userID"], status: "active" }).exec();
         if (!session) throw new UnauthorizedException(-3);
 
         // check if session is expired
@@ -72,7 +72,7 @@ export class GuestMiddleware implements NestMiddleware {
         if (typeof payload["userID"] === "undefined" || typeof payload["sessionID"] === "undefined") return next();
 
         // get the session
-        const session = await this.SessionModel.findOne({ _id: payload["sessionID"], user: payload["userID"], status: "active" });
+        const session = await this.SessionModel.findOne({ _id: payload["sessionID"], user: payload["userID"], status: "active" }).exec();
         if (!session) return next();
 
         // check if session is expired

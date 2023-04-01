@@ -203,7 +203,7 @@ export class AuthController {
         const userID = req.session.userID;
         // const FamilyLength = parseInt(process.env.ACCESS_TOKEN_FAMILY_LENGTH);
 
-        const session = await this.SessionModel.findOne({ _id: sessionID, user: userID, status: "active" });
+        const session = await this.SessionModel.findOne({ _id: sessionID, user: userID, status: "active" }).exec();
 
         // check the updatedAt field and if it is passed the refresh rate mark
         const refreshInterval = 60 * 15; // 15 minutes
@@ -228,6 +228,15 @@ export class AuthController {
         await this.authService.updateSession(req, sessionID, newToken);
 
         return res.json({ token: newToken });
+    }
+
+    @Post("logout")
+    async logout(@Req() req: Request, @Res() res: Response): Promise<void | Response> {
+        const sessionID = req.session.sessionID;
+        const userID = req.session.userID;
+        await this.SessionModel.updateOne({ _id: sessionID, user: userID, status: "active" }, { status: "revoked" }).exec();
+        
+        return res.end();
     }
 
     @Post("check-if-role/:role")
