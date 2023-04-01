@@ -2,7 +2,7 @@ import { Document, Schema } from "mongoose";
 import { Translation, TranslationSchema } from "src/interfaces/Translation.interface";
 export type BrandTypeDocument = BrandType & Document;
 
-export const BrandTypesSchema = new Schema({
+export const BrandTypeSchema = new Schema({
     name: { type: String, required: true },
     createdAt: {
         type: Date,

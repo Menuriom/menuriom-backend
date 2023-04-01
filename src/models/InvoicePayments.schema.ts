@@ -4,7 +4,7 @@ import { BrandsPlan } from "./BrandsPlans.schema";
 import { User } from "./Users.schema";
 export type InvoicePaymentDocument = InvoicePayment & Document;
 
-export const InvoicePaymentsSchema = new Schema({
+export const InvoicePaymentSchema = new Schema({
     brand: { type: Schema.Types.ObjectId, ref: "Brand", required: true },
     brandsPlan: { type: Schema.Types.ObjectId, ref: "BrandsPlan", required: true },
     payedByUser: { type: Schema.Types.ObjectId, ref: "User", required: true },

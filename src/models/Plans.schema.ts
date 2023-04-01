@@ -3,7 +3,7 @@ import { Translation, TranslationSchema } from "src/interfaces/Translation.inter
 import { PlanLimitation } from "./PlansLimitations.schema";
 export type PlanDocument = Plan & Document;
 
-export const PlansSchema = new Schema({
+export const PlanSchema = new Schema({
     name: { type: String, required: true },
     limitations: [{ type: Schema.Types.ObjectId, ref: "PlanLimitation", required: true }],
     monthlyPrice: { type: Number, default: 0, required: true }, // in toman

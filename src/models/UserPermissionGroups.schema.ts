@@ -3,7 +3,7 @@ import { Translation, TranslationSchema } from "src/interfaces/Translation.inter
 import { UserPermission } from "./UserPermissions.schema";
 export type UserPermissionGroupDocument = UserPermissionGroup & Document;
 
-export const UserPermissionGroupsSchema = new Schema({
+export const UserPermissionGroupSchema = new Schema({
     name: { type: String, required: true },
     permissions: [{ type: String }],
     createdAt: {

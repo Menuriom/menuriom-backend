@@ -2,7 +2,7 @@ import { Document, Schema } from "mongoose";
 import { Translation, TranslationSchema } from "src/interfaces/Translation.interface";
 export type PlanLimitationDocument = PlanLimitation & Document;
 
-export const PlanLimitationsSchema = new Schema({
+export const PlanLimitationSchema = new Schema({
     name: { type: String, required: true },
     description: { type: String, required: true },
     createdAt: {
