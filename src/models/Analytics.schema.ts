@@ -4,7 +4,7 @@ import { Brand } from "./Brands.schema";
 import { Menu } from "./Menus.schema";
 export type AnalyticDocument = Analytic & Document;
 
-export const AnalyticsSchema = new Schema({
+export const AnalyticSchema = new Schema({
     brand: { type: Schema.Types.ObjectId, ref: "Brand", required: true },
     branch: { type: Schema.Types.ObjectId, ref: "Branch", required: true },
     menu: { type: Schema.Types.ObjectId, ref: "Menu", required: true },

@@ -4,7 +4,7 @@ import { Brand } from "./Brands.schema";
 import { Plan } from "./Plans.schema";
 export type BrandsPlanDocument = BrandsPlan & Document;
 
-export const BrandsPlansSchema = new Schema({
+export const BrandsPlanSchema = new Schema({
     brand: { type: Schema.Types.ObjectId, ref: "Brand", required: true },
     currentPlan: { type: Schema.Types.ObjectId, ref: "Plan", required: true },
     startTime: {

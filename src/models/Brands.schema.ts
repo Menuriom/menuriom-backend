@@ -4,7 +4,7 @@ import { BrandType } from "./BrandTypes.schema";
 import { User } from "./Users.schema";
 export type BrandDocument = Brand & Document;
 
-export const BrandsSchema = new Schema({
+export const BrandSchema = new Schema({
     logo: { type: String },
     name: { type: String, required: true },
     type: { type: Schema.Types.ObjectId, ref: "BrandType" },

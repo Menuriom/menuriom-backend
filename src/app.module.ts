@@ -7,54 +7,60 @@ import { serverOnly } from "./middlewares/server.middleware";
 import { AuthCheckMiddleware, GuestMiddleware } from "./middlewares/auth.middleware";
 // services
 import { AppService } from "./app.service";
+// modules
+import { AuthModule } from "./modules/auth.module";
+import { UserPanelModule } from "./modules/userPanel.module";
 // schemas
-import { AnalyticsSchema } from "./models/Analytics.schema";
-import { BranchesSchema } from "./models/Branches.schema";
-import { BrandsPlansSchema } from "./models/BrandsPlans.schema";
-import { BrandsSchema } from "./models/Brands.schema";
-import { BrandTypesSchema } from "./models/BrandTypes.schema";
-import { DefaultUserPermissionGroupsSchema } from "./models/DefaultUserPermissionGroups.schema";
-import { InvoicePaymentsSchema } from "./models/InvoicePayments.schema";
-import { MenuItemsSchema } from "./models/MenuItems.schema";
-import { MenusSchema } from "./models/Menus.schema";
-import { OrdersSchema } from "./models/Orders.schema";
-import { PlanLimitationsSchema } from "./models/PlansLimitations.schema";
-import { PlansSchema } from "./models/Plans.schema";
-import { QrCodesSchema } from "./models/QrCodes.schema";
-import { TablesSchema } from "./models/Tables.schema";
-import { UserBranchPermissionsSchema } from "./models/UserBranchPermissions.schema";
-import { UserPermissionGroupsSchema } from "./models/UserPermissionGroups.schema";
-import { UserPermissionsSchema } from "./models/UserPermissions.schema";
-import { UsersSchema } from "./models/users.schema";
-import { AuthService } from "./services/auth.service";
+import { AnalyticSchema } from "./models/Analytics.schema";
+import { BranchSchema } from "./models/Branches.schema";
+import { BrandsPlanSchema } from "./models/BrandsPlans.schema";
+import { BrandSchema } from "./models/Brands.schema";
+import { BrandTypeSchema } from "./models/BrandTypes.schema";
+import { DefaultUserPermissionGroupSchema } from "./models/DefaultUserPermissionGroups.schema";
+import { InvoicePaymentSchema } from "./models/InvoicePayments.schema";
+import { MenuItemSchema } from "./models/MenuItems.schema";
+import { MenuSchema } from "./models/Menus.schema";
+import { OrderSchema } from "./models/Orders.schema";
+import { PlanLimitationSchema } from "./models/PlansLimitations.schema";
+import { PlanSchema } from "./models/Plans.schema";
+import { QrCodeSchema } from "./models/QrCodes.schema";
+import { TableSchema } from "./models/Tables.schema";
+import { UserBranchPermissionSchema } from "./models/UserBranchPermissions.schema";
+import { UserPermissionGroupSchema } from "./models/UserPermissionGroups.schema";
+import { UserPermissionSchema } from "./models/UserPermissions.schema";
+import { UserSchema } from "./models/Users.schema";
+import { SessionSchema } from "./models/Sessions.schema";
 
 @Module({
     imports: [
+        AuthModule,
+        UserPanelModule,
         ConfigModule.forRoot(),
         MongooseModule.forRoot(process.env.MONGO_URL, { dbName: process.env.MONGO_DB }),
         MongooseModule.forFeature([
-            { name: "Analytics", schema: AnalyticsSchema },
-            { name: "Branches", schema: BranchesSchema },
-            { name: "BrandPlans", schema: BrandsPlansSchema },
-            { name: "Brands", schema: BrandsSchema },
-            { name: "BrandTypes", schema: BrandTypesSchema },
-            { name: "DefaultUserPermissionGroups", schema: DefaultUserPermissionGroupsSchema },
-            { name: "InvoicePayments", schema: InvoicePaymentsSchema },
-            { name: "MenuesItems", schema: MenuItemsSchema },
-            { name: "Menues", schema: MenusSchema },
-            { name: "Orders", schema: OrdersSchema },
-            { name: "PlanLimitations", schema: PlanLimitationsSchema },
-            { name: "Plans", schema: PlansSchema },
-            { name: "QrCodes", schema: QrCodesSchema },
-            { name: "Tables", schema: TablesSchema },
-            { name: "UserBranchPermissions", schema: UserBranchPermissionsSchema },
-            { name: "UserPermissionGroups", schema: UserPermissionGroupsSchema },
-            { name: "UserPermissions", schema: UserPermissionsSchema },
-            { name: "Users", schema: UsersSchema },
+            { name: "Analytic", schema: AnalyticSchema },
+            { name: "Branch", schema: BranchSchema },
+            { name: "BrandPlan", schema: BrandsPlanSchema },
+            { name: "Brand", schema: BrandSchema },
+            { name: "BrandType", schema: BrandTypeSchema },
+            { name: "DefaultUserPermissionGroup", schema: DefaultUserPermissionGroupSchema },
+            { name: "InvoicePayment", schema: InvoicePaymentSchema },
+            { name: "MenuesItem", schema: MenuItemSchema },
+            { name: "Menue", schema: MenuSchema },
+            { name: "Order", schema: OrderSchema },
+            { name: "PlanLimitation", schema: PlanLimitationSchema },
+            { name: "Plan", schema: PlanSchema },
+            { name: "QrCode", schema: QrCodeSchema },
+            { name: "Table", schema: TableSchema },
+            { name: "UserBranchPermission", schema: UserBranchPermissionSchema },
+            { name: "UserPermissionGroup", schema: UserPermissionGroupSchema },
+            { name: "UserPermission", schema: UserPermissionSchema },
+            { name: "User", schema: UserSchema },
+            { name: "Session", schema: SessionSchema },
         ]),
     ],
     controllers: [AppController],
-    providers: [AppService, AuthService],
+    providers: [AppService],
 })
 export class AppModule implements NestModule {
     configure(consumer: MiddlewareConsumer) {
@@ -62,6 +68,7 @@ export class AppModule implements NestModule {
 
         consumer.apply(AuthCheckMiddleware).forRoutes(
             { path: "auth/refresh", method: RequestMethod.POST },
+            { path: "auth/logout", method: RequestMethod.POST },
             { path: "auth/check-if-role/*", method: RequestMethod.POST },
 
             { path: "admin/*", method: RequestMethod.ALL },

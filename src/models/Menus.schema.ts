@@ -3,7 +3,7 @@ import { Translation, TranslationSchema } from "src/interfaces/Translation.inter
 import { Branch } from "./Branches.schema";
 export type MenuDocument = Menu & Document;
 
-export const MenusSchema = new Schema({
+export const MenuSchema = new Schema({
     name: { type: String, required: true },
     branch: { type: Schema.Types.ObjectId, ref: "Branch", required: true },
     type: { type: String, required: true },

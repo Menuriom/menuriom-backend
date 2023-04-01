@@ -5,7 +5,7 @@ import { Menu } from "./Menus.schema";
 import { Table } from "./Tables.schema";
 export type OrderDocument = Order & Document;
 
-export const OrdersSchema = new Schema({
+export const OrderSchema = new Schema({
     orderNumber: { type: String, required: true },
     table: { type: Schema.Types.ObjectId, ref: "Table", required: true },
     list: [

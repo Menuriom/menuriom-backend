@@ -3,8 +3,8 @@ import { InjectModel } from "@nestjs/mongoose";
 import { sign } from "jsonwebtoken";
 import { payload, Request } from "src/interfaces/Request.interface";
 import { Model } from "mongoose";
-import { SessionDocument } from "src/models/sessions.schema";
-import { UserDocument } from "src/models/users.schema";
+import { SessionDocument } from "src/models/Sessions.schema";
+// import { UserDocument } from "src/models/users.schema";
 
 // interface generateTokenResults {
 //     payload: payload & JwtPayload;
@@ -14,8 +14,7 @@ import { UserDocument } from "src/models/users.schema";
 @Injectable()
 export class AuthService {
     constructor(
-        @InjectModel("Session") private readonly SessionModel: Model<SessionDocument>,
-        @InjectModel("User") private readonly UserModel: Model<UserDocument>,
+        @InjectModel("Session") private readonly SessionModel: Model<SessionDocument>, // @InjectModel("User") private readonly UserModel: Model<UserDocument>,
     ) {}
 
     async createSession(req: Request, userID: string): Promise<string> {
@@ -39,7 +38,7 @@ export class AuthService {
         const userAgent = req.headers["user-agent"];
 
         await this.SessionModel.updateOne(
-            { id: sessionID },
+            { _id: sessionID },
             {
                 ip: ip,
                 userAgent: userAgent,
@@ -48,10 +47,10 @@ export class AuthService {
                 expireAt: new Date(Date.now() + parseInt(process.env.SESSION_EXPIRE_TIME) * 1000),
                 updatedAt: new Date(Date.now()),
             },
-        );
+        ).exec();
     }
 
-    generateToken(req: Request, sessionID: string, userID: string): string {
+    async generateToken(req: Request, sessionID: string, userID: string): Promise<string> {
         const ip = req.headers.ipaddr || req.headers["x-forwarded-for"] || req.socket.remoteAddress || null;
         const userAgent = req.headers["user-agent"];
 
@@ -62,7 +61,7 @@ export class AuthService {
             userAgent: userAgent,
         };
 
-        const token = sign(payload, process.env.JWT_SECRET, {
+        const token = sign({ ...payload, iat: Date.now() }, process.env.JWT_SECRET, {
             algorithm: "HS512",
             expiresIn: parseInt(process.env.SESSION_EXPIRE_TIME),
         });

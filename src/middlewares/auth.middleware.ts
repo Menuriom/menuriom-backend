@@ -5,7 +5,7 @@ import { Request } from "src/interfaces/Request.interface";
 import { verify } from "jsonwebtoken";
 import { Model } from "mongoose";
 import { SessionDocument } from "src/models/sessions.schema";
-import { UserDocument } from "src/models/users.schema";
+import { UserDocument } from "src/models/Users.schema";
 
 /*
     Making sure the user is logged in
@@ -26,19 +26,14 @@ export class AuthCheckMiddleware implements NestMiddleware {
 
         const payload: any = verify(token, process.env.JWT_SECRET);
 
-        if (typeof payload["userID"] === "undefined") throw new UnauthorizedException(-2);
-        if (typeof payload["sessionID"] === "undefined") throw new UnauthorizedException(-3);
+        if (typeof payload["userID"] === "undefined" || typeof payload["sessionID"] === "undefined") throw new UnauthorizedException(-2);
 
         // get the session
-        const session = await this.SessionModel.findOne({ _id: payload["sessionID"], user: payload["userID"], status: "active" });
-        if (!session) throw new UnauthorizedException(-4);
-
-        // check the updatedAt field and if it is passed the refresh rate mark
-        const refreshInterval = 60 * 15; // 15 minutes
-        if (session.updatedAt >= new Date(Date.now() - refreshInterval * 1000)) throw new UnauthorizedException(-5);
+        const session = await this.SessionModel.findOne({ _id: payload["sessionID"], user: payload["userID"], status: "active" }).exec();
+        if (!session) throw new UnauthorizedException(-3);
 
         // check if session is expired
-        if (payload["iat"] * 1000 < Date.now() - parseInt(process.env.SESSION_EXPIRE_TIME) * 1000) throw new UnauthorizedException(-6);
+        if (payload["iat"] * 1000 < Date.now() - parseInt(process.env.SESSION_EXPIRE_TIME) * 1000) throw new UnauthorizedException(-4);
 
         // check if token matches the current access token
         if (token !== session.currentlyInUseToken) {
@@ -46,11 +41,11 @@ export class AuthCheckMiddleware implements NestMiddleware {
             // if (session.accessTokenFamily.includes(token)) await this.SessionModel.updateOne({ _id: session.id }, { status: "revoked" });
 
             await this.SessionModel.updateOne({ _id: session.id }, { status: "revoked" });
-            throw new UnauthorizedException(-7);
+            throw new UnauthorizedException(-5);
         }
 
         const user = await this.UserModel.findOne({ _id: payload["userID"], status: "active" }).exec();
-        if (!user) throw new UnauthorizedException(-8);
+        if (!user) throw new UnauthorizedException(-6);
 
         req.session = payload;
 
@@ -74,11 +69,10 @@ export class GuestMiddleware implements NestMiddleware {
 
         const payload: any = verify(token, process.env.JWT_SECRET);
 
-        if (typeof payload["userID"] === "undefined") return next();
-        if (typeof payload["sessionID"] === "undefined") return next();
+        if (typeof payload["userID"] === "undefined" || typeof payload["sessionID"] === "undefined") return next();
 
         // get the session
-        const session = await this.SessionModel.findOne({ _id: payload["sessionID"], user: payload["userID"], status: "active" });
+        const session = await this.SessionModel.findOne({ _id: payload["sessionID"], user: payload["userID"], status: "active" }).exec();
         if (!session) return next();
 
         // check if session is expired

@@ -1,7 +1,7 @@
 import { Document, Schema } from "mongoose";
 export type UserDocument = User & Document;
 
-export const UsersSchema = new Schema({
+export const UserSchema = new Schema({
     avatar: { type: String },
     name: { type: String },
     family: { type: String },

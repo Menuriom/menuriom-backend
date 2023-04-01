@@ -2,7 +2,7 @@ import { Document, Schema } from "mongoose";
 import { User } from "./Users.schema";
 export type SessionDocument = Session & Document;
 
-export const SessionsSchema = new Schema({
+export const SessionSchema = new Schema({
     user: {
         type: Schema.Types.ObjectId,
         ref: "User",

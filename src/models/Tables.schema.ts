@@ -5,7 +5,7 @@ import { QrCode } from "./QrCodes.schema";
 import { User } from "./Users.schema";
 export type TableDocument = Table & Document;
 
-export const TablesSchema = new Schema({
+export const TableSchema = new Schema({
     brand: { type: Schema.Types.ObjectId, ref: "Brand", required: true },
     branch: { type: Schema.Types.ObjectId, ref: "Branch", required: true },
     qrCode: { type: Schema.Types.ObjectId, ref: "QrCode", required: true },

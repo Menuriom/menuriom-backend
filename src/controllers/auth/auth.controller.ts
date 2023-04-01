@@ -8,8 +8,8 @@ import { VerifyDto } from "src/dto/auth/verify.dto";
 import { RegisterDto } from "src/dto/auth/register.dto";
 import { InjectModel } from "@nestjs/mongoose";
 import { Model } from "mongoose";
-import { UserDocument } from "src/models/users.schema";
-import { SessionDocument } from "src/models/sessions.schema";
+import { UserDocument } from "src/models/Users.schema";
+import { SessionDocument } from "src/models/Sessions.schema";
 import Email from "src/notifications/channels/Email";
 import Sms from "src/notifications/channels/Sms";
 
@@ -39,9 +39,8 @@ export class AuthController {
         }
 
         const user = await this.UserModel.findOne({ [field]: username }).exec();
-        if (user.status === "banned") throw new UnprocessableEntityException([{ property: "username", errors: ["امکان ورود برای شما وجود ندارد"] }]);
-
         if (user) {
+            if (user.status === "banned") throw new UnprocessableEntityException([{ property: "username", errors: ["امکان ورود برای شما وجود ندارد"] }]);
             // check the time of last email or sms sent
             if (!!user.verficationCodeSentAt) {
                 let duration = (new Date(Date.now()).getTime() - user.verficationCodeSentAt.getTime()) / 1000;
@@ -114,7 +113,7 @@ export class AuthController {
 
         // generate token
         const sessionID = await this.authService.createSession(req, user.id);
-        const token = this.authService.generateToken(req, sessionID, user.id);
+        const token = await this.authService.generateToken(req, sessionID, user.id);
         await this.authService.updateSession(req, sessionID, token);
 
         return res.json({ token, register: false });
@@ -147,7 +146,7 @@ export class AuthController {
 
         // generate token
         const sessionID = await this.authService.createSession(req, user.id);
-        const token = this.authService.generateToken(req, sessionID, user.id);
+        const token = await this.authService.generateToken(req, sessionID, user.id);
         await this.authService.updateSession(req, sessionID, token);
 
         return res.json({ token });
@@ -178,7 +177,7 @@ export class AuthController {
 
         // generate token
         const sessionID = await this.authService.createSession(req, user.id);
-        const token = this.authService.generateToken(req, sessionID, user.id);
+        const token = await this.authService.generateToken(req, sessionID, user.id);
         await this.authService.updateSession(req, sessionID, token);
 
         return res.json({ token });
@@ -188,7 +187,10 @@ export class AuthController {
     async refresh(@Req() req: Request, @Res() res: Response): Promise<void | Response> {
         /* 
             TODO : if the family lenth reaches the limit then revoke the session and create new one
-            old sessions can be stored up to 3 months (could change) then we delete them from database
+
+            TODO
+            old sessions can be stored up to 3 months (could change) then we delete them from database make a job for this
+            a session is deletable when the expire time is passed or status of it is not active
         */
 
         // let token = "";
@@ -201,7 +203,11 @@ export class AuthController {
         const userID = req.session.userID;
         // const FamilyLength = parseInt(process.env.ACCESS_TOKEN_FAMILY_LENGTH);
 
-        // const session = await this.SessionModel.findOne({ _id: sessionID, user: userID, status: "active" });
+        const session = await this.SessionModel.findOne({ _id: sessionID, user: userID, status: "active" }).exec();
+
+        // check the updatedAt field and if it is passed the refresh rate mark
+        const refreshInterval = 60 * 15; // 15 minutes
+        if (session.updatedAt >= new Date(Date.now() - refreshInterval * 1000)) throw new ForbiddenException(-1);
 
         // check the family length and make new session if it passed the limit
         // if (session.accessTokenFamily.length >= FamilyLength) {
@@ -218,10 +224,19 @@ export class AuthController {
         // await this.authService.updateSession(req, sessionID, newToken, Array.from(family));
 
         // generate token
-        const newToken = this.authService.generateToken(req, sessionID, userID);
+        const newToken = await this.authService.generateToken(req, sessionID, userID);
         await this.authService.updateSession(req, sessionID, newToken);
 
         return res.json({ token: newToken });
+    }
+
+    @Post("logout")
+    async logout(@Req() req: Request, @Res() res: Response): Promise<void | Response> {
+        const sessionID = req.session.sessionID;
+        const userID = req.session.userID;
+        await this.SessionModel.updateOne({ _id: sessionID, user: userID, status: "active" }, { status: "revoked" }).exec();
+        
+        return res.end();
     }
 
     @Post("check-if-role/:role")

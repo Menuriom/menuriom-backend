@@ -2,7 +2,7 @@ import { Document, Schema } from "mongoose";
 import { Translation, TranslationSchema } from "src/interfaces/Translation.interface";
 export type UserPermissionDocument = UserPermission & Document;
 
-export const UserPermissionsSchema = new Schema({
+export const UserPermissionSchema = new Schema({
     _id: { type: String },
     label: { type: String, required: true },
     group: { type: String, required: true },
