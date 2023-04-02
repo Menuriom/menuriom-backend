@@ -73,8 +73,6 @@ export class AppModule implements NestModule {
 
             { path: "admin/*", method: RequestMethod.ALL },
             { path: "user/*", method: RequestMethod.ALL },
-
-            { path: "users/info", method: RequestMethod.ALL },
         );
 
         consumer

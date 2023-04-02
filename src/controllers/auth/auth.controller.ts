@@ -157,18 +157,20 @@ export class AuthController {
         if (!req.body.profile) throw new ForbiddenException();
         const profile = req.body.profile;
 
-        let user = await this.UserModel.findOne({ email: profile._json.email }).exec();
+        if (!profile.email_verified) throw new ForbiddenException([{ property: "", errors: ["ایمیل شما توسط گوگل تایید نشده"] }]);
+
+        let user = await this.UserModel.findOne({ email: profile.email }).exec();
         if (user) {
             if (user.status !== "active") throw new ForbiddenException([{ property: "", errors: ["امکان ورود برای شما وجود ندارد"] }]);
-            if (!user.googleId) await this.UserModel.updateOne({ email: profile._json.email }, { googleID: profile.id, status: "active" });
+            if (!user.googleId) await this.UserModel.updateOne({ email: profile.email }, { googleId: profile.sub, status: "active" }).exec();
         } else {
             user = await this.UserModel.create({
-                googleId: profile.id,
-                avatar: profile._json.picture,
-                email: profile._json.email,
+                googleId: profile.sub,
+                avatar: profile.picture,
+                email: profile.email,
                 emailVerifiedAt: new Date(Date.now()),
-                name: profile._json.given_name || profile.name.givenName,
-                family: profile._json.family_name || profile.name.familyName,
+                name: profile.given_name,
+                family: profile.family_name,
                 role: "user",
                 status: "active",
                 createdAt: new Date(Date.now()),
@@ -235,7 +237,7 @@ export class AuthController {
         const sessionID = req.session.sessionID;
         const userID = req.session.userID;
         await this.SessionModel.updateOne({ _id: sessionID, user: userID, status: "active" }, { status: "revoked" }).exec();
-        
+
         return res.end();
     }
 
