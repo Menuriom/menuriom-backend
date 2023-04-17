@@ -30,11 +30,22 @@ import { UserPermissionGroupSchema } from "./models/UserPermissionGroups.schema"
 import { UserPermissionSchema } from "./models/UserPermissions.schema";
 import { UserSchema } from "./models/Users.schema";
 import { SessionSchema } from "./models/Sessions.schema";
+import { AcceptLanguageResolver, I18nJsonLoader, I18nModule, QueryResolver } from "nestjs-i18n";
+import * as path from "path";
 
 @Module({
     imports: [
         AuthModule,
         UserPanelModule,
+        I18nModule.forRoot({
+            fallbackLanguage: "fa",
+            loaderOptions: {
+                path: path.join(__dirname, "/i18n/"),
+                watch: true,
+                includeSubfolders: true,
+            },
+            resolvers: [{ use: QueryResolver, options: ["lang"] }, AcceptLanguageResolver],
+        }),
         ConfigModule.forRoot(),
         MongooseModule.forRoot(process.env.MONGO_URL, { dbName: process.env.MONGO_DB }),
         MongooseModule.forFeature([
@@ -66,14 +77,15 @@ export class AppModule implements NestModule {
     configure(consumer: MiddlewareConsumer) {
         consumer.apply(serverOnly).forRoutes({ path: "*", method: RequestMethod.ALL });
 
-        consumer.apply(AuthCheckMiddleware).forRoutes(
-            { path: "auth/refresh", method: RequestMethod.POST },
-            { path: "auth/logout", method: RequestMethod.POST },
-            { path: "auth/check-if-role/*", method: RequestMethod.POST },
-
-            { path: "admin/*", method: RequestMethod.ALL },
-            { path: "user/*", method: RequestMethod.ALL },
-        );
+        consumer
+            .apply(AuthCheckMiddleware)
+            .forRoutes(
+                { path: "auth/refresh", method: RequestMethod.POST },
+                { path: "auth/logout", method: RequestMethod.POST },
+                { path: "auth/check-if-role/*", method: RequestMethod.POST },
+                { path: "admin/*", method: RequestMethod.ALL },
+                { path: "user/*", method: RequestMethod.ALL },
+            );
 
         consumer
             .apply(GuestMiddleware)

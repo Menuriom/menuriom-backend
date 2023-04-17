@@ -1,12 +1,13 @@
 import { IsNotEmpty, Length, IsString, IsPhoneNumber } from "class-validator";
+import { i18nValidationMessage } from "nestjs-i18n";
 
 export class RegisterDto {
-    @IsNotEmpty({ message: "ایمیل یا شماره همراه خود را وارد کنید" })
+    @IsNotEmpty({ message: i18nValidationMessage("dto.please enter your mobile or email") })
     readonly username: string;
 
-    @Length(6, 6, { message: "کد نامعتبر" })
-    @IsString({ message: "کد ارسال شده را وارد کنید" })
-    @IsNotEmpty({ message: "کد ارسال شده را وارد کنید" })
+    @Length(6, 6, { message: i18nValidationMessage("dto.invalid code") })
+    @IsString({ message: i18nValidationMessage("dto.enter the sent code") })
+    @IsNotEmpty({ message: i18nValidationMessage("dto.enter the sent code") })
     readonly code: string;
 
     @Length(1, 100, { message: "نام حداکثر 100 کاراکتر" })

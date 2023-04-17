@@ -1,0 +1,30 @@
+{
+    "sms system in not active right now, sorry!": "sms system in not active right now, sorry!",
+    "you can not login": "Sorry!You can not login",
+    "entered code is not correct": "entered code is not correct",
+    "your entered code has expired": "your entered code has expired",
+    "user not found": "User not found",
+    "please first confirm your account": "please first confirm your account",
+    "your email account not valid by google": "your email account not valid by google",
+    "size of file must not be more than 2M": "size of file must not be more than 2M",
+    "format of file is not valid": "format of file is not valid",
+    "HELLO": "salam",
+    "PRODUCT": {
+        "NEW": "New Product: {name}"
+    },
+    "ENGLISH": "English",
+    "ARRAY": ["ONE", "TWO", "THREE"],
+    "cat": "Cat",
+    "cat_name": "Cat: {name}",
+    "set-up-password": {
+        "heading": "Hello, {username}",
+        "title": "Forgot password",
+        "followLink": "Please follow the link to set up your password"
+    },
+    "day_interval": {
+        "one": "Every day",
+        "other": "Every {count} days",
+        "zero": "Never"
+    },
+    "nested": "We go shopping: $t(test.day_interval, {{\"count\": {count} }})"
+}
