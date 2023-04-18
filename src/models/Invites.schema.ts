@@ -10,8 +10,8 @@ export const InviteSchema = new Schema({
     brand: { type: Schema.Types.ObjectId, ref: "Brand", required: true },
     status: {
         type: String,
-        enum: ["sended", "canceled"],
-        default: "sended",
+        enum: ["sent", "rejected"],
+        default: "sent",
         required: true,
     },
     createdAt: {
@@ -26,6 +26,6 @@ export interface Invite {
     mobile?: string;
     branch?: Branch | Schema.Types.ObjectId;
     brand?: Brand | Schema.Types.ObjectId;
-    status: "sended" | "canceled";
+    status: "sent" | "rejected";
     createdAt: Date;
 }
