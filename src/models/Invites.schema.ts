@@ -22,10 +22,10 @@ export const InviteSchema = new Schema({
 
 export interface Invite {
     _id: Schema.Types.ObjectId;
-    email: string;
+    email?: string;
     mobile?: string;
-    branch?: Branch | Schema.Types.ObjectId;
-    brand?: Brand | Schema.Types.ObjectId;
+    branch: Branch | Schema.Types.ObjectId;
+    brand: Brand | Schema.Types.ObjectId;
     status: "sent" | "rejected";
     createdAt: Date;
 }
