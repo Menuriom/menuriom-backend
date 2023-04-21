@@ -48,6 +48,10 @@
             "Length": "family must be 100 characters at max",
             "IsString": "please enter your family",
             "IsNotEmpty": "please enter your family"
+        },
+        "mobile": {
+            "IsPhoneNumber": "phone number is not valid",
+            "IsNotEmpty": "please enter your phone number"
         }
     }
 }

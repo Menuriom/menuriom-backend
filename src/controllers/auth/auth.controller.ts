@@ -150,6 +150,12 @@ export class AuthController {
             throw new UnprocessableEntityException([{ property: "", errors: [this.i18n.t("auth.first, please verify your email or phone number")] }]);
         }
 
+        const otherUser = await this.UserModel.findOne({ mobile: inputs.mobile }).exec();
+        if (otherUser && !otherUser.mobileVerifiedAt && otherUser.status != "banned") {
+            throw new UnprocessableEntityException([
+                { property: "", errors: [this.i18n.t("auth.phone number is already in use in our system! please enter another phone number")] },
+            ]);
+        }
         // update user's info and set status to active
         await this.UserModel.updateOne({ id: user.id }, { name: inputs.name, family: inputs.family, mobile: inputs.mobile, status: "active" }).exec();
 

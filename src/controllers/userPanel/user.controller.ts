@@ -9,13 +9,11 @@ import { UserPermissionGroupDocument } from "src/models/UserPermissionGroups.sch
 import { UserDocument } from "src/models/Users.schema";
 import { unlink } from "fs/promises";
 import { FilesInterceptor } from "@nestjs/platform-express";
-import { EditUserInfoDto } from "src/dto/userPanel/user.dto";
+import { CompleteInfoDto, EditUserInfoDto } from "src/dto/userPanel/user.dto";
 import { I18nService } from "nestjs-i18n";
 
 @Controller("user")
 export class UserController {
-    private verficationCodeExpireTime = 120; // 2 minutes
-
     constructor(
         private readonly i18n: I18nService,
         @InjectModel("User") private readonly UserModel: Model<UserDocument>,
@@ -29,6 +27,8 @@ export class UserController {
         if (!user) throw NotFoundException;
 
         // TODO
+        // get the list of brands that user own + list of brands that user has access to them with their permissions
+
         // const permissions = new Set();
         // if (!!user.permissions) user.permissions.forEach((permission) => permissions.add(permission));
         // if (!!user.permissionGroup) user.permissionGroup.permissions.forEach((permission) => permissions.add(permission));
@@ -40,7 +40,6 @@ export class UserController {
             email: user.email,
             mobile: user.mobile,
             role: user.role,
-            permissions: [],
         });
     }
 
@@ -53,6 +52,23 @@ export class UserController {
             emailVerified: !!user.emailVerifiedAt,
             mobileVerified: !!user.mobileVerifiedAt,
         });
+    }
+
+    @Get("complete-info")
+    async completeInfo(@Body() input: CompleteInfoDto, @Req() req: Request, @Res() res: Response): Promise<void | Response> {
+        const user = await this.UserModel.findOne({ _id: req.session.userID }).select("-_v -password -createdAt").exec();
+        if (!user) throw NotFoundException;
+
+        const otherUser = await this.UserModel.findOne({ mobile: input.mobile }).exec();
+        if (otherUser && !otherUser.mobileVerifiedAt && otherUser.status != "banned") {
+            throw new UnprocessableEntityException([
+                { property: "", errors: [this.i18n.t("auth.phone number is already in use in our system! please enter another phone number")] },
+            ]);
+        }
+
+        await this.UserModel.updateOne({ id: user.id }, { name: input.name, family: input.family, mobile: input.mobile }).exec();
+
+        return res.json({ ...input });
     }
 
     @Post("edit-info")
