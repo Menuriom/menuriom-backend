@@ -16,7 +16,7 @@ import { BranchSchema } from "./models/Branches.schema";
 import { BrandsPlanSchema } from "./models/BrandsPlans.schema";
 import { BrandSchema } from "./models/Brands.schema";
 import { BrandTypeSchema } from "./models/BrandTypes.schema";
-import { DefaultUserPermissionGroupSchema } from "./models/DefaultUserPermissionGroups.schema";
+import { DefaultUserRoleSchema } from "./models/DefaultUserRoles.schema";
 import { InvoicePaymentSchema } from "./models/InvoicePayments.schema";
 import { MenuItemSchema } from "./models/MenuItems.schema";
 import { MenuSchema } from "./models/Menus.schema";
@@ -26,7 +26,7 @@ import { PlanSchema } from "./models/Plans.schema";
 import { QrCodeSchema } from "./models/QrCodes.schema";
 import { TableSchema } from "./models/Tables.schema";
 import { UserBranchPermissionSchema } from "./models/UserBranchPermissions.schema";
-import { UserPermissionGroupSchema } from "./models/UserPermissionGroups.schema";
+import { UserRoleSchema } from "./models/UserRoles.schema";
 import { UserPermissionSchema } from "./models/UserPermissions.schema";
 import { UserSchema } from "./models/Users.schema";
 import { SessionSchema } from "./models/Sessions.schema";
@@ -50,7 +50,7 @@ import * as path from "path";
             { name: "BrandPlan", schema: BrandsPlanSchema },
             { name: "Brand", schema: BrandSchema },
             { name: "BrandType", schema: BrandTypeSchema },
-            { name: "DefaultUserPermissionGroup", schema: DefaultUserPermissionGroupSchema },
+            { name: "DefaultUserRole", schema: DefaultUserRoleSchema },
             { name: "InvoicePayment", schema: InvoicePaymentSchema },
             { name: "MenuesItem", schema: MenuItemSchema },
             { name: "Menue", schema: MenuSchema },
@@ -60,7 +60,7 @@ import * as path from "path";
             { name: "QrCode", schema: QrCodeSchema },
             { name: "Table", schema: TableSchema },
             { name: "UserBranchPermission", schema: UserBranchPermissionSchema },
-            { name: "UserPermissionGroup", schema: UserPermissionGroupSchema },
+            { name: "UserRole", schema: UserRoleSchema },
             { name: "UserPermission", schema: UserPermissionSchema },
             { name: "User", schema: UserSchema },
             { name: "Session", schema: SessionSchema },

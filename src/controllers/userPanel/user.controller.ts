@@ -5,7 +5,7 @@ import { Request } from "src/interfaces/Request.interface";
 import { InjectModel } from "@nestjs/mongoose";
 import { Model } from "mongoose";
 import { UserPermissionDocument } from "src/models/UserPermissions.schema";
-import { UserPermissionGroupDocument } from "src/models/UserPermissionGroups.schema";
+import { UserRoleDocument } from "src/models/UserRoles.schema";
 import { UserDocument } from "src/models/Users.schema";
 import { unlink } from "fs/promises";
 import { FilesInterceptor } from "@nestjs/platform-express";
@@ -17,7 +17,7 @@ export class UserController {
     constructor(
         private readonly i18n: I18nService,
         @InjectModel("User") private readonly UserModel: Model<UserDocument>,
-        @InjectModel("PermissionGroup") private readonly PermissionGroupModel: Model<UserPermissionGroupDocument>,
+        @InjectModel("Role") private readonly RoleModel: Model<UserRoleDocument>,
         @InjectModel("Permission") private readonly PermissionModel: Model<UserPermissionDocument>,
     ) {}
 
@@ -31,7 +31,7 @@ export class UserController {
 
         // const permissions = new Set();
         // if (!!user.permissions) user.permissions.forEach((permission) => permissions.add(permission));
-        // if (!!user.permissionGroup) user.permissionGroup.permissions.forEach((permission) => permissions.add(permission));
+        // if (!!user.Role) user.Role.permissions.forEach((permission) => permissions.add(permission));
 
         return res.json({
             avatar: user.avatar,
