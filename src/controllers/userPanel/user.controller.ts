@@ -10,12 +10,11 @@ import { UserDocument } from "src/models/Users.schema";
 import { unlink } from "fs/promises";
 import { FilesInterceptor } from "@nestjs/platform-express";
 import { CompleteInfoDto, EditUserInfoDto } from "src/dto/userPanel/user.dto";
-import { I18nService } from "nestjs-i18n";
+import { I18nContext } from "nestjs-i18n";
 
 @Controller("user")
 export class UserController {
     constructor(
-        private readonly i18n: I18nService,
         @InjectModel("User") private readonly UserModel: Model<UserDocument>,
         @InjectModel("Role") private readonly RoleModel: Model<UserRoleDocument>,
         @InjectModel("Permission") private readonly PermissionModel: Model<UserPermissionDocument>,
@@ -54,7 +53,7 @@ export class UserController {
         });
     }
 
-    @Get("complete-info")
+    @Post("complete-info")
     async completeInfo(@Body() input: CompleteInfoDto, @Req() req: Request, @Res() res: Response): Promise<void | Response> {
         const user = await this.UserModel.findOne({ _id: req.session.userID }).select("-_v -password -createdAt").exec();
         if (!user) throw NotFoundException;
@@ -62,7 +61,10 @@ export class UserController {
         const otherUser = await this.UserModel.findOne({ mobile: input.mobile }).exec();
         if (otherUser && !otherUser.mobileVerifiedAt && otherUser.status != "banned") {
             throw new UnprocessableEntityException([
-                { property: "", errors: [this.i18n.t("auth.phone number is already in use in our system! please enter another phone number")] },
+                {
+                    property: "mobile",
+                    errors: [I18nContext.current().t("auth.phone number is already in use in our system! please enter another phone number")],
+                },
             ]);
         }
 
@@ -74,7 +76,7 @@ export class UserController {
     @Post("edit-info")
     async editUserInfo(@Body() input: EditUserInfoDto, @Req() req: Request, @Res() res: Response): Promise<void | Response> {
         const user = await this.UserModel.findOne({ _id: req.session.userID }).exec();
-        if (!user) throw new NotFoundException([{ property: "user", errors: [this.i18n.t("userPanel.user.user not found")] }]);
+        if (!user) throw new NotFoundException([{ property: "user", errors: [I18nContext.current().t("userPanel.user.user not found")] }]);
 
         await this.UserModel.updateOne({ _id: req.session.userID }, { name: input.name, family: input.family });
 
@@ -85,7 +87,7 @@ export class UserController {
     @UseInterceptors(FilesInterceptor("files"))
     async editUserImage(@UploadedFiles() files: Array<Express.Multer.File>, @Req() req: Request, @Res() res: Response): Promise<void | Response> {
         const user = await this.UserModel.findOne({ _id: req.session.userID }).exec();
-        if (!user) throw new NotFoundException([{ property: "user", errors: [this.i18n.t("userPanel.user.user not found")] }]);
+        if (!user) throw new NotFoundException([{ property: "user", errors: [I18nContext.current().t("userPanel.user.user not found")] }]);
 
         if (!!files.length) {
             const ogName = files[0].originalname;
@@ -93,12 +95,15 @@ export class UserController {
 
             // check file size
             if (files[0].size > 1_048_576) {
-                throw new UnprocessableEntityException([{ property: "image", errors: [this.i18n.t("userPanel.user.size of avatar pic must be less than 1M")] }]);
+                throw new UnprocessableEntityException([
+                    { property: "image", errors: [I18nContext.current().t("userPanel.user.size of avatar pic must be less than 1M")] },
+                ]);
             }
 
             // check file format
             const isMimeOk = extension == "png" || extension == "jpeg" || extension == "jpg";
-            if (!isMimeOk) throw new UnprocessableEntityException([{ property: "image", errors: [this.i18n.t("userPanel.user.image format is not valid")] }]);
+            if (!isMimeOk)
+                throw new UnprocessableEntityException([{ property: "image", errors: [I18nContext.current().t("userPanel.user.image format is not valid")] }]);
 
             // delete the old image from system
             if (!!user.avatar) await unlink(user.avatar.replace("/file/", "storage/")).catch((e) => {});
@@ -122,7 +127,7 @@ export class UserController {
     @Delete("delete-avatar-image")
     async deleteUserImage(@Req() req: Request, @Res() res: Response): Promise<void | Response> {
         const user = await this.UserModel.findOne({ _id: req.session.userID }).select("-_v -password -createdAt").exec();
-        if (!user) throw new NotFoundException([{ property: "user", errors: [this.i18n.t("userPanel.user.user not found")] }]);
+        if (!user) throw new NotFoundException([{ property: "user", errors: [I18nContext.current().t("userPanel.user.user not found")] }]);
 
         // delete the old image from system
         if (!!user.avatar) await unlink(user.avatar.replace("/file/", "storage/")).catch((e) => {});

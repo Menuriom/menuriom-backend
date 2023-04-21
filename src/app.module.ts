@@ -30,7 +30,7 @@ import { UserRoleSchema } from "./models/UserRoles.schema";
 import { UserPermissionSchema } from "./models/UserPermissions.schema";
 import { UserSchema } from "./models/Users.schema";
 import { SessionSchema } from "./models/Sessions.schema";
-import { AcceptLanguageResolver, I18nJsonLoader, I18nModule, QueryResolver } from "nestjs-i18n";
+import { AcceptLanguageResolver, CookieResolver, I18nModule } from "nestjs-i18n";
 import * as path from "path";
 
 @Module({
@@ -40,7 +40,7 @@ import * as path from "path";
         I18nModule.forRoot({
             fallbackLanguage: "fa",
             loaderOptions: { path: path.join(__dirname, "/i18n/"), watch: true, includeSubfolders: true },
-            resolvers: [{ use: QueryResolver, options: ["lang"] }, AcceptLanguageResolver],
+            resolvers: [new CookieResolver(["lang"]), AcceptLanguageResolver],
         }),
         ConfigModule.forRoot(),
         MongooseModule.forRoot(process.env.MONGO_URL, { dbName: process.env.MONGO_DB }),
