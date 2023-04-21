@@ -3,6 +3,7 @@ import { Response } from "express";
 import { readFile } from "fs/promises";
 import { Request } from "src/interfaces/Request.interface";
 import { AuthService } from "src/services/auth.service";
+import { I18nService } from "nestjs-i18n";
 import { SendCodeDto } from "src/dto/auth/sendCode.dto";
 import { VerifyDto } from "src/dto/auth/verify.dto";
 import { RegisterDto } from "src/dto/auth/register.dto";
@@ -12,7 +13,6 @@ import { UserDocument } from "src/models/Users.schema";
 import { SessionDocument } from "src/models/Sessions.schema";
 import Email from "src/notifications/channels/Email";
 import Sms from "src/notifications/channels/Sms";
-import { I18n, I18nContext } from "nestjs-i18n";
 
 @Controller("auth")
 export class AuthController {
@@ -20,17 +20,13 @@ export class AuthController {
 
     constructor(
         private readonly authService: AuthService,
+        private readonly i18n: I18nService,
         @InjectModel("User") private readonly UserModel: Model<UserDocument>,
         @InjectModel("Session") private readonly SessionModel: Model<SessionDocument>,
     ) {}
 
-    @Get()
-    public async getHello(@I18n() i18n: I18nContext, @Res() res: Response): Promise<void | Response> {
-        return res.json({ test: i18n.t("test.cat_name", { args: { name: "یک" } }) });
-    }
-
     @Post("send-code")
-    public async sendCode(@I18n() i18n: I18nContext, @Body() inputs: SendCodeDto, @Req() req: Request, @Res() res: Response): Promise<void | Response> {
+    public async sendCode(@Body() inputs: SendCodeDto, @Req() req: Request, @Res() res: Response): Promise<void | Response> {
         let field = "mobile";
         let verificationCodeField = "mobileVerificationCode";
         const username: string = inputs.username.trim();
@@ -41,12 +37,14 @@ export class AuthController {
         }
 
         if (field === "mobile" && process.env.SMS_SYSTEM_STATE === "inactive") {
-            throw new UnprocessableEntityException([{ property: "username", errors: [i18n.t("test.sms system in not active right now, sorry!")] }]);
+            throw new UnprocessableEntityException([{ property: "username", errors: [this.i18n.t("auth.sms system is not available right now!")] }]);
         }
 
         const user = await this.UserModel.findOne({ [field]: username }).exec();
         if (user) {
-            if (user.status === "banned") throw new UnprocessableEntityException([{ property: "username", errors: [i18n.t("test.you can not login")] }]);
+            if (user.status === "banned") {
+                throw new UnprocessableEntityException([{ property: "username", errors: [this.i18n.t("auth.you are banned from system and can't login")] }]);
+            }
             // check the time of last email or sms sent
             if (!!user.verficationCodeSentAt) {
                 const duration = (new Date(Date.now()).getTime() - user.verficationCodeSentAt.getTime()) / 1000;
@@ -86,7 +84,7 @@ export class AuthController {
     }
 
     @Post("verify")
-    public async verfication(@I18n() i18n: I18nContext, @Body() inputs: VerifyDto, @Req() req: Request, @Res() res: Response): Promise<void | Response> {
+    public async verfication(@Body() inputs: VerifyDto, @Req() req: Request, @Res() res: Response): Promise<void | Response> {
         let field = "mobile";
         let verifiedAtField = "mobileVerifiedAt";
         let verificationCodeField = "mobileVerificationCode";
@@ -99,17 +97,19 @@ export class AuthController {
         }
 
         if (field === "mobile" && process.env.SMS_SYSTEM_STATE === "inactive") {
-            throw new UnprocessableEntityException([{ property: "username", errors: [i18n.t("test.sms system in not active right now, sorry!")] }]);
+            throw new UnprocessableEntityException([{ property: "username", errors: [this.i18n.t("auth.sms system is not available right now!")] }]);
         }
 
         const user = await this.UserModel.findOne({ [field]: username, [verificationCodeField]: inputs.code }).exec();
-        if (!user) throw new UnprocessableEntityException([{ property: "code", errors: [i18n.t("test.entered code is not correct")] }]);
-        if (user.status === "banned") throw new UnprocessableEntityException([{ property: "code", errors: [i18n.t("test.you can not login")] }]);
+        if (!user) throw new UnprocessableEntityException([{ property: "code", errors: [this.i18n.t("auth.entered verification code is not correct")] }]);
+        if (user.status === "banned") {
+            throw new UnprocessableEntityException([{ property: "code", errors: [this.i18n.t("auth.you are banned from system and can't login")] }]);
+        }
 
         // check the time with verficationCodeSentAt field
         const duration = (new Date(Date.now()).getTime() - user.verficationCodeSentAt.getTime()) / 1000;
         if (duration > this.verficationCodeExpireTime) {
-            throw new UnprocessableEntityException([{ property: "code", errors: [i18n.t("test.your entered code has expired")] }]);
+            throw new UnprocessableEntityException([{ property: "code", errors: [this.i18n.t("auth.entered verification code has expired")] }]);
         }
 
         await this.UserModel.updateOne({ [field]: username, [verificationCodeField]: inputs.code }, { [verifiedAtField]: new Date(Date.now()) }).exec();
@@ -126,7 +126,7 @@ export class AuthController {
     }
 
     @Post("register")
-    async register(@I18n() i18n: I18nContext, @Body() inputs: RegisterDto, @Req() req: Request, @Res() res: Response): Promise<void | Response> {
+    async register(@Body() inputs: RegisterDto, @Req() req: Request, @Res() res: Response): Promise<void | Response> {
         let field = "mobile";
         let verifiedAtField = "mobileVerifiedAt";
         let verificationCodeField = "mobileVerificationCode";
@@ -139,13 +139,16 @@ export class AuthController {
         }
 
         if (field === "mobile" && process.env.SMS_SYSTEM_STATE === "inactive") {
-            throw new UnprocessableEntityException([{ property: "", errors: [i18n.t("test.sms system in not active right now, sorry!")] }]);
+            throw new UnprocessableEntityException([{ property: "", errors: [this.i18n.t("auth.sms system is not available right now!")] }]);
         }
 
         const user = await this.UserModel.findOne({ [field]: username, [verificationCodeField]: inputs.code }).exec();
-        if (!user) throw new UnauthorizedException([{ property: "", errors: [i18n.t("test.user not found")] }]);
-        if (user.status === "banned") throw new UnprocessableEntityException([{ property: "", errors: [i18n.t("test.you can not login")] }]);
-        if (!user[verifiedAtField]) throw new UnprocessableEntityException([{ property: "", errors: [i18n.t("please first confirm your account")] }]);
+        if (!user) throw new UnauthorizedException([{ property: "", errors: [this.i18n.t("auth.first, please verify your email or phone number")] }]);
+        if (user.status === "banned")
+            throw new UnprocessableEntityException([{ property: "", errors: [this.i18n.t("auth.you are banned from system and can't login")] }]);
+        if (!user[verifiedAtField]) {
+            throw new UnprocessableEntityException([{ property: "", errors: [this.i18n.t("auth.first, please verify your email or phone number")] }]);
+        }
 
         // update user's info and set status to active
         await this.UserModel.updateOne({ id: user.id }, { name: inputs.name, family: inputs.family, mobile: inputs.mobile, status: "active" }).exec();
@@ -159,15 +162,15 @@ export class AuthController {
     }
 
     @Post("continue-with-google")
-    async continueWithGoogle(@I18n() i18n: I18nContext, @Req() req: Request, @Res() res: Response): Promise<void | Response> {
+    async continueWithGoogle(@Req() req: Request, @Res() res: Response): Promise<void | Response> {
         if (!req.body.profile) throw new ForbiddenException();
         const profile = req.body.profile;
 
-        if (!profile.email_verified) throw new ForbiddenException([{ property: "", errors: [i18n.t("test.your email account not valid by google")] }]);
+        if (!profile.email_verified) throw new ForbiddenException([{ property: "", errors: [this.i18n.t("auth.your email account is not verified by google")] }]);
 
         let user = await this.UserModel.findOne({ email: profile.email }).exec();
         if (user) {
-            if (user.status !== "active") throw new ForbiddenException([{ property: "", errors: [i18n.t("test.you can not login")] }]);
+            if (user.status !== "active") throw new ForbiddenException([{ property: "", errors: [this.i18n.t("auth.you are banned from system and can't login")] }]);
             if (!user.googleId) await this.UserModel.updateOne({ email: profile.email }, { googleId: profile.sub, status: "active" }).exec();
         } else {
             user = await this.UserModel.create({

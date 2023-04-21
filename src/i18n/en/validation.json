@@ -1,0 +1,53 @@
+{
+    "register": {
+        "username": {
+            "IsNotEmpty": "please enter your mobile or email"
+        },
+        "code": {
+            "Length": "invalid code",
+            "IsString": "enter the verfication code",
+            "IsNotEmpty": "enter the verfication code"
+        },
+        "name": {
+            "Length": "name must be 100 characters at max",
+            "IsString": "please enter your name",
+            "IsNotEmpty": "please enter your name"
+        },
+        "family": {
+            "Length": "family must be 100 characters at max",
+            "IsString": "please enter your family",
+            "IsNotEmpty": "please enter your family"
+        },
+        "mobile": {
+            "IsPhoneNumber": "phone number is not valid",
+            "IsNotEmpty": "please enter your phone number"
+        }
+    },
+    "sendCode": {
+        "username": {
+            "IsNotEmpty": "please enter your mobile or email"
+        }
+    },
+    "verify": {
+        "username": {
+            "IsNotEmpty": "please enter your mobile or email"
+        },
+        "code": {
+            "Length": "invalid code",
+            "IsString": "enter the verfication code",
+            "IsNotEmpty": "enter the verfication code"
+        }
+    },
+    "user": {
+        "name": {
+            "Length": "name must be 100 characters at max",
+            "IsString": "please enter your name",
+            "IsNotEmpty": "please enter your name"
+        },
+        "family": {
+            "Length": "family must be 100 characters at max",
+            "IsString": "please enter your family",
+            "IsNotEmpty": "please enter your family"
+        }
+    }
+}

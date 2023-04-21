@@ -39,11 +39,7 @@ import * as path from "path";
         UserPanelModule,
         I18nModule.forRoot({
             fallbackLanguage: "fa",
-            loaderOptions: {
-                path: path.join(__dirname, "/i18n/"),
-                watch: true,
-                includeSubfolders: true,
-            },
+            loaderOptions: { path: path.join(__dirname, "/i18n/"), watch: true, includeSubfolders: true },
             resolvers: [{ use: QueryResolver, options: ["lang"] }, AcceptLanguageResolver],
         }),
         ConfigModule.forRoot(),

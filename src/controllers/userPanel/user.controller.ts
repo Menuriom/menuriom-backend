@@ -10,13 +10,14 @@ import { UserDocument } from "src/models/Users.schema";
 import { unlink } from "fs/promises";
 import { FilesInterceptor } from "@nestjs/platform-express";
 import { EditUserInfoDto } from "src/dto/userPanel/user.dto";
-import { I18n, I18nContext } from "nestjs-i18n";
+import { I18nService } from "nestjs-i18n";
 
 @Controller("user")
 export class UserController {
     private verficationCodeExpireTime = 120; // 2 minutes
 
     constructor(
+        private readonly i18n: I18nService,
         @InjectModel("User") private readonly UserModel: Model<UserDocument>,
         @InjectModel("PermissionGroup") private readonly PermissionGroupModel: Model<UserPermissionGroupDocument>,
         @InjectModel("Permission") private readonly PermissionModel: Model<UserPermissionDocument>,
@@ -55,9 +56,9 @@ export class UserController {
     }
 
     @Post("edit-info")
-    async editUserInfo(@I18n() i18n: I18nContext, @Body() input: EditUserInfoDto, @Req() req: Request, @Res() res: Response): Promise<void | Response> {
+    async editUserInfo(@Body() input: EditUserInfoDto, @Req() req: Request, @Res() res: Response): Promise<void | Response> {
         const user = await this.UserModel.findOne({ _id: req.session.userID }).exec();
-        if (!user) throw new NotFoundException([{ property: "user", errors: [i18n.t("test.user not found")] }]);
+        if (!user) throw new NotFoundException([{ property: "user", errors: [this.i18n.t("userPanel.user.user not found")] }]);
 
         await this.UserModel.updateOne({ _id: req.session.userID }, { name: input.name, family: input.family });
 
@@ -66,26 +67,22 @@ export class UserController {
 
     @Post("edit-avatar-image")
     @UseInterceptors(FilesInterceptor("files"))
-    async editUserImage(
-        @I18n() i18n: I18nContext,
-        @UploadedFiles() files: Array<Express.Multer.File>,
-        @Req() req: Request,
-        @Res() res: Response,
-    ): Promise<void | Response> {
+    async editUserImage(@UploadedFiles() files: Array<Express.Multer.File>, @Req() req: Request, @Res() res: Response): Promise<void | Response> {
         const user = await this.UserModel.findOne({ _id: req.session.userID }).exec();
-        if (!user) throw new NotFoundException([{ property: "user", errors: [i18n.t("test.user not found")] }]);
+        if (!user) throw new NotFoundException([{ property: "user", errors: [this.i18n.t("userPanel.user.user not found")] }]);
 
         if (!!files.length) {
             const ogName = files[0].originalname;
             const extension = ogName.slice(((ogName.lastIndexOf(".") - 1) >>> 0) + 2);
 
             // check file size
-            if (files[0].size > 2097152)
-                throw new UnprocessableEntityException([{ property: "image", errors: [i18n.t("test.size of file must not be more than 2M")] }]);
+            if (files[0].size > 1_048_576) {
+                throw new UnprocessableEntityException([{ property: "image", errors: [this.i18n.t("userPanel.user.size of avatar pic must be less than 1M")] }]);
+            }
 
             // check file format
-            const isMimeOk = extension == "png" || extension == "gif" || extension == "jpeg" || extension == "jpg";
-            if (!isMimeOk) throw new UnprocessableEntityException([{ property: "image", errors: [i18n.t("test.format of file is not valid")] }]);
+            const isMimeOk = extension == "png" || extension == "jpeg" || extension == "jpg";
+            if (!isMimeOk) throw new UnprocessableEntityException([{ property: "image", errors: [this.i18n.t("userPanel.user.image format is not valid")] }]);
 
             // delete the old image from system
             if (!!user.avatar) await unlink(user.avatar.replace("/file/", "storage/")).catch((e) => {});
@@ -107,9 +104,9 @@ export class UserController {
     }
 
     @Delete("delete-avatar-image")
-    async deleteUserImage(@I18n() i18n: I18nContext, @Req() req: Request, @Res() res: Response): Promise<void | Response> {
+    async deleteUserImage(@Req() req: Request, @Res() res: Response): Promise<void | Response> {
         const user = await this.UserModel.findOne({ _id: req.session.userID }).select("-_v -password -createdAt").exec();
-        if (!user) throw new NotFoundException([{ property: "user", errors: [i18n.t("test.user not found")] }]);
+        if (!user) throw new NotFoundException([{ property: "user", errors: [this.i18n.t("userPanel.user.user not found")] }]);
 
         // delete the old image from system
         if (!!user.avatar) await unlink(user.avatar.replace("/file/", "storage/")).catch((e) => {});

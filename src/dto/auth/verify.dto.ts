@@ -1,11 +1,12 @@
-import { IsEmail, IsNotEmpty, IsString, Length, MinLength } from "class-validator";
+import { IsNotEmpty, IsString, Length } from "class-validator";
+import { i18nValidationMessage } from "nestjs-i18n";
 
 export class VerifyDto {
-    @IsNotEmpty({ message: "ایمیل یا شماره همراه خود را وارد کنید" })
+    @IsNotEmpty({ message: i18nValidationMessage("validation.verify.username.IsNotEmpty") })
     readonly username: string;
 
-    @Length(6, 6, { message: "کد نامعتبر" })
-    @IsString({ message: "کد ارسال شده را وارد کنید" })
-    @IsNotEmpty({ message: "کد ارسال شده را وارد کنید" })
+    @Length(6, 6, { message: i18nValidationMessage("validation.verify.code.Length") })
+    @IsString({ message: i18nValidationMessage("validation.verify.code.IsString") })
+    @IsNotEmpty({ message: i18nValidationMessage("validation.verify.code.IsNotEmpty") })
     readonly code: string;
 }

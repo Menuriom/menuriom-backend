@@ -3,6 +3,7 @@ import { NestFactory } from "@nestjs/core";
 import { AppModule } from "./app.module";
 import * as cookieParser from "cookie-parser";
 import helmet from "helmet";
+import { I18nValidationExceptionFilter, I18nValidationPipe, i18nValidationErrorFactory } from "nestjs-i18n";
 
 async function bootstrap() {
     const app = await NestFactory.create(AppModule);
@@ -12,10 +13,25 @@ async function bootstrap() {
 
     // added validation pipe
     app.useGlobalPipes(
-        new ValidationPipe({
+        new I18nValidationPipe({
+            // new ValidationPipe({
             errorHttpStatusCode: 422,
             stopAtFirstError: true,
-            exceptionFactory: (errors) => {
+            // exceptionFactory: (errors) => {
+            //     return new UnprocessableEntityException(
+            //         errors.map((item) => {
+            //             return {
+            //                 property: item.property,
+            //                 errors: Object.values(item.constraints),
+            //             };
+            //         }),
+            //     );
+            // },
+        }),
+    );
+    app.useGlobalFilters(
+        new I18nValidationExceptionFilter({
+            errorFormatter: (errors) => {
                 return new UnprocessableEntityException(
                     errors.map((item) => {
                         return {

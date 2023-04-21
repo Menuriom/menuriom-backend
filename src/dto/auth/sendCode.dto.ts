@@ -1,7 +1,7 @@
 import { IsNotEmpty } from "class-validator";
+import { i18nValidationMessage } from "nestjs-i18n";
 
 export class SendCodeDto {
-    // TODO : set I18N for translating error messages
-    @IsNotEmpty({ message: "ایمیل یا شماره همراه خود را وارد کنید" })
+    @IsNotEmpty({ message: i18nValidationMessage("validation.sendCode.username.IsNotEmpty") })
     readonly username: string;
 }
