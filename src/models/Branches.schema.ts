@@ -7,7 +7,7 @@ export const BranchSchema = new Schema({
     brand: { type: Schema.Types.ObjectId, ref: "Brand", required: true },
     name: { type: String, required: true },
     address: { type: String, required: true },
-    telephoneNumber: { type: String },
+    telephoneNumbers: [{ type: String }],
     postalCode: { type: String },
     gallery: [{ type: String }],
     createdAt: {
@@ -22,9 +22,9 @@ export interface Branch {
     brand: Brand | Schema.Types.ObjectId;
     name: string;
     address: string;
-    telephoneNumber?: string;
+    telephoneNumbers?: string[];
     postalCode?: string;
-    gallery: string[];
+    gallery?: string[];
     createdAt: Date;
     translation: Translation;
 }

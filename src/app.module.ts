@@ -81,6 +81,7 @@ export class AppModule implements NestModule {
                 { path: "auth/check-if-role/*", method: RequestMethod.POST },
                 { path: "admin/*", method: RequestMethod.ALL },
                 { path: "user/*", method: RequestMethod.ALL },
+                { path: "account/*", method: RequestMethod.ALL },
             );
 
         consumer

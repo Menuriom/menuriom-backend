@@ -3,44 +3,28 @@ import { NestFactory } from "@nestjs/core";
 import { AppModule } from "./app.module";
 import * as cookieParser from "cookie-parser";
 import helmet from "helmet";
+import createDefaultFilesAndFolders from "./createDefaultFilesAndFolders";
 import { I18nValidationExceptionFilter, I18nValidationPipe, i18nValidationErrorFactory } from "nestjs-i18n";
 
 async function bootstrap() {
     const app = await NestFactory.create(AppModule);
 
-    // TODO
-    // await createDefaultFilesAndFolders();
+    await createDefaultFilesAndFolders();
 
     // added validation pipe
     app.useGlobalPipes(
         new I18nValidationPipe({
-            // new ValidationPipe({
             errorHttpStatusCode: 422,
             stopAtFirstError: true,
-            // exceptionFactory: (errors) => {
-            //     return new UnprocessableEntityException(
-            //         errors.map((item) => {
-            //             return {
-            //                 property: item.property,
-            //                 errors: Object.values(item.constraints),
-            //             };
-            //         }),
-            //     );
-            // },
         }),
     );
     app.useGlobalFilters(
         new I18nValidationExceptionFilter({
-            errorFormatter: (errors) => {
-                return new UnprocessableEntityException(
-                    errors.map((item) => {
-                        return {
-                            property: item.property,
-                            errors: Object.values(item.constraints),
-                        };
-                    }),
-                );
-            },
+            errorHttpStatusCode: 422,
+            errorFormatter: (errors) =>
+                errors.map((item) => {
+                    return { property: item.property, errors: Object.values(item.constraints) };
+                }),
         }),
     );
 

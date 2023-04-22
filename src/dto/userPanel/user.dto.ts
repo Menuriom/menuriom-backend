@@ -1,4 +1,4 @@
-import { IsNotEmpty, Length, IsString, IsPhoneNumber } from "class-validator";
+import { IsNotEmpty, Length, IsString, IsMobilePhone } from "class-validator";
 import { i18nValidationMessage } from "nestjs-i18n";
 
 export class CompleteInfoDto {
@@ -12,7 +12,7 @@ export class CompleteInfoDto {
     @IsNotEmpty({ message: i18nValidationMessage("validation.user.family.IsNotEmpty") })
     readonly family: string;
 
-    @IsPhoneNumber("IR", { message: i18nValidationMessage("validation.user.mobile.IsPhoneNumber") })
+    @IsMobilePhone("fa-IR", { strictMode: true }, { message: i18nValidationMessage("validation.user.mobile.IsPhoneNumber") })
     @IsNotEmpty({ message: i18nValidationMessage("validation.user.mobile.IsNotEmpty") })
     readonly mobile: string;
 }

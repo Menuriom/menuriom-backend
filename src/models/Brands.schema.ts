@@ -9,11 +9,14 @@ export const BrandSchema = new Schema({
     name: { type: String, required: true },
     type: { type: Schema.Types.ObjectId, ref: "BrandType" },
     slogan: { type: String },
+    branchSize: { type: Number, default: 1 },
     creator: { type: Schema.Types.ObjectId, ref: "User" },
-    socials: [new Schema({
-        name: { type: String, required: true },
-        link: { type: String, required: true },
-    })],
+    socials: [
+        new Schema({
+            name: { type: String, required: true },
+            link: { type: String, required: true },
+        }),
+    ],
     createdAt: {
         type: Date,
         default: new Date(Date.now()),
@@ -27,6 +30,7 @@ export interface Brand {
     name: string;
     brandType: BrandType | Schema.Types.ObjectId;
     slogan?: string;
+    branchSize: number;
     creator: User | Schema.Types.ObjectId;
     socials: Social[];
     createdAt: Date;
