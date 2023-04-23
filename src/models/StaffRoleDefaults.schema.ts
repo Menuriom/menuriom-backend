@@ -1,9 +1,9 @@
 import { Document, Schema } from "mongoose";
 import { Translation, TranslationSchema } from "src/interfaces/Translation.interface";
-import { UserPermission } from "./UserPermissions.schema";
-export type UserRoleDocument = UserRole & Document;
+import { StaffPermission } from "./StaffPermissions.schema";
+export type StaffRoleDefaultDocument = StaffRoleDefault & Document;
 
-export const UserRoleSchema = new Schema({
+export const StaffRoleDefaultSchema = new Schema({
     name: { type: String, required: true },
     permissions: [{ type: String }],
     createdAt: {
@@ -13,10 +13,10 @@ export const UserRoleSchema = new Schema({
     translation: TranslationSchema,
 });
 
-export interface UserRole {
+export interface StaffRoleDefault {
     _id: Schema.Types.ObjectId;
     name: string;
-    permissions: Array<UserPermission | String>;
+    permissions?: StaffPermission[] | string[];
     createdAt: Date;
     translation: Translation;
 }

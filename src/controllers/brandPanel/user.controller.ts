@@ -4,8 +4,8 @@ import { Response } from "express";
 import { Request } from "src/interfaces/Request.interface";
 import { InjectModel } from "@nestjs/mongoose";
 import { Model } from "mongoose";
-import { UserPermissionDocument } from "src/models/UserPermissions.schema";
-import { UserRoleDocument } from "src/models/UserRoles.schema";
+import { StaffPermissionDocument } from "src/models/StaffPermissions.schema";
+import { StaffRoleDocument } from "src/models/StaffRoles.schema";
 import { UserDocument } from "src/models/Users.schema";
 import { unlink } from "fs/promises";
 import { FilesInterceptor } from "@nestjs/platform-express";
@@ -16,8 +16,8 @@ import { I18nContext } from "nestjs-i18n";
 export class UserController {
     constructor(
         @InjectModel("User") private readonly UserModel: Model<UserDocument>,
-        @InjectModel("Role") private readonly RoleModel: Model<UserRoleDocument>,
-        @InjectModel("Permission") private readonly PermissionModel: Model<UserPermissionDocument>,
+        @InjectModel("Role") private readonly RoleModel: Model<StaffRoleDocument>,
+        @InjectModel("Permission") private readonly PermissionModel: Model<StaffPermissionDocument>,
     ) {}
 
     @Get("info")
@@ -27,6 +27,8 @@ export class UserController {
 
         // TODO
         // get the list of brands that user own + list of brands that user has access to them with their permissions
+
+        // get brands that user owns
 
         // const permissions = new Set();
         // if (!!user.permissions) user.permissions.forEach((permission) => permissions.add(permission));

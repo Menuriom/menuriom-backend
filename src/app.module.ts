@@ -9,14 +9,14 @@ import { AuthCheckMiddleware, GuestMiddleware } from "./middlewares/auth.middlew
 import { AppService } from "./app.service";
 // modules
 import { AuthModule } from "./modules/auth.module";
-import { UserPanelModule } from "./modules/userPanel.module";
+import { BrandPanelModule } from "./modules/brandPanel.module";
 // schemas
 import { AnalyticSchema } from "./models/Analytics.schema";
 import { BranchSchema } from "./models/Branches.schema";
 import { BrandsPlanSchema } from "./models/BrandsPlans.schema";
 import { BrandSchema } from "./models/Brands.schema";
 import { BrandTypeSchema } from "./models/BrandTypes.schema";
-import { DefaultUserRoleSchema } from "./models/DefaultUserRoles.schema";
+import { StaffRoleDefaultSchema } from "./models/StaffRoleDefaults.schema";
 import { InvoicePaymentSchema } from "./models/InvoicePayments.schema";
 import { MenuItemSchema } from "./models/MenuItems.schema";
 import { MenuSchema } from "./models/Menus.schema";
@@ -25,9 +25,9 @@ import { PlanLimitationSchema } from "./models/PlansLimitations.schema";
 import { PlanSchema } from "./models/Plans.schema";
 import { QrCodeSchema } from "./models/QrCodes.schema";
 import { TableSchema } from "./models/Tables.schema";
-import { UserBranchPermissionSchema } from "./models/UserBranchPermissions.schema";
-import { UserRoleSchema } from "./models/UserRoles.schema";
-import { UserPermissionSchema } from "./models/UserPermissions.schema";
+import { StaffSchema } from "./models/Staff.schema";
+import { StaffRoleSchema } from "./models/StaffRoles.schema";
+import { StaffPermissionSchema } from "./models/StaffPermissions.schema";
 import { UserSchema } from "./models/Users.schema";
 import { SessionSchema } from "./models/Sessions.schema";
 import { AcceptLanguageResolver, CookieResolver, I18nModule } from "nestjs-i18n";
@@ -36,7 +36,7 @@ import * as path from "path";
 @Module({
     imports: [
         AuthModule,
-        UserPanelModule,
+        BrandPanelModule,
         I18nModule.forRoot({
             fallbackLanguage: "fa",
             loaderOptions: { path: path.join(__dirname, "/i18n/"), watch: true, includeSubfolders: true },
@@ -50,7 +50,7 @@ import * as path from "path";
             { name: "BrandPlan", schema: BrandsPlanSchema },
             { name: "Brand", schema: BrandSchema },
             { name: "BrandType", schema: BrandTypeSchema },
-            { name: "DefaultUserRole", schema: DefaultUserRoleSchema },
+            { name: "StaffRoleDefault", schema: StaffRoleDefaultSchema },
             { name: "InvoicePayment", schema: InvoicePaymentSchema },
             { name: "MenuesItem", schema: MenuItemSchema },
             { name: "Menue", schema: MenuSchema },
@@ -59,9 +59,9 @@ import * as path from "path";
             { name: "Plan", schema: PlanSchema },
             { name: "QrCode", schema: QrCodeSchema },
             { name: "Table", schema: TableSchema },
-            { name: "UserBranchPermission", schema: UserBranchPermissionSchema },
-            { name: "UserRole", schema: UserRoleSchema },
-            { name: "UserPermission", schema: UserPermissionSchema },
+            { name: "Staff", schema: StaffSchema },
+            { name: "StaffRole", schema: StaffRoleSchema },
+            { name: "StaffPermission", schema: StaffPermissionSchema },
             { name: "User", schema: UserSchema },
             { name: "Session", schema: SessionSchema },
         ]),
