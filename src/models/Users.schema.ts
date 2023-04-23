@@ -1,4 +1,4 @@
-import { Document, Schema } from "mongoose";
+import { Document, Schema, Types } from "mongoose";
 export type UserDocument = User & Document;
 
 export const UserSchema = new Schema({
@@ -35,7 +35,7 @@ export const UserSchema = new Schema({
 });
 
 export interface User {
-    _id: Schema.Types.ObjectId;
+    _id: Types.ObjectId;
     avatar?: string;
     name?: string;
     family?: string;

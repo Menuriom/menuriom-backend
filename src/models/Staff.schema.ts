@@ -1,12 +1,13 @@
-import { Document, Schema } from "mongoose";
+import { Document, Schema, Types } from "mongoose";
 import { Branch } from "./Branches.schema";
 import { StaffRole } from "./StaffRoles.schema";
 import { User } from "./Users.schema";
+import { Brand } from "./Brands.schema";
 export type StaffDocument = Staff & Document;
 
 export const StaffSchema = new Schema({
     user: { type: Schema.Types.ObjectId, ref: "User", required: true },
-    brand: { type: Schema.Types.ObjectId, ref: "Branch", required: true },
+    brand: { type: Schema.Types.ObjectId, ref: "Brand", required: true },
     brandPermissions: [{ type: String }],
     branches: new Schema({
         branch: { type: Schema.Types.ObjectId, ref: "Branch", required: true },
@@ -19,9 +20,13 @@ export const StaffSchema = new Schema({
 });
 
 export interface Staff {
-    _id: Schema.Types.ObjectId;
-    user: User | Schema.Types.ObjectId;
-    branch: Branch | Schema.Types.ObjectId;
-    Role: StaffRole | Schema.Types.ObjectId;
+    _id: Types.ObjectId;
+    user: User | Types.ObjectId;
+    brand: Brand & Types.ObjectId;
+    brandPermissions: string[];
+    branches: {
+        branch: Branch | Types.ObjectId;
+        role: StaffRole | Types.ObjectId;
+    };
     createdAt: Date;
 }

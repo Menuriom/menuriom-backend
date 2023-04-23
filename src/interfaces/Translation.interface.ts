@@ -1,7 +1,7 @@
 import { Schema } from "mongoose";
 
 export interface Translation {
-    ir: unknown;
+    fa: unknown;
     en: unknown;
     it: unknown;
     de: unknown;
@@ -11,7 +11,7 @@ export interface Translation {
 }
 
 export const TranslationSchema = new Schema({
-    ir: { type: Object },
+    fa: { type: Object },
     en: { type: Object },
     it: { type: Object },
     de: { type: Object },

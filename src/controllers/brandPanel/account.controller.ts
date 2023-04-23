@@ -51,7 +51,7 @@ export class AccountController {
         });
 
         return res.json({
-            brand: { [newBrand.id]: { name: newBrand.name, role: "owner", permissions: [] } },
+            brand: { [newBrand.id]: { logo: newBrand.logo, name: newBrand.name, role: "owner", permissions: [] } },
         });
     }
 }

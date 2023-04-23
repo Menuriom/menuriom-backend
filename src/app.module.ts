@@ -32,6 +32,7 @@ import { UserSchema } from "./models/Users.schema";
 import { SessionSchema } from "./models/Sessions.schema";
 import { AcceptLanguageResolver, CookieResolver, I18nModule } from "nestjs-i18n";
 import * as path from "path";
+import { FilesController } from "./controllers/files.controller";
 
 @Module({
     imports: [
@@ -66,23 +67,23 @@ import * as path from "path";
             { name: "Session", schema: SessionSchema },
         ]),
     ],
-    controllers: [AppController],
+    controllers: [AppController, FilesController],
     providers: [AppService],
 })
 export class AppModule implements NestModule {
     configure(consumer: MiddlewareConsumer) {
         consumer.apply(serverOnly).forRoutes({ path: "*", method: RequestMethod.ALL });
 
-        consumer
-            .apply(AuthCheckMiddleware)
-            .forRoutes(
-                { path: "auth/refresh", method: RequestMethod.POST },
-                { path: "auth/logout", method: RequestMethod.POST },
-                { path: "auth/check-if-role/*", method: RequestMethod.POST },
-                { path: "admin/*", method: RequestMethod.ALL },
-                { path: "user/*", method: RequestMethod.ALL },
-                { path: "account/*", method: RequestMethod.ALL },
-            );
+        consumer.apply(AuthCheckMiddleware).forRoutes(
+            { path: "auth/refresh", method: RequestMethod.POST },
+            { path: "auth/logout", method: RequestMethod.POST },
+            { path: "auth/check-if-role/*", method: RequestMethod.POST },
+
+            { path: "admin/*", method: RequestMethod.ALL },
+            { path: "user/*", method: RequestMethod.ALL },
+            { path: "account/*", method: RequestMethod.ALL },
+            { path: "brand/*", method: RequestMethod.ALL },
+        );
 
         consumer
             .apply(GuestMiddleware)

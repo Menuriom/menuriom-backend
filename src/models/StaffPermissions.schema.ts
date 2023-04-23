@@ -1,4 +1,4 @@
-import { Document, Schema } from "mongoose";
+import { Document, Schema, Types } from "mongoose";
 import { Translation, TranslationSchema } from "src/interfaces/Translation.interface";
 export type StaffPermissionDocument = StaffPermission & Document;
 
@@ -15,7 +15,7 @@ export const StaffPermissionSchema = new Schema({
 });
 
 export interface StaffPermission {
-    _id: Schema.Types.ObjectId;
+    _id: string;
     label: string;
     group: string;
     groupLabel: string;

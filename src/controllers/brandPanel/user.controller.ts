@@ -3,7 +3,7 @@ import { NotFoundException, UnprocessableEntityException } from "@nestjs/common"
 import { Response } from "express";
 import { Request } from "src/interfaces/Request.interface";
 import { InjectModel } from "@nestjs/mongoose";
-import { Model } from "mongoose";
+import { Model, Types } from "mongoose";
 import { StaffPermissionDocument } from "src/models/StaffPermissions.schema";
 import { StaffRoleDocument } from "src/models/StaffRoles.schema";
 import { UserDocument } from "src/models/Users.schema";
@@ -11,13 +11,15 @@ import { unlink } from "fs/promises";
 import { FilesInterceptor } from "@nestjs/platform-express";
 import { CompleteInfoDto, EditUserInfoDto } from "src/dto/userPanel/user.dto";
 import { I18nContext } from "nestjs-i18n";
+import { BrandDocument } from "src/models/Brands.schema";
+import { StaffDocument } from "src/models/Staff.schema";
 
 @Controller("user")
 export class UserController {
     constructor(
         @InjectModel("User") private readonly UserModel: Model<UserDocument>,
-        @InjectModel("Role") private readonly RoleModel: Model<StaffRoleDocument>,
-        @InjectModel("Permission") private readonly PermissionModel: Model<StaffPermissionDocument>,
+        @InjectModel("Brand") private readonly BrandModel: Model<BrandDocument>,
+        @InjectModel("Staff") private readonly StaffModel: Model<StaffDocument>,
     ) {}
 
     @Get("info")
@@ -28,11 +30,23 @@ export class UserController {
         // TODO
         // get the list of brands that user own + list of brands that user has access to them with their permissions
 
-        // get brands that user owns
+        const userBrands = {};
 
-        // const permissions = new Set();
-        // if (!!user.permissions) user.permissions.forEach((permission) => permissions.add(permission));
-        // if (!!user.Role) user.Role.permissions.forEach((permission) => permissions.add(permission));
+        // get brands that user owns
+        const brands = await this.BrandModel.find({ creator: user.id }).select("logo name").exec();
+        for (let i = 0; i < brands.length; i++) {
+            const brand = brands[i];
+            // TODO : get all possible permissions from seeder and inject into permissions array
+            userBrands[brand.id] = { logo: brand.logo, name: brand.name, role: "owner", permissions: [] };
+        }
+
+        // from staff document get brands that user has with permissions
+        const staff = await this.StaffModel.find({ user: user.id }).select("brand brandPermissions").populate("brand", "_id logo name").exec();
+        for (let i = 0; i < staff.length; i++) {
+            const member = staff[i];
+            // TODO : get list of roles from branches in staffModel
+            // userBrands[member.brand._id.toString()] = { logo: member.brand.logo, name: member.brand.name, role: "", permissions: member.brandPermissions };
+        }
 
         return res.json({
             avatar: user.avatar,
@@ -40,7 +54,7 @@ export class UserController {
             family: user.family,
             email: user.email,
             mobile: user.mobile,
-            role: user.role,
+            brands: userBrands,
         });
     }
 

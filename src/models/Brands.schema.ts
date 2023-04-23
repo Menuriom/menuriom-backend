@@ -1,4 +1,4 @@
-import { Document, Schema } from "mongoose";
+import { Document, Schema, Types } from "mongoose";
 import { Translation, TranslationSchema } from "src/interfaces/Translation.interface";
 import { BrandType } from "./BrandTypes.schema";
 import { User } from "./Users.schema";
@@ -25,13 +25,13 @@ export const BrandSchema = new Schema({
 });
 
 export interface Brand {
-    _id: Schema.Types.ObjectId;
+    _id: Types.ObjectId;
     logo?: string;
     name: string;
-    brandType: BrandType | Schema.Types.ObjectId;
+    brandType: BrandType | Types.ObjectId;
     slogan?: string;
     branchSize: number;
-    creator: User | Schema.Types.ObjectId;
+    creator: User | Types.ObjectId;
     socials: Social[];
     createdAt: Date;
     translation: Translation;

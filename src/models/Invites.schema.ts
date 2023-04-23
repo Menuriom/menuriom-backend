@@ -1,4 +1,4 @@
-import { Document, Schema } from "mongoose";
+import { Document, Schema, Types } from "mongoose";
 import { Branch } from "./Branches.schema";
 import { Brand } from "./Brands.schema";
 import { StaffRole } from "./StaffRoles.schema";
@@ -26,14 +26,14 @@ export const InviteSchema = new Schema({
 });
 
 export interface Invite {
-    _id: Schema.Types.ObjectId;
+    _id: Types.ObjectId;
     email?: string;
     mobile?: string;
-    brand: Brand | Schema.Types.ObjectId;
+    brand: Brand | Types.ObjectId;
     brandPermissions: string[];
     branches: {
-        branch: Branch | Schema.Types.ObjectId;
-        role: StaffRole | Schema.Types.ObjectId;
+        branch: Branch | Types.ObjectId;
+        role: StaffRole | Types.ObjectId;
     };
     status: "sent" | "rejected";
     createdAt: Date;

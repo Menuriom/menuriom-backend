@@ -9,6 +9,7 @@ import { UserController } from "src/controllers/brandPanel/user.controller";
 import { BrandController } from "src/controllers/brandPanel/brand.controller";
 import { AccountController } from "src/controllers/brandPanel/account.controller";
 import { FileService } from "src/services/file.service";
+import { StaffSchema } from "src/models/Staff.schema";
 
 @Module({
     imports: [
@@ -18,6 +19,7 @@ import { FileService } from "src/services/file.service";
             { name: "Permission", schema: StaffPermissionSchema },
             { name: "Brand", schema: BrandSchema },
             { name: "Branch", schema: BranchSchema },
+            { name: "Staff", schema: StaffSchema },
         ]),
     ],
     controllers: [AccountController, UserController, BrandController],

@@ -1,4 +1,4 @@
-import { Document, Schema } from "mongoose";
+import { Document, Schema, Types } from "mongoose";
 import { Translation, TranslationSchema } from "src/interfaces/Translation.interface";
 import { Menu } from "./Menus.schema";
 export type MenuItemDocument = MenuItem & Document;
@@ -30,8 +30,8 @@ export const MenuItemSchema = new Schema({
 });
 
 export interface MenuItem {
-    _id: Schema.Types.ObjectId;
-    menu: Menu | Schema.Types.ObjectId;
+    _id: Types.ObjectId;
+    menu: Menu | Types.ObjectId;
     category: string;
 
     images: string[];
