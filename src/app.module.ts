@@ -33,6 +33,9 @@ import { SessionSchema } from "./models/Sessions.schema";
 import { AcceptLanguageResolver, CookieResolver, I18nModule } from "nestjs-i18n";
 import * as path from "path";
 import { FilesController } from "./controllers/files.controller";
+import { AccountController } from "./controllers/account.controller";
+import { UserController } from "./controllers/user.controller";
+import { FileService } from "./services/file.service";
 
 @Module({
     imports: [
@@ -67,8 +70,8 @@ import { FilesController } from "./controllers/files.controller";
             { name: "Session", schema: SessionSchema },
         ]),
     ],
-    controllers: [AppController, FilesController],
-    providers: [AppService],
+    controllers: [AppController, AccountController, UserController, FilesController],
+    providers: [AppService, FileService],
 })
 export class AppModule implements NestModule {
     configure(consumer: MiddlewareConsumer) {
@@ -82,7 +85,7 @@ export class AppModule implements NestModule {
             { path: "admin/*", method: RequestMethod.ALL },
             { path: "user/*", method: RequestMethod.ALL },
             { path: "account/*", method: RequestMethod.ALL },
-            { path: "brand/*", method: RequestMethod.ALL },
+            { path: "brand-panel/*", method: RequestMethod.ALL },
         );
 
         consumer

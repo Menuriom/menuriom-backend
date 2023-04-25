@@ -17,10 +17,8 @@ export const BrandSchema = new Schema({
             link: { type: String, required: true },
         }),
     ],
-    createdAt: {
-        type: Date,
-        default: new Date(Date.now()),
-    },
+    createdAt: { type: Date, default: new Date(Date.now()) },
+    deletedAt: { type: Date },
     translation: TranslationSchema,
 });
 
@@ -34,6 +32,7 @@ export interface Brand {
     creator: User | Types.ObjectId;
     socials: Social[];
     createdAt: Date;
+    deletedAt?: Date;
     translation: Translation;
 }
 

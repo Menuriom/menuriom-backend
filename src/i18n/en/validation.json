@@ -58,5 +58,6 @@
     "IsString": "Must be a string",
     "IsNotEmpty": "This field is required",
     "IsNumber": "This field must be just a number",
-    "IsPhoneNumber": "Phone number is not valid"
+    "IsPhoneNumber": "Phone number is not valid",
+    "IsMongoId": "Must be a valid ID"
 }

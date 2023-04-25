@@ -5,9 +5,7 @@ import { StaffPermissionSchema } from "src/models/StaffPermissions.schema";
 import { UserSchema } from "src/models/Users.schema";
 import { BrandSchema } from "src/models/Brands.schema";
 import { BranchSchema } from "src/models/Branches.schema";
-import { UserController } from "src/controllers/brandPanel/user.controller";
 import { BrandController } from "src/controllers/brandPanel/brand.controller";
-import { AccountController } from "src/controllers/brandPanel/account.controller";
 import { FileService } from "src/services/file.service";
 import { StaffSchema } from "src/models/Staff.schema";
 
@@ -22,7 +20,7 @@ import { StaffSchema } from "src/models/Staff.schema";
             { name: "Staff", schema: StaffSchema },
         ]),
     ],
-    controllers: [AccountController, UserController, BrandController],
+    controllers: [BrandController],
     providers: [FileService],
     exports: [],
 })

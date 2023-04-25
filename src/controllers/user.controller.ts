@@ -27,9 +27,6 @@ export class UserController {
         const user = await this.UserModel.findOne({ _id: req.session.userID }).select("-_v -password -createdAt").exec();
         if (!user) throw NotFoundException;
 
-        // TODO
-        // get the list of brands that user own + list of brands that user has access to them with their permissions
-
         const userBrands = {};
 
         // get brands that user owns

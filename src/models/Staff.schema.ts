@@ -24,9 +24,9 @@ export interface Staff {
     user: User | Types.ObjectId;
     brand: Brand & Types.ObjectId;
     brandPermissions: string[];
-    branches: {
+    branches: Array<{
         branch: Branch | Types.ObjectId;
-        role: StaffRole | Types.ObjectId;
-    };
+        role: StaffRole & Types.ObjectId;
+    }>;
     createdAt: Date;
 }

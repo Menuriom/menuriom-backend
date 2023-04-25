@@ -1,4 +1,4 @@
-import { IsNotEmpty, Length, IsString, IsPhoneNumber } from "class-validator";
+import { IsNotEmpty, Length, IsString, IsPhoneNumber, IsMongoId } from "class-validator";
 import { i18nValidationMessage } from "nestjs-i18n";
 
 export class CreateNewBrandDto {
@@ -27,4 +27,11 @@ export class EditBrandDto {
     @IsString({ message: i18nValidationMessage("validation.user.family.IsString") })
     @IsNotEmpty({ message: i18nValidationMessage("validation.user.family.IsNotEmpty") })
     readonly family: string;
+}
+
+export class DeleteBrandDto {
+    @IsMongoId({ message: i18nValidationMessage("validation.IsMongoId") })
+    @IsString({ message: i18nValidationMessage("validation.IsString") })
+    @IsNotEmpty({ message: i18nValidationMessage("validation.IsNotEmpty") })
+    readonly id: string;
 }
