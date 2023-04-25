@@ -66,7 +66,9 @@ export class BrandController {
         @Body() input: CreateNewBrandDto,
         @Req() req: Request,
         @Res() res: Response,
-    ): Promise<void | Response> {}
+    ): Promise<void | Response> {
+        // check if user already has a brand then dont allow new brand creation
+    }
 
     @Put("/:id")
     @UseInterceptors(FileInterceptor("logo"))
@@ -75,14 +77,19 @@ export class BrandController {
     @Delete("/:id")
     async deleteSingleRecord(@Param() input: DeleteBrandDto, @Req() req: Request, @Res() res: Response): Promise<void | Response> {
         const brand = await this.BrandModel.findOne({ creator: req.session.userID, _id: input.id }).select("logo name slogan").exec();
+
+        // check if user authorize to delete this record - user must be owner of brand
         if (!brand) {
             throw new UnprocessableEntityException([
                 { property: "", errors: [I18nContext.current().t("userPanel.brand.no record was found, or you are not authorized to do this action")] },
             ]);
         }
 
-        // check if user authorize to delete this record - user must be owner of brand
         // mark the record as deleted
-        // cancel that brand's subscription
+        await this.BrandModel.updateOne({ creator: req.session.userID, _id: input.id }, { deletedAt: new Date(Date.now()) }).exec();
+
+        // TODO : cancel that brand's subscription
+
+        return res.end();
     }
 }
