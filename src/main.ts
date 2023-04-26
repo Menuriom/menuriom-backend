@@ -28,6 +28,8 @@ async function bootstrap() {
         }),
     );
 
+    // TODO : make a function or middleware or some sort of filter to pass all user inputs throw number filter to conver all arabic numbers to english
+
     // added cookie parser
     app.use(cookieParser());
 

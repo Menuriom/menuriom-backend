@@ -9,7 +9,7 @@ import { StaffRoleDocument } from "src/models/StaffRoles.schema";
 import { UserDocument } from "src/models/Users.schema";
 import { unlink } from "fs/promises";
 import { FilesInterceptor } from "@nestjs/platform-express";
-import { CompleteInfoDto, EditUserInfoDto } from "src/dto/userPanel/user.dto";
+import { CompleteInfoDto, EditUserInfoDto } from "src/dto/panel/user.dto";
 import { I18nContext } from "nestjs-i18n";
 import { BrandDocument } from "src/models/Brands.schema";
 import { StaffDocument } from "src/models/Staff.schema";
@@ -30,7 +30,9 @@ export class UserController {
         const userBrands = {};
 
         // get brands that user owns
-        const brands = await this.BrandModel.find({ creator: user.id }).select("logo name").exec();
+        const brands = await this.BrandModel.find({ creator: user.id, $or: [{ deletedAt: { $exists: false } }, { deletedAt: null }] })
+            .select("logo name")
+            .exec();
         for (let i = 0; i < brands.length; i++) {
             const brand = brands[i];
             // TODO : get all possible permissions from seeder and inject into permissions array
@@ -38,9 +40,14 @@ export class UserController {
         }
 
         // from staff document get brands that user has with permissions
-        const staff = await this.StaffModel.find({ user: user.id }).select("brand brandPermissions").populate("brand", "_id logo name").exec();
+        const staff = await this.StaffModel.find({ user: user.id })
+            .select("brand brandPermissions")
+            .populate("brand", "_id logo name slogan deletedAt")
+            .populate("branches.role", "name")
+            .exec();
         for (let i = 0; i < staff.length; i++) {
             const member = staff[i];
+            if (!!member.brand.deletedAt) continue;
             // TODO : get list of roles from branches in staffModel
             // userBrands[member.brand._id.toString()] = { logo: member.brand.logo, name: member.brand.name, role: "", permissions: member.brandPermissions };
         }
@@ -89,7 +96,7 @@ export class UserController {
     @Post("edit-info")
     async editUserInfo(@Body() input: EditUserInfoDto, @Req() req: Request, @Res() res: Response): Promise<void | Response> {
         const user = await this.UserModel.findOne({ _id: req.session.userID }).exec();
-        if (!user) throw new NotFoundException([{ property: "user", errors: [I18nContext.current().t("userPanel.user.user not found")] }]);
+        if (!user) throw new NotFoundException([{ property: "user", errors: [I18nContext.current().t("panel.user.user not found")] }]);
 
         await this.UserModel.updateOne({ _id: req.session.userID }, { name: input.name, family: input.family });
 
@@ -100,7 +107,7 @@ export class UserController {
     @UseInterceptors(FilesInterceptor("files"))
     async editUserImage(@UploadedFiles() files: Array<Express.Multer.File>, @Req() req: Request, @Res() res: Response): Promise<void | Response> {
         const user = await this.UserModel.findOne({ _id: req.session.userID }).exec();
-        if (!user) throw new NotFoundException([{ property: "user", errors: [I18nContext.current().t("userPanel.user.user not found")] }]);
+        if (!user) throw new NotFoundException([{ property: "user", errors: [I18nContext.current().t("panel.user.user not found")] }]);
 
         if (!!files.length) {
             const ogName = files[0].originalname;
@@ -109,14 +116,14 @@ export class UserController {
             // check file size
             if (files[0].size > 1_048_576) {
                 throw new UnprocessableEntityException([
-                    { property: "image", errors: [I18nContext.current().t("userPanel.user.size of avatar pic must be less than 1M")] },
+                    { property: "image", errors: [I18nContext.current().t("panel.user.size of avatar pic must be less than 1M")] },
                 ]);
             }
 
             // check file format
             const isMimeOk = extension == "png" || extension == "jpeg" || extension == "jpg";
             if (!isMimeOk)
-                throw new UnprocessableEntityException([{ property: "image", errors: [I18nContext.current().t("userPanel.user.image format is not valid")] }]);
+                throw new UnprocessableEntityException([{ property: "image", errors: [I18nContext.current().t("panel.user.image format is not valid")] }]);
 
             // delete the old image from system
             if (!!user.avatar) await unlink(user.avatar.replace("/file/", "storage/")).catch((e) => {});
@@ -140,7 +147,7 @@ export class UserController {
     @Delete("delete-avatar-image")
     async deleteUserImage(@Req() req: Request, @Res() res: Response): Promise<void | Response> {
         const user = await this.UserModel.findOne({ _id: req.session.userID }).select("-_v -password -createdAt").exec();
-        if (!user) throw new NotFoundException([{ property: "user", errors: [I18nContext.current().t("userPanel.user.user not found")] }]);
+        if (!user) throw new NotFoundException([{ property: "user", errors: [I18nContext.current().t("panel.user.user not found")] }]);
 
         // delete the old image from system
         if (!!user.avatar) await unlink(user.avatar.replace("/file/", "storage/")).catch((e) => {});

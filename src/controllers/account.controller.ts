@@ -10,7 +10,7 @@ import { BranchDocument } from "src/models/Branches.schema";
 import { unlink } from "fs/promises";
 import { FileService } from "src/services/file.service";
 import { FileInterceptor } from "@nestjs/platform-express";
-import { SetupBrandDto } from "src/dto/userPanel/account.dto";
+import { SetupBrandDto } from "src/dto/panel/account.dto";
 import { I18nContext } from "nestjs-i18n";
 
 @Controller("account")
@@ -27,7 +27,7 @@ export class AccountController {
     @UseInterceptors(FileInterceptor("logo"))
     async setupBrand(@UploadedFile() logo: Express.Multer.File, @Body() input: SetupBrandDto, @Req() req: Request, @Res() res: Response): Promise<void | Response> {
         if (!logo) {
-            throw new UnprocessableEntityException([{ property: "logo", errors: [I18nContext.current().t("userPanel.brand.Please select your brand logo")] }]);
+            throw new UnprocessableEntityException([{ property: "logo", errors: [I18nContext.current().t("panel.brand.Please select your brand logo")] }]);
         }
         const logoLink = await this.fileService.saveUploadedImages([logo], "logo", 1_048_576, ["png", "jpeg", "jpg", "webp"], 256, "public", "/logos");
 
@@ -44,13 +44,14 @@ export class AccountController {
         // creating user's first branch
         await this.BranchModel.create({
             brand: newBrand.id,
-            name: I18nContext.current().t("userPanel.brand.Main Branch"),
+            name: I18nContext.current().t("panel.brand.Main Branch"),
             address: input.address,
             telephoneNumbers: input.tel,
             createdAt: new Date(Date.now()),
         });
 
         return res.json({
+            newId: newBrand.id,
             brand: { [newBrand.id]: { logo: newBrand.logo, name: newBrand.name, role: "owner", permissions: [] } },
         });
     }

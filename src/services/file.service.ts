@@ -37,7 +37,7 @@ export class FileService {
                     {
                         index: i,
                         property: property,
-                        errors: [I18nContext.current().t("userPanel.formatError")],
+                        errors: [I18nContext.current().t("panel.formatError")],
                     },
                 ]);
             }

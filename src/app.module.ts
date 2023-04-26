@@ -9,7 +9,7 @@ import { AuthCheckMiddleware, GuestMiddleware } from "./middlewares/auth.middlew
 import { AppService } from "./app.service";
 // modules
 import { AuthModule } from "./modules/auth.module";
-import { BrandPanelModule } from "./modules/brandPanel.module";
+import { BrandPanelModule } from "./modules/panel.module";
 // schemas
 import { AnalyticSchema } from "./models/Analytics.schema";
 import { BranchSchema } from "./models/Branches.schema";
@@ -85,7 +85,7 @@ export class AppModule implements NestModule {
             { path: "admin/*", method: RequestMethod.ALL },
             { path: "user/*", method: RequestMethod.ALL },
             { path: "account/*", method: RequestMethod.ALL },
-            { path: "brand-panel/*", method: RequestMethod.ALL },
+            { path: "panel/*", method: RequestMethod.ALL },
         );
 
         consumer

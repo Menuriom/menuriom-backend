@@ -9,10 +9,10 @@ import { StaffDocument } from "src/models/Staff.schema";
 import { FileService } from "src/services/file.service";
 import { unlink } from "fs/promises";
 import { FileInterceptor } from "@nestjs/platform-express";
-import { CreateNewBrandDto, DeleteBrandDto, EditBrandDto } from "src/dto/userPanel/brand.dto";
+import { CreateNewBrandDto, DeleteBrandDto, EditBrandDto } from "src/dto/panel/brand.dto";
 import { I18nContext } from "nestjs-i18n";
 
-@Controller("brand-panel/brands")
+@Controller("panel/brands")
 export class BrandController {
     constructor(
         // ...
@@ -37,11 +37,12 @@ export class BrandController {
         // from staff document get brands that user is part of
         const staff = await this.StaffModel.find({ user: req.session.userID })
             .select("brand")
-            .populate("brand", "_id logo name slogan")
+            .populate("brand", "_id logo name slogan deletedAt")
             .populate("branches.role", "name")
             .exec();
         for (let i = 0; i < staff.length; i++) {
             const member = staff[i];
+            if (!!member.brand.deletedAt) continue;
             // TODO : after we did branches api we need to get thi roles list
             // const roles = member.branches.map((branch) => branch.role.name);
             // userBrands[member.brand._id.toString()] = { logo: member.brand.logo, name: member.brand.name, roles };
@@ -81,15 +82,28 @@ export class BrandController {
         // check if user authorize to delete this record - user must be owner of brand
         if (!brand) {
             throw new UnprocessableEntityException([
-                { property: "", errors: [I18nContext.current().t("userPanel.brand.no record was found, or you are not authorized to do this action")] },
+                { property: "", errors: [I18nContext.current().t("panel.brand.no record was found, or you are not authorized to do this action")] },
             ]);
         }
 
         // mark the record as deleted
         await this.BrandModel.updateOne({ creator: req.session.userID, _id: input.id }, { deletedAt: new Date(Date.now()) }).exec();
 
+        // TODO : make scheduler for cleaning all the brands data (images - menus - branches - staff - ...)
         // TODO : cancel that brand's subscription
 
+        return res.end();
+    }
+
+    @Delete("/leave/:id")
+    async leaveFromBrand(@Param() input: DeleteBrandDto, @Req() req: Request, @Res() res: Response): Promise<void | Response> {
+        const staff = await this.StaffModel.findOne({ user: req.session.userID, brand: input.id }).exec();
+        if (!staff) {
+            throw new UnprocessableEntityException([
+                { property: "", errors: [I18nContext.current().t("panel.brand.no record was found, or you are not authorized to do this action")] },
+            ]);
+        }
+        await this.StaffModel.deleteOne({ user: req.session.userID, brand: input.id }).exec();
         return res.end();
     }
 }
