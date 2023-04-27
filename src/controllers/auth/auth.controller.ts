@@ -1,4 +1,4 @@
-import { Body, Controller, ForbiddenException, Post, Req, Res, UnauthorizedException, UnprocessableEntityException } from "@nestjs/common";
+import { Body, Controller, ForbiddenException, Post, Req, Res, UnauthorizedException, UnprocessableEntityException, Get } from "@nestjs/common";
 import { Response } from "express";
 import { readFile } from "fs/promises";
 import { Request } from "src/interfaces/Request.interface";
@@ -8,6 +8,7 @@ import { VerifyDto } from "src/dto/auth/verify.dto";
 import { RegisterDto } from "src/dto/auth/register.dto";
 import { InjectModel } from "@nestjs/mongoose";
 import { Model } from "mongoose";
+import { I18nContext } from "nestjs-i18n";
 import { UserDocument } from "src/models/Users.schema";
 import { SessionDocument } from "src/models/Sessions.schema";
 import Email from "src/notifications/channels/Email";
@@ -35,15 +36,19 @@ export class AuthController {
         }
 
         if (field === "mobile" && process.env.SMS_SYSTEM_STATE === "inactive") {
-            throw new UnprocessableEntityException([{ property: "username", errors: ["sms system in not active right now, sorry!"] }]);
+            throw new UnprocessableEntityException([{ property: "username", errors: [I18nContext.current().t("auth.sms system is not available right now!")] }]);
         }
 
         const user = await this.UserModel.findOne({ [field]: username }).exec();
         if (user) {
-            if (user.status === "banned") throw new UnprocessableEntityException([{ property: "username", errors: ["امکان ورود برای شما وجود ندارد"] }]);
+            if (user.status === "banned") {
+                throw new UnprocessableEntityException([
+                    { property: "username", errors: [I18nContext.current().t("auth.you are banned from system and can't login")] },
+                ]);
+            }
             // check the time of last email or sms sent
             if (!!user.verficationCodeSentAt) {
-                let duration = (new Date(Date.now()).getTime() - user.verficationCodeSentAt.getTime()) / 1000;
+                const duration = (new Date(Date.now()).getTime() - user.verficationCodeSentAt.getTime()) / 1000;
                 if (duration < this.verficationCodeExpireTime) return res.json({ expireIn: this.verficationCodeExpireTime - duration });
             }
         }
@@ -93,17 +98,20 @@ export class AuthController {
         }
 
         if (field === "mobile" && process.env.SMS_SYSTEM_STATE === "inactive") {
-            throw new UnprocessableEntityException([{ property: "username", errors: ["sms system in not active right now, sorry!"] }]);
+            throw new UnprocessableEntityException([{ property: "username", errors: [I18nContext.current().t("auth.sms system is not available right now!")] }]);
         }
 
         const user = await this.UserModel.findOne({ [field]: username, [verificationCodeField]: inputs.code }).exec();
-        if (!user) throw new UnprocessableEntityException([{ property: "code", errors: ["کد وارد شده نادرست است"] }]);
-        if (user.status === "banned") throw new UnprocessableEntityException([{ property: "code", errors: ["امکان ورود برای شما وجود ندارد"] }]);
+        if (!user)
+            throw new UnprocessableEntityException([{ property: "code", errors: [I18nContext.current().t("auth.entered verification code is not correct")] }]);
+        if (user.status === "banned") {
+            throw new UnprocessableEntityException([{ property: "code", errors: [I18nContext.current().t("auth.you are banned from system and can't login")] }]);
+        }
 
         // check the time with verficationCodeSentAt field
-        let duration = (new Date(Date.now()).getTime() - user.verficationCodeSentAt.getTime()) / 1000;
+        const duration = (new Date(Date.now()).getTime() - user.verficationCodeSentAt.getTime()) / 1000;
         if (duration > this.verficationCodeExpireTime) {
-            throw new UnprocessableEntityException([{ property: "code", errors: ["کد وارد شده منقضی شده، لطفا دوباره تلاش کنید"] }]);
+            throw new UnprocessableEntityException([{ property: "code", errors: [I18nContext.current().t("auth.entered verification code has expired")] }]);
         }
 
         await this.UserModel.updateOne({ [field]: username, [verificationCodeField]: inputs.code }, { [verifiedAtField]: new Date(Date.now()) }).exec();
@@ -133,14 +141,23 @@ export class AuthController {
         }
 
         if (field === "mobile" && process.env.SMS_SYSTEM_STATE === "inactive") {
-            throw new UnprocessableEntityException([{ property: "", errors: ["sms system in not active right now, sorry!"] }]);
+            throw new UnprocessableEntityException([{ property: "", errors: [I18nContext.current().t("auth.sms system is not available right now!")] }]);
         }
 
         const user = await this.UserModel.findOne({ [field]: username, [verificationCodeField]: inputs.code }).exec();
-        if (!user) throw new UnauthorizedException([{ property: "", errors: ["کاربر پیدا نشد"] }]);
-        if (user.status === "banned") throw new UnprocessableEntityException([{ property: "", errors: ["امکان ورود برای شما وجود ندارد"] }]);
-        if (!user[verifiedAtField]) throw new UnprocessableEntityException([{ property: "", errors: ["لطفا ابتدا حساب خود را تایید کنید"] }]);
+        if (!user) throw new UnauthorizedException([{ property: "", errors: [I18nContext.current().t("auth.first, please verify your email or phone number")] }]);
+        if (user.status === "banned")
+            throw new UnprocessableEntityException([{ property: "", errors: [I18nContext.current().t("auth.you are banned from system and can't login")] }]);
+        if (!user[verifiedAtField]) {
+            throw new UnprocessableEntityException([{ property: "", errors: [I18nContext.current().t("auth.first, please verify your email or phone number")] }]);
+        }
 
+        const otherUser = await this.UserModel.findOne({ mobile: inputs.mobile }).exec();
+        if (otherUser && !otherUser.mobileVerifiedAt && otherUser.status != "banned") {
+            throw new UnprocessableEntityException([
+                { property: "", errors: [I18nContext.current().t("auth.phone number is already in use in our system! please enter another phone number")] },
+            ]);
+        }
         // update user's info and set status to active
         await this.UserModel.updateOne({ id: user.id }, { name: inputs.name, family: inputs.family, mobile: inputs.mobile, status: "active" }).exec();
 
@@ -157,18 +174,24 @@ export class AuthController {
         if (!req.body.profile) throw new ForbiddenException();
         const profile = req.body.profile;
 
-        let user = await this.UserModel.findOne({ email: profile._json.email }).exec();
+        if (!profile.email_verified) {
+            throw new ForbiddenException([{ property: "", errors: [I18nContext.current().t("auth.your email account is not verified by google")] }]);
+        }
+
+        let user = await this.UserModel.findOne({ email: profile.email }).exec();
         if (user) {
-            if (user.status !== "active") throw new ForbiddenException([{ property: "", errors: ["امکان ورود برای شما وجود ندارد"] }]);
-            if (!user.googleId) await this.UserModel.updateOne({ email: profile._json.email }, { googleID: profile.id, status: "active" });
+            if (user.status !== "active") {
+                throw new ForbiddenException([{ property: "", errors: [I18nContext.current().t("auth.you are banned from system and can't login")] }]);
+            }
+            if (!user.googleId) await this.UserModel.updateOne({ email: profile.email }, { googleId: profile.sub, status: "active" }).exec();
         } else {
             user = await this.UserModel.create({
-                googleId: profile.id,
-                avatar: profile._json.picture,
-                email: profile._json.email,
+                googleId: profile.sub,
+                avatar: profile.picture,
+                email: profile.email,
                 emailVerifiedAt: new Date(Date.now()),
-                name: profile._json.given_name || profile.name.givenName,
-                family: profile._json.family_name || profile.name.familyName,
+                name: profile.given_name,
+                family: profile.family_name,
                 role: "user",
                 status: "active",
                 createdAt: new Date(Date.now()),
@@ -235,7 +258,7 @@ export class AuthController {
         const sessionID = req.session.sessionID;
         const userID = req.session.userID;
         await this.SessionModel.updateOne({ _id: sessionID, user: userID, status: "active" }, { status: "revoked" }).exec();
-        
+
         return res.end();
     }
 

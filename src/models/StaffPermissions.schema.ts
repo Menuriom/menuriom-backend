@@ -1,8 +1,8 @@
-import { Document, Schema } from "mongoose";
+import { Document, Schema, Types } from "mongoose";
 import { Translation, TranslationSchema } from "src/interfaces/Translation.interface";
-export type UserPermissionDocument = UserPermission & Document;
+export type StaffPermissionDocument = StaffPermission & Document;
 
-export const UserPermissionSchema = new Schema({
+export const StaffPermissionSchema = new Schema({
     _id: { type: String },
     label: { type: String, required: true },
     group: { type: String, required: true },
@@ -14,8 +14,8 @@ export const UserPermissionSchema = new Schema({
     translation: TranslationSchema,
 });
 
-export interface UserPermission {
-    _id: Schema.Types.ObjectId;
+export interface StaffPermission {
+    _id: string;
     label: string;
     group: string;
     groupLabel: string;

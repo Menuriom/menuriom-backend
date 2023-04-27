@@ -3,22 +3,23 @@ import { NotFoundException, UnprocessableEntityException } from "@nestjs/common"
 import { Response } from "express";
 import { Request } from "src/interfaces/Request.interface";
 import { InjectModel } from "@nestjs/mongoose";
-import { Model } from "mongoose";
-import { UserPermissionDocument } from "src/models/UserPermissions.schema";
-import { UserPermissionGroupDocument } from "src/models/UserPermissionGroups.schema";
+import { Model, Types } from "mongoose";
+import { StaffPermissionDocument } from "src/models/StaffPermissions.schema";
+import { StaffRoleDocument } from "src/models/StaffRoles.schema";
 import { UserDocument } from "src/models/Users.schema";
 import { unlink } from "fs/promises";
 import { FilesInterceptor } from "@nestjs/platform-express";
-import { EditUserInfoDto } from "src/dto/userPanel/user.dto";
+import { CompleteInfoDto, EditUserInfoDto } from "src/dto/panel/user.dto";
+import { I18nContext } from "nestjs-i18n";
+import { BrandDocument } from "src/models/Brands.schema";
+import { StaffDocument } from "src/models/Staff.schema";
 
 @Controller("user")
 export class UserController {
-    private verficationCodeExpireTime = 120; // 2 minutes
-
     constructor(
         @InjectModel("User") private readonly UserModel: Model<UserDocument>,
-        @InjectModel("PermissionGroup") private readonly PermissionGroupModel: Model<UserPermissionGroupDocument>,
-        @InjectModel("Permission") private readonly PermissionModel: Model<UserPermissionDocument>,
+        @InjectModel("Brand") private readonly BrandModel: Model<BrandDocument>,
+        @InjectModel("Staff") private readonly StaffModel: Model<StaffDocument>,
     ) {}
 
     @Get("info")
@@ -26,10 +27,30 @@ export class UserController {
         const user = await this.UserModel.findOne({ _id: req.session.userID }).select("-_v -password -createdAt").exec();
         if (!user) throw NotFoundException;
 
-        // TODO
-        // const permissions = new Set();
-        // if (!!user.permissions) user.permissions.forEach((permission) => permissions.add(permission));
-        // if (!!user.permissionGroup) user.permissionGroup.permissions.forEach((permission) => permissions.add(permission));
+        const userBrands = {};
+
+        // get brands that user owns
+        const brands = await this.BrandModel.find({ creator: user.id, $or: [{ deletedAt: { $exists: false } }, { deletedAt: null }] })
+            .select("logo name")
+            .exec();
+        for (let i = 0; i < brands.length; i++) {
+            const brand = brands[i];
+            // TODO : get all possible permissions from seeder and inject into permissions array
+            userBrands[brand.id] = { logo: brand.logo, name: brand.name, role: "owner", permissions: [] };
+        }
+
+        // from staff document get brands that user has with permissions
+        const staff = await this.StaffModel.find({ user: user.id })
+            .select("brand brandPermissions")
+            .populate("brand", "_id logo name slogan deletedAt")
+            .populate("branches.role", "name")
+            .exec();
+        for (let i = 0; i < staff.length; i++) {
+            const member = staff[i];
+            if (!!member.brand.deletedAt) continue;
+            // TODO : get list of roles from branches in staffModel
+            // userBrands[member.brand._id.toString()] = { logo: member.brand.logo, name: member.brand.name, role: "", permissions: member.brandPermissions };
+        }
 
         return res.json({
             avatar: user.avatar,
@@ -37,8 +58,7 @@ export class UserController {
             family: user.family,
             email: user.email,
             mobile: user.mobile,
-            role: user.role,
-            permissions: [],
+            brands: userBrands,
         });
     }
 
@@ -53,10 +73,30 @@ export class UserController {
         });
     }
 
+    @Post("complete-info")
+    async completeInfo(@Body() input: CompleteInfoDto, @Req() req: Request, @Res() res: Response): Promise<void | Response> {
+        const user = await this.UserModel.findOne({ _id: req.session.userID }).select("-_v -password -createdAt").exec();
+        if (!user) throw NotFoundException;
+
+        const otherUser = await this.UserModel.findOne({ mobile: input.mobile }).exec();
+        if (otherUser && !otherUser.mobileVerifiedAt && otherUser.status != "banned") {
+            throw new UnprocessableEntityException([
+                {
+                    property: "mobile",
+                    errors: [I18nContext.current().t("auth.phone number is already in use in our system! please enter another phone number")],
+                },
+            ]);
+        }
+
+        await this.UserModel.updateOne({ id: user.id }, { name: input.name, family: input.family, mobile: input.mobile }).exec();
+
+        return res.json({ ...input });
+    }
+
     @Post("edit-info")
     async editUserInfo(@Body() input: EditUserInfoDto, @Req() req: Request, @Res() res: Response): Promise<void | Response> {
         const user = await this.UserModel.findOne({ _id: req.session.userID }).exec();
-        if (!user) throw new NotFoundException([{ property: "user", errors: ["کاربر پیدا نشد"] }]);
+        if (!user) throw new NotFoundException([{ property: "user", errors: [I18nContext.current().t("panel.user.user not found")] }]);
 
         await this.UserModel.updateOne({ _id: req.session.userID }, { name: input.name, family: input.family });
 
@@ -67,18 +107,23 @@ export class UserController {
     @UseInterceptors(FilesInterceptor("files"))
     async editUserImage(@UploadedFiles() files: Array<Express.Multer.File>, @Req() req: Request, @Res() res: Response): Promise<void | Response> {
         const user = await this.UserModel.findOne({ _id: req.session.userID }).exec();
-        if (!user) throw new NotFoundException([{ property: "user", errors: ["کاربر پیدا نشد"] }]);
+        if (!user) throw new NotFoundException([{ property: "user", errors: [I18nContext.current().t("panel.user.user not found")] }]);
 
         if (!!files.length) {
             const ogName = files[0].originalname;
             const extension = ogName.slice(((ogName.lastIndexOf(".") - 1) >>> 0) + 2);
 
             // check file size
-            if (files[0].size > 2097152) throw new UnprocessableEntityException([{ property: "image", errors: ["حجم فایل باید کمتر از 2Mb باشد"] }]);
+            if (files[0].size > 1_048_576) {
+                throw new UnprocessableEntityException([
+                    { property: "image", errors: [I18nContext.current().t("panel.user.size of avatar pic must be less than 1M")] },
+                ]);
+            }
 
             // check file format
-            let isMimeOk = extension == "png" || extension == "gif" || extension == "jpeg" || extension == "jpg";
-            if (!isMimeOk) throw new UnprocessableEntityException([{ property: "image", errors: ["فرمت فایل معتبر نیست"] }]);
+            const isMimeOk = extension == "png" || extension == "jpeg" || extension == "jpg";
+            if (!isMimeOk)
+                throw new UnprocessableEntityException([{ property: "image", errors: [I18nContext.current().t("panel.user.image format is not valid")] }]);
 
             // delete the old image from system
             if (!!user.avatar) await unlink(user.avatar.replace("/file/", "storage/")).catch((e) => {});
@@ -102,7 +147,7 @@ export class UserController {
     @Delete("delete-avatar-image")
     async deleteUserImage(@Req() req: Request, @Res() res: Response): Promise<void | Response> {
         const user = await this.UserModel.findOne({ _id: req.session.userID }).select("-_v -password -createdAt").exec();
-        if (!user) throw new NotFoundException([{ property: "user", errors: ["کاربر پیدا نشد"] }]);
+        if (!user) throw new NotFoundException([{ property: "user", errors: [I18nContext.current().t("panel.user.user not found")] }]);
 
         // delete the old image from system
         if (!!user.avatar) await unlink(user.avatar.replace("/file/", "storage/")).catch((e) => {});

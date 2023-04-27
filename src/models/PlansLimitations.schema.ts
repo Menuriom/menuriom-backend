@@ -1,4 +1,4 @@
-import { Document, Schema } from "mongoose";
+import { Document, Schema, Types } from "mongoose";
 import { Translation, TranslationSchema } from "src/interfaces/Translation.interface";
 export type PlanLimitationDocument = PlanLimitation & Document;
 
@@ -13,7 +13,7 @@ export const PlanLimitationSchema = new Schema({
 });
 
 export interface PlanLimitation {
-    _id: Schema.Types.ObjectId;
+    _id: Types.ObjectId;
     name: string;
     description: string;
     createdAt: Date;

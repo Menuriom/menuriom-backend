@@ -76,14 +76,14 @@ export class AuthService {
     //     // get the user
     //     const user = await this.UserModel.findOne({ _id: req.user["payload"].user_id })
     //         .select("-_v -password -createdAt")
-    //         .populate("permissionGroup", "-_id name permissions")
+    //         .populate("Role", "-_id name permissions")
     //         .exec();
     //     if (!user) return false;
 
-    //     // list the user's permissions base on both permissionGroup and permissions
+    //     // list the user's permissions base on both Role and permissions
     //     const userPermissionsSet = new Set();
     //     if (!!user.permissions) user.permissions.forEach((permission) => userPermissionsSet.add(permission));
-    //     if (!!user.permissionGroup) user.permissionGroup.permissions.forEach((permission) => userPermissionsSet.add(permission));
+    //     if (!!user.Role) user.Role.permissions.forEach((permission) => userPermissionsSet.add(permission));
     //     const userPermissions = [...userPermissionsSet];
 
     //     // then check the requested permission list agains it

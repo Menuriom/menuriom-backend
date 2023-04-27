@@ -1,4 +1,4 @@
-import { Document, Schema } from "mongoose";
+import { Document, Schema, Types } from "mongoose";
 import { Translation, TranslationSchema } from "src/interfaces/Translation.interface";
 import { SubItem } from "./MenuItems.schema";
 import { Menu } from "./Menus.schema";
@@ -37,9 +37,9 @@ export const OrderSchema = new Schema({
 });
 
 export interface Order {
-    _id: Schema.Types.ObjectId;
+    _id: Types.ObjectId;
     orderNumber: string;
-    table: Table | Schema.Types.ObjectId;
+    table: Table | Types.ObjectId;
     list: List;
     date: Date;
     status: "newOrder" | "preparing" | "delivered" | "canceled";
@@ -48,7 +48,7 @@ export interface Order {
 }
 
 export interface List {
-    menu: Menu | Schema.Types.ObjectId;
+    menu: Menu | Types.ObjectId;
     name: string;
     description: string;
     price: number;

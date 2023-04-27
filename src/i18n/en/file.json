@@ -1,0 +1,4 @@
+{
+    "sizeError": "Image size must be less than {size}MB",
+    "formatError": "Image format is not supported"
+}

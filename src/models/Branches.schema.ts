@@ -1,4 +1,4 @@
-import { Document, Schema } from "mongoose";
+import { Document, Schema, Types } from "mongoose";
 import { Translation, TranslationSchema } from "src/interfaces/Translation.interface";
 import { Brand } from "./Brands.schema";
 export type BranchDocument = Branch & Document;
@@ -7,7 +7,7 @@ export const BranchSchema = new Schema({
     brand: { type: Schema.Types.ObjectId, ref: "Brand", required: true },
     name: { type: String, required: true },
     address: { type: String, required: true },
-    telephoneNumber: { type: String },
+    telephoneNumbers: [{ type: String }],
     postalCode: { type: String },
     gallery: [{ type: String }],
     createdAt: {
@@ -18,13 +18,13 @@ export const BranchSchema = new Schema({
 });
 
 export interface Branch {
-    _id: Schema.Types.ObjectId;
-    brand: Brand | Schema.Types.ObjectId;
+    _id: Types.ObjectId;
+    brand: Brand | Types.ObjectId;
     name: string;
     address: string;
-    telephoneNumber?: string;
+    telephoneNumbers?: string[];
     postalCode?: string;
-    gallery: string[];
+    gallery?: string[];
     createdAt: Date;
     translation: Translation;
 }

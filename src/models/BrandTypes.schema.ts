@@ -1,4 +1,4 @@
-import { Document, Schema } from "mongoose";
+import { Document, Schema, Types } from "mongoose";
 import { Translation, TranslationSchema } from "src/interfaces/Translation.interface";
 export type BrandTypeDocument = BrandType & Document;
 
@@ -12,7 +12,7 @@ export const BrandTypeSchema = new Schema({
 });
 
 export interface BrandType {
-    _id: Schema.Types.ObjectId;
+    _id: Types.ObjectId;
     name: string;
     createdAt: Date;
     translation: Translation;

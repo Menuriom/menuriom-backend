@@ -9,14 +9,14 @@ import { AuthCheckMiddleware, GuestMiddleware } from "./middlewares/auth.middlew
 import { AppService } from "./app.service";
 // modules
 import { AuthModule } from "./modules/auth.module";
-import { UserPanelModule } from "./modules/userPanel.module";
+import { BrandPanelModule } from "./modules/panel.module";
 // schemas
 import { AnalyticSchema } from "./models/Analytics.schema";
 import { BranchSchema } from "./models/Branches.schema";
 import { BrandsPlanSchema } from "./models/BrandsPlans.schema";
 import { BrandSchema } from "./models/Brands.schema";
 import { BrandTypeSchema } from "./models/BrandTypes.schema";
-import { DefaultUserPermissionGroupSchema } from "./models/DefaultUserPermissionGroups.schema";
+import { StaffRoleDefaultSchema } from "./models/StaffRoleDefaults.schema";
 import { InvoicePaymentSchema } from "./models/InvoicePayments.schema";
 import { MenuItemSchema } from "./models/MenuItems.schema";
 import { MenuSchema } from "./models/Menus.schema";
@@ -25,16 +25,27 @@ import { PlanLimitationSchema } from "./models/PlansLimitations.schema";
 import { PlanSchema } from "./models/Plans.schema";
 import { QrCodeSchema } from "./models/QrCodes.schema";
 import { TableSchema } from "./models/Tables.schema";
-import { UserBranchPermissionSchema } from "./models/UserBranchPermissions.schema";
-import { UserPermissionGroupSchema } from "./models/UserPermissionGroups.schema";
-import { UserPermissionSchema } from "./models/UserPermissions.schema";
+import { StaffSchema } from "./models/Staff.schema";
+import { StaffRoleSchema } from "./models/StaffRoles.schema";
+import { StaffPermissionSchema } from "./models/StaffPermissions.schema";
 import { UserSchema } from "./models/Users.schema";
 import { SessionSchema } from "./models/Sessions.schema";
+import { AcceptLanguageResolver, CookieResolver, I18nModule } from "nestjs-i18n";
+import * as path from "path";
+import { FilesController } from "./controllers/files.controller";
+import { AccountController } from "./controllers/account.controller";
+import { UserController } from "./controllers/user.controller";
+import { FileService } from "./services/file.service";
 
 @Module({
     imports: [
         AuthModule,
-        UserPanelModule,
+        BrandPanelModule,
+        I18nModule.forRoot({
+            fallbackLanguage: "fa",
+            loaderOptions: { path: path.join(__dirname, "/i18n/"), watch: true, includeSubfolders: true },
+            resolvers: [new CookieResolver(["lang"]), AcceptLanguageResolver],
+        }),
         ConfigModule.forRoot(),
         MongooseModule.forRoot(process.env.MONGO_URL, { dbName: process.env.MONGO_DB }),
         MongooseModule.forFeature([
@@ -43,7 +54,7 @@ import { SessionSchema } from "./models/Sessions.schema";
             { name: "BrandPlan", schema: BrandsPlanSchema },
             { name: "Brand", schema: BrandSchema },
             { name: "BrandType", schema: BrandTypeSchema },
-            { name: "DefaultUserPermissionGroup", schema: DefaultUserPermissionGroupSchema },
+            { name: "StaffRoleDefault", schema: StaffRoleDefaultSchema },
             { name: "InvoicePayment", schema: InvoicePaymentSchema },
             { name: "MenuesItem", schema: MenuItemSchema },
             { name: "Menue", schema: MenuSchema },
@@ -52,15 +63,15 @@ import { SessionSchema } from "./models/Sessions.schema";
             { name: "Plan", schema: PlanSchema },
             { name: "QrCode", schema: QrCodeSchema },
             { name: "Table", schema: TableSchema },
-            { name: "UserBranchPermission", schema: UserBranchPermissionSchema },
-            { name: "UserPermissionGroup", schema: UserPermissionGroupSchema },
-            { name: "UserPermission", schema: UserPermissionSchema },
+            { name: "Staff", schema: StaffSchema },
+            { name: "StaffRole", schema: StaffRoleSchema },
+            { name: "StaffPermission", schema: StaffPermissionSchema },
             { name: "User", schema: UserSchema },
             { name: "Session", schema: SessionSchema },
         ]),
     ],
-    controllers: [AppController],
-    providers: [AppService],
+    controllers: [AppController, AccountController, UserController, FilesController],
+    providers: [AppService, FileService],
 })
 export class AppModule implements NestModule {
     configure(consumer: MiddlewareConsumer) {
@@ -73,8 +84,8 @@ export class AppModule implements NestModule {
 
             { path: "admin/*", method: RequestMethod.ALL },
             { path: "user/*", method: RequestMethod.ALL },
-
-            { path: "users/info", method: RequestMethod.ALL },
+            { path: "account/*", method: RequestMethod.ALL },
+            { path: "panel/*", method: RequestMethod.ALL },
         );
 
         consumer
