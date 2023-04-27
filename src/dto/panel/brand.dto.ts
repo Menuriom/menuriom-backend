@@ -29,7 +29,7 @@ export class EditBrandDto {
     readonly family: string;
 }
 
-export class DeleteBrandDto {
+export class IDBrandDto {
     @IsMongoId({ message: i18nValidationMessage("validation.IsMongoId") })
     @IsString({ message: i18nValidationMessage("validation.IsString") })
     @IsNotEmpty({ message: i18nValidationMessage("validation.IsNotEmpty") })

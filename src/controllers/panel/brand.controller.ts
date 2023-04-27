@@ -9,7 +9,7 @@ import { StaffDocument } from "src/models/Staff.schema";
 import { FileService } from "src/services/file.service";
 import { unlink } from "fs/promises";
 import { FileInterceptor } from "@nestjs/platform-express";
-import { CreateNewBrandDto, DeleteBrandDto, EditBrandDto } from "src/dto/panel/brand.dto";
+import { CreateNewBrandDto, EditBrandDto, IDBrandDto } from "src/dto/panel/brand.dto";
 import { I18nContext } from "nestjs-i18n";
 
 @Controller("panel/brands")
@@ -20,6 +20,22 @@ export class BrandController {
         @InjectModel("Brand") private readonly BrandModel: Model<BrandDocument>,
         @InjectModel("Staff") private readonly StaffModel: Model<StaffDocument>,
     ) {}
+
+    @Get("/:id/settings")
+    async getBrandSettings(@Param() input: IDBrandDto, @Req() req: Request, @Res() res: Response): Promise<void | Response> {
+        const brand = await this.BrandModel.findOne({ _id: input.id }).select("languages currency").exec();
+        if (!brand) {
+            throw new UnprocessableEntityException([
+                { property: "", errors: [I18nContext.current().t("panel.brand.no record was found, or you are not authorized to do this action")] },
+            ]);
+        }
+        return res.json({
+            languages: brand.languages,
+            currency: brand.currency,
+        });
+    }
+
+    // ====================================================================
 
     @Get("/")
     async getList(@Req() req: Request, @Res() res: Response): Promise<void | Response> {
@@ -76,7 +92,7 @@ export class BrandController {
     async editRecord(@UploadedFile() logo: Express.Multer.File, @Body() input: EditBrandDto, @Req() req: Request, @Res() res: Response): Promise<void | Response> {}
 
     @Delete("/:id")
-    async deleteSingleRecord(@Param() input: DeleteBrandDto, @Req() req: Request, @Res() res: Response): Promise<void | Response> {
+    async deleteSingleRecord(@Param() input: IDBrandDto, @Req() req: Request, @Res() res: Response): Promise<void | Response> {
         const brand = await this.BrandModel.findOne({ creator: req.session.userID, _id: input.id }).select("logo name slogan").exec();
 
         // check if user authorize to delete this record - user must be owner of brand
@@ -96,7 +112,7 @@ export class BrandController {
     }
 
     @Delete("/leave/:id")
-    async leaveFromBrand(@Param() input: DeleteBrandDto, @Req() req: Request, @Res() res: Response): Promise<void | Response> {
+    async leaveFromBrand(@Param() input: IDBrandDto, @Req() req: Request, @Res() res: Response): Promise<void | Response> {
         const staff = await this.StaffModel.findOne({ user: req.session.userID, brand: input.id }).exec();
         if (!staff) {
             throw new UnprocessableEntityException([

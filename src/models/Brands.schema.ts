@@ -17,6 +17,8 @@ export const BrandSchema = new Schema({
             link: { type: String, required: true },
         }),
     ],
+    languages: [{ type: String }],
+    currency: { type: String, default: "Toman" },
     createdAt: { type: Date, default: new Date(Date.now()) },
     deletedAt: { type: Date },
     translation: TranslationSchema,
@@ -31,6 +33,8 @@ export interface Brand {
     branchSize: number;
     creator: User | Types.ObjectId;
     socials: Social[];
+    languages?: string[];
+    currency: string;
     createdAt: Date;
     deletedAt?: Date;
     translation: Translation;
