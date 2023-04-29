@@ -9,7 +9,7 @@ import { StaffDocument } from "src/models/Staff.schema";
 import { FileService } from "src/services/file.service";
 import { unlink } from "fs/promises";
 import { FileInterceptor } from "@nestjs/platform-express";
-import { CreateNewBrandDto, EditBrandDto, IDBrandDto } from "src/dto/panel/brand.dto";
+import { CreateNewBrandDto, EditBrandDto, IDBrandDto, SaveBrandSettingsDto } from "src/dto/panel/brand.dto";
 import { I18nContext } from "nestjs-i18n";
 
 @Controller("panel/brands")
@@ -21,6 +21,8 @@ export class BrandController {
         @InjectModel("Staff") private readonly StaffModel: Model<StaffDocument>,
     ) {}
 
+    // TODO : set permission check on every method - we can try custom decorators for this
+
     @Get("/:id/settings")
     async getBrandSettings(@Param() input: IDBrandDto, @Req() req: Request, @Res() res: Response): Promise<void | Response> {
         const brand = await this.BrandModel.findOne({ _id: input.id }).select("languages currency").exec();
@@ -29,10 +31,29 @@ export class BrandController {
                 { property: "", errors: [I18nContext.current().t("panel.brand.no record was found, or you are not authorized to do this action")] },
             ]);
         }
+
+        // TODO : get lang limit from the brand's purchased plan
+
         return res.json({
             languages: brand.languages,
             currency: brand.currency,
+            languageLimit: 2,
         });
+    }
+
+    @Post("/:id/settings")
+    async saveBrandSettings(@Param() params: IDBrandDto, @Body() body: SaveBrandSettingsDto, @Req() req: Request, @Res() res: Response): Promise<void | Response> {
+        const brand = await this.BrandModel.findOne({ _id: params.id }).select("languages currency").exec();
+        if (!brand) {
+            throw new UnprocessableEntityException([
+                { property: "", errors: [I18nContext.current().t("panel.brand.no record was found, or you are not authorized to do this action")] },
+            ]);
+        }
+        
+        // TODO : get lang limit from the brand's purchased plan and make sure user only is sending currect limit
+        await this.BrandModel.updateOne({ _id: params.id }, { languages: body.languages, currency: body.currency }).exec();
+
+        return res.end();
     }
 
     // ====================================================================
