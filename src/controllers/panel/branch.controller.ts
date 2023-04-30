@@ -1,4 +1,4 @@
-import { Body, Param, Query, Controller, Delete, Get, InternalServerErrorException, Post, Put, Req, Res, UploadedFile, UseInterceptors } from "@nestjs/common";
+import { Body, Param, Query, Controller, Delete, Get, InternalServerErrorException, Post, Put, Req, Res, UploadedFiles, UseInterceptors } from "@nestjs/common";
 import { NotFoundException, UnprocessableEntityException } from "@nestjs/common";
 import { Response, query } from "express";
 import { Request } from "src/interfaces/Request.interface";
@@ -6,8 +6,8 @@ import { InjectModel } from "@nestjs/mongoose";
 import { Model, Types } from "mongoose";
 import { FileService } from "src/services/file.service";
 import { unlink } from "fs/promises";
-import { FileInterceptor } from "@nestjs/platform-express";
-import { IDBranchDto, IDBrandDto } from "src/dto/panel/branch.dto";
+import { FileInterceptor, FilesInterceptor } from "@nestjs/platform-express";
+import { CreateNewBranchDto, EditBranchDto, IDBranchDto, IDBrandDto } from "src/dto/panel/branch.dto";
 import { I18nContext } from "nestjs-i18n";
 import { BranchDocument } from "src/models/Branches.schema";
 
@@ -34,33 +34,60 @@ export class BranchController {
     @Get("/:id")
     async getSingleRecord(@Req() req: Request, @Res() res: Response): Promise<void | Response> {}
 
-    @Post("/")
-    @UseInterceptors(FileInterceptor("logo"))
-    async addRecord(@UploadedFile() logo: Express.Multer.File, @Req() req: Request, @Res() res: Response): Promise<void | Response> {
-        // check if user already has a brand then dont allow new brand creation
+    @Post("/:brandID")
+    @UseInterceptors(FilesInterceptor("gallery"))
+    async addRecord(
+        @UploadedFiles() gallery: Express.Multer.File[],
+        @Param() params: IDBrandDto,
+        @Body() body: CreateNewBranchDto,
+        @Req() req: Request,
+        @Res() res: Response,
+    ): Promise<void | Response> {
+        // TODO : check if user has access to this brand and has permission to create branches
+        // TODO : check branch limit
+
+        const galleryLinks = await this.fileService.saveUploadedImages(gallery, "gallery", 2 * 1_048_576, ["png", "jpeg", "jpg", "webp"], 768, "public", "/gallery");
+
+        await this.BranchModel.create({
+            brand: params.brandID,
+            name: body.name,
+            address: body.address,
+            telephoneNumbers: body.telephoneNumbers,
+            postalCode: body.postalCode,
+            gallery: galleryLinks,
+            createdAt: new Date(Date.now()),
+            translation: {}, // TODO : add translation side bar base on languages that user choose - and if no lang is choosen inform the user in the side bar that they can put up languages and link to language settings
+        });
+
+        return res.end();
     }
 
     @Put("/:id")
-    @UseInterceptors(FileInterceptor("logo"))
-    async editRecord(@UploadedFile() logo: Express.Multer.File, @Req() req: Request, @Res() res: Response): Promise<void | Response> {}
+    @UseInterceptors(FilesInterceptor("gallery"))
+    async editRecord(
+        @UploadedFiles() logo: Express.Multer.File[],
+        @Body() body: EditBranchDto,
+        @Req() req: Request,
+        @Res() res: Response,
+    ): Promise<void | Response> {
+        // ...
+    }
 
-    @Delete("/:branchID")
-    async deleteSingleRecord(@Param() params: IDBranchDto, @Query() query: IDBrandDto, @Req() req: Request, @Res() res: Response): Promise<void | Response> {
-        const branch = await this.BranchModel.findOne({ _id: params.branchID, brand: query.brandID }).select("logo name slogan").exec();
+    @Delete("/:id")
+    async deleteSingleRecord(@Param() params: IDBranchDto, @Req() req: Request, @Res() res: Response): Promise<void | Response> {
+        const branch = await this.BranchModel.findOne({ _id: params.id }).select("logo name slogan").exec();
 
-        console.log({ branch });
-        return res.end();
-
-        // check if user authorize to delete this record - user must be owner of brand
         if (!branch) {
             throw new UnprocessableEntityException([
                 { property: "", errors: [I18nContext.current().t("panel.brand.no record was found, or you are not authorized to do this action")] },
             ]);
         }
 
-        // delete branch
-        await this.BranchModel.deleteOne({ _id: params.branchID, brand: query.brandID }).exec();
+        // TODO : get the branch
+        // check if =? does user has access to brand and can user delete branches in this brand
 
+        // delete branch
+        await this.BranchModel.deleteOne({ _id: params.id }).exec();
         // TODO : delete branch staff
         // TODO : delete branch custom menu
 
