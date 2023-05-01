@@ -35,7 +35,6 @@ export class UserController {
             .exec();
         for (let i = 0; i < brands.length; i++) {
             const brand = brands[i];
-            // TODO : get all possible permissions from seeder and inject into permissions array
             userBrands[brand.id] = { logo: brand.logo, name: brand.name, role: "owner", permissions: [] };
         }
 

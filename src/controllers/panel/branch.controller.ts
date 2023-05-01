@@ -1,5 +1,5 @@
 import { Body, Param, Query, Controller, Delete, Get, InternalServerErrorException, Post, Put, Req, Res, UploadedFiles, UseInterceptors } from "@nestjs/common";
-import { NotFoundException, UnprocessableEntityException } from "@nestjs/common";
+import { NotFoundException, UnprocessableEntityException, ForbiddenException } from "@nestjs/common";
 import { Response, query } from "express";
 import { Request } from "src/interfaces/Request.interface";
 import { InjectModel } from "@nestjs/mongoose";
@@ -8,6 +8,7 @@ import { FileService } from "src/services/file.service";
 import { unlink } from "fs/promises";
 import { FileInterceptor, FilesInterceptor } from "@nestjs/platform-express";
 import { CreateNewBranchDto, EditBranchDto, IDBranchDto, IDBrandDto } from "src/dto/panel/branch.dto";
+import { languages } from "src/interfaces/Translation.interface";
 import { I18nContext } from "nestjs-i18n";
 import { BranchDocument } from "src/models/Branches.schema";
 
@@ -48,15 +49,25 @@ export class BranchController {
 
         const galleryLinks = await this.fileService.saveUploadedImages(gallery, "gallery", 2 * 1_048_576, ["png", "jpeg", "jpg", "webp"], 768, "public", "/gallery");
 
+        const translation = {};
+        for (const lang in languages) {
+            if (body[`name.${lang}`] || body[`address.${lang}`]) {
+                translation[lang] = {
+                    name: body[`name.${lang}`],
+                    address: body[`address.${lang}`],
+                };
+            }
+        }
+
         await this.BranchModel.create({
             brand: params.brandID,
-            name: body.name,
-            address: body.address,
+            name: body["name.default"],
+            address: body["address.default"],
             telephoneNumbers: body.telephoneNumbers,
             postalCode: body.postalCode,
             gallery: galleryLinks,
             createdAt: new Date(Date.now()),
-            translation: {}, // TODO : add translation side bar base on languages that user choose - and if no lang is choosen inform the user in the side bar that they can put up languages and link to language settings
+            translation: translation,
         });
 
         return res.end();

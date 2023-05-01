@@ -1,16 +1,16 @@
-import { IsNotEmpty, Length, IsString, IsPhoneNumber, IsMongoId, IsArray, IsOptional, Matches } from "class-validator";
+import { IsNotEmpty, Length, IsString, IsPhoneNumber, IsMongoId, IsArray, IsOptional, Matches, ValidateNested } from "class-validator";
 import { i18nValidationMessage } from "nestjs-i18n";
 
 export class CreateNewBranchDto {
     @Length(1, 100, { message: i18nValidationMessage("validation.Length") })
     @IsString({ message: i18nValidationMessage("validation.IsString") })
     @IsNotEmpty({ message: i18nValidationMessage("validation.IsNotEmpty") })
-    readonly name: string;
+    readonly ["name.default"]: string;
 
     @Length(1, 300, { message: i18nValidationMessage("validation.Length") })
     @IsString({ message: i18nValidationMessage("validation.IsString") })
     @IsNotEmpty({ message: i18nValidationMessage("validation.IsNotEmpty") })
-    readonly address: string;
+    readonly ["address.default"]: string;
 
     @IsOptional()
     @IsArray({ message: i18nValidationMessage("validation.IsArray") })
