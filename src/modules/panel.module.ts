@@ -7,12 +7,15 @@ import { BrandSchema } from "src/models/Brands.schema";
 import { BranchSchema } from "src/models/Branches.schema";
 import { BrandController } from "src/controllers/panel/brand.controller";
 import { FileService } from "src/services/file.service";
+import { AuthService } from "src/services/auth.service";
 import { StaffSchema } from "src/models/Staff.schema";
+import { SessionSchema } from "src/models/Sessions.schema";
 import { BranchController } from "src/controllers/panel/branch.controller";
 
 @Module({
     imports: [
         MongooseModule.forFeature([
+            { name: "Session", schema: SessionSchema },
             { name: "User", schema: UserSchema },
             { name: "Role", schema: StaffRoleSchema },
             { name: "Permission", schema: StaffPermissionSchema },

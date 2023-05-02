@@ -42,8 +42,15 @@ export const records = [
 
     // settings ----------------------------------
     {
-        record: { _id: "main-panel.settings.language-settings", label: "تغییر تنظیمات زبان ها", group: "settings", groupLabel: "تنظیمات" },
-        translation: { en: { label: "Change language settings", groupLabel: "Settings" } },
+        record: { _id: "main-panel.settings", label: "تغییر تنظیمات برند", group: "settings", groupLabel: "تنظیمات" },
+        translation: { en: { label: "Change brand settings", groupLabel: "Settings" } },
+    },
+    // ----------------------------------
+
+    // billing ----------------------------------
+    {
+        record: { _id: "main-main-panel.billing", label: "صورتحساب و ارتقا پلن", group: "billing", groupLabel: "بخش مالی" },
+        translation: { en: { label: "Billing and plan upgrade", groupLabel: "Billing" } },
     },
     // ----------------------------------
 ];

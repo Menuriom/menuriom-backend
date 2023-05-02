@@ -1,4 +1,5 @@
-import { Body, Param, Controller, Delete, Get, InternalServerErrorException, Post, Put, Req, Res, UploadedFile, UseInterceptors } from "@nestjs/common";
+import { Body, Param, Controller, UseGuards, Delete, Get, Post, Put, Req, Res, UploadedFile, UseInterceptors } from "@nestjs/common";
+import { InternalServerErrorException, ForbiddenException } from "@nestjs/common";
 import { NotFoundException, UnprocessableEntityException } from "@nestjs/common";
 import { Response } from "express";
 import { Request } from "src/interfaces/Request.interface";
@@ -7,10 +8,13 @@ import { Model, Types } from "mongoose";
 import { BrandDocument } from "src/models/Brands.schema";
 import { StaffDocument } from "src/models/Staff.schema";
 import { FileService } from "src/services/file.service";
+import { AuthService } from "src/services/auth.service";
 import { unlink } from "fs/promises";
 import { FileInterceptor } from "@nestjs/platform-express";
 import { CreateNewBrandDto, EditBrandDto, IDBrandDto, SaveBrandSettingsDto } from "src/dto/panel/brand.dto";
 import { I18nContext } from "nestjs-i18n";
+import { AuthorizeUser } from "src/guards/authorizeUser.guard";
+import { SetPermissions } from "src/decorators/authorization.decorator";
 
 @Controller("panel/brands")
 export class BrandController {
@@ -24,6 +28,8 @@ export class BrandController {
     // TODO : set permission check on every method - we can try custom decorators for this
 
     @Get("/:id/settings")
+    @SetPermissions("main-panel.settings")
+    @UseGuards(AuthorizeUser)
     async getBrandSettings(@Param() input: IDBrandDto, @Req() req: Request, @Res() res: Response): Promise<void | Response> {
         const brand = await this.BrandModel.findOne({ _id: input.id }).select("languages currency").exec();
         if (!brand) {
@@ -42,6 +48,8 @@ export class BrandController {
     }
 
     @Post("/:id/settings")
+    @SetPermissions("main-panel.settings")
+    @UseGuards(AuthorizeUser)
     async saveBrandSettings(@Param() params: IDBrandDto, @Body() body: SaveBrandSettingsDto, @Req() req: Request, @Res() res: Response): Promise<void | Response> {
         const brand = await this.BrandModel.findOne({ _id: params.id }).select("languages currency").exec();
         if (!brand) {
@@ -49,7 +57,7 @@ export class BrandController {
                 { property: "", errors: [I18nContext.current().t("panel.brand.no record was found, or you are not authorized to do this action")] },
             ]);
         }
-        
+
         // TODO : get lang limit from the brand's purchased plan and make sure user only is sending currect limit
         await this.BrandModel.updateOne({ _id: params.id }, { languages: body.languages, currency: body.currency }).exec();
 
@@ -68,23 +76,25 @@ export class BrandController {
             .exec();
         for (let i = 0; i < brands.length; i++) {
             const brand = brands[i];
-            userBrands[brand.id] = { _id: brand.id, logo: brand.logo, name: brand.name, slogan: brand.slogan, roles: ["owner"] };
+            userBrands[brand.id] = { _id: brand.id, logo: brand.logo, name: brand.name, slogan: brand.slogan, role: "owner", permissions: [] };
         }
 
         // from staff document get brands that user is part of
         const staff = await this.StaffModel.find({ user: req.session.userID })
-            .select("brand")
             .populate("brand", "_id logo name slogan deletedAt")
-            .populate("branches.role", "name")
+            .populate("role", "name permissions")
             .exec();
         for (let i = 0; i < staff.length; i++) {
             const member = staff[i];
             if (!!member.brand.deletedAt) continue;
-            // TODO : after we did branches api we need to get thi roles list
-            // const roles = member.branches.map((branch) => branch.role.name);
-            // userBrands[member.brand._id.toString()] = { logo: member.brand.logo, name: member.brand.name, roles };
 
-            userBrands[member.brand._id.toString()] = { _id: member.brand._id.toString(), logo: member.brand.logo, name: member.brand.name, roles: [] };
+            userBrands[member.brand._id.toString()] = {
+                _id: member.brand._id.toString(),
+                logo: member.brand.logo,
+                name: member.brand.name,
+                role: member.role.name,
+                permissions: member.role.permissions || [],
+            };
         }
 
         // TODO : get the branch count for each brands
