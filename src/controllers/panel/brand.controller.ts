@@ -11,7 +11,7 @@ import { FileService } from "src/services/file.service";
 import { AuthService } from "src/services/auth.service";
 import { unlink } from "fs/promises";
 import { FileInterceptor } from "@nestjs/platform-express";
-import { CreateNewBrandDto, EditBrandDto, IDBrandDto, SaveBrandSettingsDto } from "src/dto/panel/brand.dto";
+import { EditBrandDto, IDBrandDto, SaveBrandSettingsDto } from "src/dto/panel/brand.dto";
 import { I18nContext } from "nestjs-i18n";
 import { AuthorizeUser } from "src/guards/authorizeUser.guard";
 import { SetPermissions } from "src/decorators/authorization.decorator";
@@ -25,8 +25,6 @@ export class BrandController {
         @InjectModel("Staff") private readonly StaffModel: Model<StaffDocument>,
     ) {}
 
-    // TODO : set permission check on every method - we can try custom decorators for this
-
     @Get("/:id/settings")
     @SetPermissions("main-panel.settings")
     @UseGuards(AuthorizeUser)
@@ -37,9 +35,7 @@ export class BrandController {
                 { property: "", errors: [I18nContext.current().t("panel.brand.no record was found, or you are not authorized to do this action")] },
             ]);
         }
-
         // TODO : get lang limit from the brand's purchased plan
-
         return res.json({
             languages: brand.languages,
             currency: brand.currency,
@@ -57,10 +53,8 @@ export class BrandController {
                 { property: "", errors: [I18nContext.current().t("panel.brand.no record was found, or you are not authorized to do this action")] },
             ]);
         }
-
         // TODO : get lang limit from the brand's purchased plan and make sure user only is sending currect limit
         await this.BrandModel.updateOne({ _id: params.id }, { languages: body.languages, currency: body.currency }).exec();
-
         return res.end();
     }
 
@@ -105,40 +99,62 @@ export class BrandController {
     }
 
     @Get("/:id")
-    async getSingleRecord(@Req() req: Request, @Res() res: Response): Promise<void | Response> {}
-
-    @Post("/")
-    @UseInterceptors(FileInterceptor("logo"))
-    async addRecord(
-        @UploadedFile() logo: Express.Multer.File,
-        @Body() input: CreateNewBrandDto,
-        @Req() req: Request,
-        @Res() res: Response,
-    ): Promise<void | Response> {
-        // check if user already has a brand then dont allow new brand creation
+    async getSingleRecord(@Param() params: IDBrandDto, @Req() req: Request, @Res() res: Response): Promise<void | Response> {
+        const brand = await this.BrandModel.findOne({ creator: req.session.userID, _id: params.id }).select("logo name slogan socials").exec();
+        // check if user authorize to edit this record - user must be owner of brand
+        if (!brand) {
+            throw new UnprocessableEntityException([
+                { property: "", errors: [I18nContext.current().t("panel.brand.no record was found, or you are not authorized to do this action")] },
+            ]);
+        }
+        return res.json({ logo: brand.logo, name: brand.name, slogan: brand.slogan, socials: brand.socials });
     }
 
     @Put("/:id")
     @UseInterceptors(FileInterceptor("logo"))
-    async editRecord(@UploadedFile() logo: Express.Multer.File, @Body() input: EditBrandDto, @Req() req: Request, @Res() res: Response): Promise<void | Response> {}
-
-    @Delete("/:id")
-    async deleteSingleRecord(@Param() input: IDBrandDto, @Req() req: Request, @Res() res: Response): Promise<void | Response> {
-        const brand = await this.BrandModel.findOne({ creator: req.session.userID, _id: input.id }).select("logo name slogan").exec();
-
-        // check if user authorize to delete this record - user must be owner of brand
+    async editRecord(
+        @UploadedFile() logo: Express.Multer.File,
+        @Param() params: IDBrandDto,
+        @Body() body: EditBrandDto,
+        @Req() req: Request,
+        @Res() res: Response,
+    ): Promise<void | Response> {
+        const brand = await this.BrandModel.findOne({
+            creator: req.session.userID,
+            _id: params.id,
+            $or: [{ deletedAt: { $exists: false } }, { deletedAt: null }],
+        }).exec();
         if (!brand) {
             throw new UnprocessableEntityException([
                 { property: "", errors: [I18nContext.current().t("panel.brand.no record was found, or you are not authorized to do this action")] },
             ]);
         }
 
+        await this.BrandModel.updateOne(
+            { _id: brand._id },
+            {
+                name: body.name,
+                slogan: body.slogan,
+                socials: { instagram: body.socials_instagram, twitter: body.socials_twitter, telegram: body.socials_telegram, whatsapp: body.socials_whatsapp },
+            },
+        ).exec();
+
+        return res.end();
+    }
+
+    @Delete("/:id")
+    async deleteSingleRecord(@Param() input: IDBrandDto, @Req() req: Request, @Res() res: Response): Promise<void | Response> {
+        const brand = await this.BrandModel.findOne({ creator: req.session.userID, _id: input.id }).select("logo name slogan").exec();
+        // check if user authorize to delete this record - user must be owner of brand
+        if (!brand) {
+            throw new UnprocessableEntityException([
+                { property: "", errors: [I18nContext.current().t("panel.brand.no record was found, or you are not authorized to do this action")] },
+            ]);
+        }
         // mark the record as deleted
         await this.BrandModel.updateOne({ creator: req.session.userID, _id: input.id }, { deletedAt: new Date(Date.now()) }).exec();
-
         // TODO : make scheduler for cleaning all the brands data (images - menus - branches - staff - ...)
         // TODO : cancel that brand's subscription
-
         return res.end();
     }
 

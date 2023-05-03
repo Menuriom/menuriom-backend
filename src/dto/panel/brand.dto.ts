@@ -1,30 +1,41 @@
-import { IsNotEmpty, Length, IsString, IsPhoneNumber, IsMongoId, IsArray } from "class-validator";
+import { IsNotEmpty, Length, IsString, IsPhoneNumber, IsMongoId, IsArray, IsOptional, IsMobilePhone } from "class-validator";
 import { i18nValidationMessage } from "nestjs-i18n";
 
-export class CreateNewBrandDto {
-    // @Length(1, 100, { message: i18nValidationMessage("validation.user.name.Length") })
-    // @IsString({ message: i18nValidationMessage("validation.user.name.IsString") })
-    // @IsNotEmpty({ message: i18nValidationMessage("validation.user.name.IsNotEmpty") })
-    // readonly name: string;
-    // @Length(1, 100, { message: i18nValidationMessage("validation.user.family.Length") })
-    // @IsString({ message: i18nValidationMessage("validation.user.family.IsString") })
-    // @IsNotEmpty({ message: i18nValidationMessage("validation.user.family.IsNotEmpty") })
-    // readonly family: string;
-    // @IsPhoneNumber("IR", { message: i18nValidationMessage("validation.user.mobile.IsPhoneNumber") })
-    // @IsNotEmpty({ message: i18nValidationMessage("validation.user.mobile.IsNotEmpty") })
-    // readonly mobile: string;
-}
-
 export class EditBrandDto {
-    @Length(1, 100, { message: i18nValidationMessage("validation.user.name.Length") })
-    @IsString({ message: i18nValidationMessage("validation.user.name.IsString") })
-    @IsNotEmpty({ message: i18nValidationMessage("validation.user.name.IsNotEmpty") })
+    @Length(1, 100, { message: i18nValidationMessage("validation.Length") })
+    @IsString({ message: i18nValidationMessage("validation.IsString") })
+    @IsNotEmpty({ message: i18nValidationMessage("validation.IsNotEmpty") })
     readonly name: string;
 
-    @Length(1, 100, { message: i18nValidationMessage("validation.user.family.Length") })
-    @IsString({ message: i18nValidationMessage("validation.user.family.IsString") })
-    @IsNotEmpty({ message: i18nValidationMessage("validation.user.family.IsNotEmpty") })
-    readonly family: string;
+    @IsOptional()
+    @Length(1, 150, { message: i18nValidationMessage("validation.Length") })
+    @IsString({ message: i18nValidationMessage("validation.IsString") })
+    @IsNotEmpty({ message: i18nValidationMessage("validation.IsNotEmpty") })
+    readonly slogan?: string;
+
+    @IsOptional()
+    @Length(1, 150, { message: i18nValidationMessage("validation.Length") })
+    @IsString({ message: i18nValidationMessage("validation.IsString") })
+    @IsNotEmpty({ message: i18nValidationMessage("validation.IsNotEmpty") })
+    readonly socials_instagram?: string;
+
+    @IsOptional()
+    @Length(1, 150, { message: i18nValidationMessage("validation.Length") })
+    @IsString({ message: i18nValidationMessage("validation.IsString") })
+    @IsNotEmpty({ message: i18nValidationMessage("validation.IsNotEmpty") })
+    readonly socials_twitter?: string;
+
+    @IsOptional()
+    @Length(1, 150, { message: i18nValidationMessage("validation.Length") })
+    @IsString({ message: i18nValidationMessage("validation.IsString") })
+    @IsNotEmpty({ message: i18nValidationMessage("validation.IsNotEmpty") })
+    readonly socials_telegram?: string;
+
+    @IsOptional()
+    @Length(1, 150, { message: i18nValidationMessage("validation.Length") })
+    @IsMobilePhone("fa-IR", {}, { message: i18nValidationMessage("validation.IsMobilePhone") })
+    @IsNotEmpty({ message: i18nValidationMessage("validation.IsNotEmpty") })
+    readonly socials_whatsapp?: string;
 }
 
 export class IDBrandDto {
