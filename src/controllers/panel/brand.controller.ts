@@ -130,16 +130,22 @@ export class BrandController {
             ]);
         }
 
+        let logoLink = brand.logo;
+        if (logo) {
+            logoLink = await this.fileService.saveUploadedImages([logo], "logo", 1_048_576, ["png", "jpeg", "jpg", "webp"], 256, "public", "/logos")[0];
+        }
+
         await this.BrandModel.updateOne(
             { _id: brand._id },
             {
+                logo: logoLink,
                 name: body.name,
                 slogan: body.slogan,
                 socials: { instagram: body.socials_instagram, twitter: body.socials_twitter, telegram: body.socials_telegram, whatsapp: body.socials_whatsapp },
             },
         ).exec();
 
-        return res.end();
+        return res.json({ logo: logoLink, name: body.name, slogan: body.slogan });
     }
 
     @Delete("/:id")
