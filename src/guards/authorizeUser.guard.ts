@@ -15,7 +15,7 @@ export class AuthorizeUser implements CanActivate {
 
     async canActivate(context: ExecutionContext): Promise<boolean> {
         const request = context.switchToHttp().getRequest();
-        const brandID = request.params.brandID || request.params.id || "";
+        const brandID = request.headers["brand"] || "";
 
         const permissionsToCheck = this.reflector.get("permissionsToCheck", context.getHandler()) || [];
         const operator = this.reflector.get("operator", context.getHandler()) || "OR";
