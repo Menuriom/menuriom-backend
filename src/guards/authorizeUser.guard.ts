@@ -20,9 +20,13 @@ export class AuthorizeUser implements CanActivate {
         const permissionsToCheck = this.reflector.get("permissionsToCheck", context.getHandler()) || [];
         const operator = this.reflector.get("operator", context.getHandler()) || "OR";
 
-        // check if user is owner
-        const isUserOwner = await this.BrandModel.exists({ _id: brandID, creator: request.session.userID }).exec();
-        if (isUserOwner) return true;
+        try {
+            // check if user is owner
+            const isUserOwner = await this.BrandModel.exists({ _id: brandID, creator: request.session.userID }).exec();
+            if (isUserOwner) return true;
+        } catch (e) {
+            throw new ForbiddenException();
+        }
 
         const staff = await this.StaffModel.findOne({ brand: brandID, user: request.session.userID }).populate("role", "name permissions").exec();
         if (!staff) return false;
