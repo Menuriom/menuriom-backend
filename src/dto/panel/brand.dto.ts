@@ -5,13 +5,13 @@ export class EditBrandDto {
     @Length(1, 100, { message: i18nValidationMessage("validation.Length") })
     @IsString({ message: i18nValidationMessage("validation.IsString") })
     @IsNotEmpty({ message: i18nValidationMessage("validation.IsNotEmpty") })
-    readonly name: string;
+    readonly ["name.default"]: string;
 
     @IsOptional()
     @Length(1, 150, { message: i18nValidationMessage("validation.Length") })
     @IsString({ message: i18nValidationMessage("validation.IsString") })
     @IsNotEmpty({ message: i18nValidationMessage("validation.IsNotEmpty") })
-    readonly slogan?: string;
+    readonly ["slogan.default"]?: string;
 
     @IsOptional()
     @Length(1, 150, { message: i18nValidationMessage("validation.Length") })

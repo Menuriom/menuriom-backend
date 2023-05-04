@@ -15,6 +15,7 @@ import { EditBrandDto, IDBrandDto, SaveBrandSettingsDto } from "src/dto/panel/br
 import { I18nContext } from "nestjs-i18n";
 import { AuthorizeUser } from "src/guards/authorizeUser.guard";
 import { SetPermissions } from "src/decorators/authorization.decorator";
+import { languages } from "src/interfaces/Translation.interface";
 
 @Controller("panel/brands")
 export class BrandController {
@@ -28,8 +29,8 @@ export class BrandController {
     @Get("/:id/settings")
     @SetPermissions("main-panel.settings")
     @UseGuards(AuthorizeUser)
-    async getBrandSettings(@Param() input: IDBrandDto, @Req() req: Request, @Res() res: Response): Promise<void | Response> {
-        const brand = await this.BrandModel.findOne({ _id: input.id }).select("languages currency").exec();
+    async getBrandSettings(@Param() params: IDBrandDto, @Req() req: Request, @Res() res: Response): Promise<void | Response> {
+        const brand = await this.BrandModel.findOne({ _id: params.id }).select("languages currency").exec();
         if (!brand) {
             throw new UnprocessableEntityException([
                 { property: "", errors: [I18nContext.current().t("panel.brand.no record was found, or you are not authorized to do this action")] },
@@ -100,14 +101,24 @@ export class BrandController {
 
     @Get("/:id")
     async getSingleRecord(@Param() params: IDBrandDto, @Req() req: Request, @Res() res: Response): Promise<void | Response> {
-        const brand = await this.BrandModel.findOne({ creator: req.session.userID, _id: params.id }).select("logo name slogan socials").exec();
+        const brand = await this.BrandModel.findOne({ creator: req.session.userID, _id: params.id }).select("logo name slogan socials translation").exec();
         // check if user authorize to edit this record - user must be owner of brand
         if (!brand) {
             throw new UnprocessableEntityException([
                 { property: "", errors: [I18nContext.current().t("panel.brand.no record was found, or you are not authorized to do this action")] },
             ]);
         }
-        return res.json({ logo: brand.logo, name: brand.name, slogan: brand.slogan, socials: brand.socials });
+
+        const name = { default: brand.name };
+        const slogan = { default: brand.slogan };
+        for (const lang in languages) {
+            if (brand.translation && brand.translation[lang]) {
+                name[lang] = brand.translation[lang].name;
+                slogan[lang] = brand.translation[lang].slogan;
+            }
+        }
+
+        return res.json({ logo: brand.logo, name, slogan, socials: brand.socials });
     }
 
     @Put("/:id")
@@ -132,20 +143,35 @@ export class BrandController {
 
         let logoLink = brand.logo;
         if (logo) {
-            logoLink = await this.fileService.saveUploadedImages([logo], "logo", 1_048_576, ["png", "jpeg", "jpg", "webp"], 256, "public", "/logos")[0];
+            const uploadedFiles = await this.fileService.saveUploadedImages([logo], "logo", 1_048_576, ["png", "jpeg", "jpg", "webp"], 256, "public", "/logos");
+            if (uploadedFiles[0]) {
+                unlink(logoLink.replace("/file/", "storage/public/")).catch((e) => {});
+                logoLink = uploadedFiles[0];
+            }
+        }
+
+        const translation = {};
+        for (const lang in languages) {
+            if (body[`name.${lang}`] || body[`slogan.${lang}`]) {
+                translation[lang] = {
+                    name: body[`name.${lang}`],
+                    slogan: body[`slogan.${lang}`],
+                };
+            }
         }
 
         await this.BrandModel.updateOne(
             { _id: brand._id },
             {
                 logo: logoLink,
-                name: body.name,
-                slogan: body.slogan,
+                name: body["name.default"],
+                slogan: body["slogan.default"],
                 socials: { instagram: body.socials_instagram, twitter: body.socials_twitter, telegram: body.socials_telegram, whatsapp: body.socials_whatsapp },
+                translation: translation,
             },
         ).exec();
 
-        return res.json({ logo: logoLink, name: body.name, slogan: body.slogan });
+        return res.json({ logo: logoLink, name: body["name.default"], slogan: body["slogan.default"] });
     }
 
     @Delete("/:id")
