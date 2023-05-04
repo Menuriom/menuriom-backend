@@ -29,27 +29,29 @@ export class UserController {
 
         const userBrands = {};
 
+        // TODO : add brand plan limitation for each brand so that front middleware can check for them
+
         // get brands that user owns
         const brands = await this.BrandModel.find({ creator: user.id, $or: [{ deletedAt: { $exists: false } }, { deletedAt: null }] })
             .select("logo name")
             .exec();
         for (let i = 0; i < brands.length; i++) {
             const brand = brands[i];
-            // TODO : get all possible permissions from seeder and inject into permissions array
             userBrands[brand.id] = { logo: brand.logo, name: brand.name, role: "owner", permissions: [] };
         }
 
         // from staff document get brands that user has with permissions
-        const staff = await this.StaffModel.find({ user: user.id })
-            .select("brand brandPermissions")
-            .populate("brand", "_id logo name slogan deletedAt")
-            .populate("branches.role", "name")
-            .exec();
+        const staff = await this.StaffModel.find({ user: user.id }).populate("brand", "_id logo name slogan deletedAt").populate("role", "name permissions").exec();
         for (let i = 0; i < staff.length; i++) {
             const member = staff[i];
             if (!!member.brand.deletedAt) continue;
             // TODO : get list of roles from branches in staffModel
-            // userBrands[member.brand._id.toString()] = { logo: member.brand.logo, name: member.brand.name, role: "", permissions: member.brandPermissions };
+            userBrands[member.brand._id.toString()] = {
+                logo: member.brand.logo,
+                name: member.brand.name,
+                role: member.role.name,
+                permissions: member.role.permissions,
+            };
         }
 
         return res.json({

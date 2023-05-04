@@ -11,12 +11,12 @@ export const BrandSchema = new Schema({
     slogan: { type: String },
     branchSize: { type: Number, default: 1 },
     creator: { type: Schema.Types.ObjectId, ref: "User" },
-    socials: [
-        new Schema({
-            name: { type: String, required: true },
-            link: { type: String, required: true },
-        }),
-    ],
+    socials: {
+        instagram: { type: String },
+        twitter: { type: String },
+        telegram: { type: String },
+        whatsapp: { type: String },
+    },
     languages: [{ type: String }],
     currency: { type: String, default: "Toman" },
     createdAt: { type: Date, default: new Date(Date.now()) },
@@ -32,15 +32,15 @@ export interface Brand {
     slogan?: string;
     branchSize: number;
     creator: User | Types.ObjectId;
-    socials: Social[];
+    socials?: {
+        instagram?: string;
+        twitter?: string;
+        telegram?: string;
+        whatsapp?: string;
+    };
     languages?: string[];
     currency: string;
     createdAt: Date;
     deletedAt?: Date;
     translation: Translation;
-}
-
-export interface Social {
-    name: string;
-    link: string;
 }

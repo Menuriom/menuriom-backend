@@ -4,17 +4,18 @@ import { sign } from "jsonwebtoken";
 import { payload, Request } from "src/interfaces/Request.interface";
 import { Model } from "mongoose";
 import { SessionDocument } from "src/models/Sessions.schema";
-// import { UserDocument } from "src/models/users.schema";
-
-// interface generateTokenResults {
-//     payload: payload & JwtPayload;
-//     token: string;
-// }
+import { UserDocument } from "src/models/Users.schema";
+import { BrandDocument } from "src/models/Brands.schema";
+import { StaffDocument } from "src/models/Staff.schema";
 
 @Injectable()
 export class AuthService {
     constructor(
-        @InjectModel("Session") private readonly SessionModel: Model<SessionDocument>, // @InjectModel("User") private readonly UserModel: Model<UserDocument>,
+        // ...
+        @InjectModel("Session") private readonly SessionModel: Model<SessionDocument>,
+        @InjectModel("User") private readonly UserModel: Model<UserDocument>,
+        @InjectModel("Brand") private readonly BrandModel: Model<BrandDocument>,
+        @InjectModel("Staff") private readonly StaffModel: Model<StaffDocument>,
     ) {}
 
     async createSession(req: Request, userID: string): Promise<string> {
@@ -69,32 +70,23 @@ export class AuthService {
         return token;
     }
 
-    // async authorize(req: Request, role: string, permissionsToCheck: string[] = [], style: "OR" | "AND" = "OR") {
-    //     // check the role
-    //     if (req.user.user.role !== role) return false;
+    async isUserAuthorize(req: Request, brandID: string, permissionsToCheck: string[] = [], operator: "OR" | "AND" = "OR"): Promise<boolean> {
+        // check if user is owner
+        const isUserOwner = await this.BrandModel.exists({ _id: brandID, creator: req.session.userID }).exec();
+        if (isUserOwner) return true;
 
-    //     // get the user
-    //     const user = await this.UserModel.findOne({ _id: req.user["payload"].user_id })
-    //         .select("-_v -password -createdAt")
-    //         .populate("Role", "-_id name permissions")
-    //         .exec();
-    //     if (!user) return false;
+        const staff = await this.StaffModel.findOne({ brand: brandID, user: req.session.userID }).populate("role", "name permissions").exec();
+        if (!staff) return false;
+        const userPermissions = [...staff.role.permissions];
 
-    //     // list the user's permissions base on both Role and permissions
-    //     const userPermissionsSet = new Set();
-    //     if (!!user.permissions) user.permissions.forEach((permission) => userPermissionsSet.add(permission));
-    //     if (!!user.Role) user.Role.permissions.forEach((permission) => userPermissionsSet.add(permission));
-    //     const userPermissions = [...userPermissionsSet];
-
-    //     // then check the requested permission list agains it
-    //     if (style == "AND") {
-    //         for (let i = 0; i < permissionsToCheck.length; i++) if (userPermissions.indexOf(permissionsToCheck[i]) == -1) return false;
-    //         return true;
-    //     } else {
-    //         for (let i = 0; i < permissionsToCheck.length; i++) if (userPermissions.indexOf(permissionsToCheck[i]) != -1) return true;
-    //         return false;
-    //     }
-
-    //     return false;
-    // }
+        // then check the requested permission list agains it
+        if (operator == "AND") {
+            for (let i = 0; i < permissionsToCheck.length; i++) if (userPermissions.indexOf(permissionsToCheck[i]) == -1) return false;
+            return true;
+        } else {
+            for (let i = 0; i < permissionsToCheck.length; i++) if (userPermissions.indexOf(permissionsToCheck[i]) != -1) return true;
+            return false;
+        }
+        return false;
+    }
 }

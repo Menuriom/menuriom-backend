@@ -26,6 +26,12 @@ export class AccountController {
     @Post("/setup-brand")
     @UseInterceptors(FileInterceptor("logo"))
     async setupBrand(@UploadedFile() logo: Express.Multer.File, @Body() input: SetupBrandDto, @Req() req: Request, @Res() res: Response): Promise<void | Response> {
+        // check if user already has a brand then dont allow new brand creation
+        const userBrand = await this.BrandModel.exists({ creator: req.session.userID, $or: [{ deletedAt: { $exists: false } }, { deletedAt: null }] }).exec();
+        if (userBrand) {
+            throw new UnprocessableEntityException([{ property: "", errors: [I18nContext.current().t("panel.brand.You can only create 1 brand!")] }]);
+        }
+
         if (!logo) {
             throw new UnprocessableEntityException([{ property: "logo", errors: [I18nContext.current().t("panel.brand.Please select your brand logo")] }]);
         }
