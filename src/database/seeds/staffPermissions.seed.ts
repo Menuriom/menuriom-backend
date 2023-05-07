@@ -1,4 +1,6 @@
 export const records = [
+    // TODO : add desc to roles beside labels to descripe better what each permission does exacly
+
     // panels ----------------------------------
     {
         record: { _id: "main-panel", label: "دسترسی به پنل اصلی", group: "panels", groupLabel: "پنل ها" },
@@ -37,6 +39,29 @@ export const records = [
     {
         record: { _id: "main-panel.branches.delete", label: "حذف شعبه", group: "branches", groupLabel: "شعبه ها" },
         translation: { en: { label: "Delete Branches", groupLabel: "Branches" } },
+    },
+    // ----------------------------------
+
+    // staff ----------------------------------
+    {
+        record: { _id: "main-panel.staff.view", label: "مشاهده اعضای خدمه", group: "staff", groupLabel: "خدمه" },
+        translation: { en: { label: "View Staff Member", groupLabel: "Staff" } },
+    },
+    {
+        record: { _id: "main-panel.staff.invite", label: "امکان ارسال دعوت", group: "staff", groupLabel: "خدمه" },
+        translation: { en: { label: "Invite Staff Member", groupLabel: "Staff" } },
+    },
+    {
+        record: { _id: "main-panel.staff.remove", label: "حذف اعضا خدمه", group: "staff", groupLabel: "خدمه" },
+        translation: { en: { label: "Remove Staff Member", groupLabel: "Staff" } },
+    },
+    {
+        record: { _id: "main-panel.staff.alter", label: "تغییر دسترسی اعضا", group: "staff", groupLabel: "خدمه" },
+        translation: { en: { label: "Alter Staff Member Roles", groupLabel: "Staff" } },
+    },
+    {
+        record: { _id: "main-panel.staff.roles", label: "مدیریت نقش های خدمه", group: "staff", groupLabel: "خدمه" },
+        translation: { en: { label: "Staff Roles", groupLabel: "Staff" } },
     },
     // ----------------------------------
 

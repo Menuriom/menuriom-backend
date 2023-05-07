@@ -1,4 +1,5 @@
 {
     "sizeError": "Image size must be less than {size}MB",
-    "formatError": "Image format is not supported"
+    "formatError": "Image format is not supported",
+    "max file count is n": "max file count is {count}"
 }
