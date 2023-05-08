@@ -10,6 +10,7 @@ import { FileService } from "src/services/file.service";
 import { StaffSchema } from "src/models/Staff.schema";
 import { SessionSchema } from "src/models/Sessions.schema";
 import { BranchController } from "src/controllers/panel/branch.controller";
+import { StaffController } from "src/controllers/panel/staff.controller";
 
 @Module({
     imports: [
@@ -23,7 +24,7 @@ import { BranchController } from "src/controllers/panel/branch.controller";
             { name: "Staff", schema: StaffSchema },
         ]),
     ],
-    controllers: [BrandController, BranchController],
+    controllers: [BrandController, BranchController, StaffController],
     providers: [FileService],
     exports: [],
 })

@@ -22,8 +22,6 @@ export class BranchController {
         @InjectModel("Branch") private readonly BranchModel: Model<BranchDocument>,
     ) {}
 
-    // TODO : set permission check on every method - we can try custom decorators for this
-
     @Get("/")
     @SetPermissions("main-panel.branches.view")
     @UseGuards(AuthorizeUser)
