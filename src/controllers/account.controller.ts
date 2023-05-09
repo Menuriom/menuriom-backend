@@ -12,6 +12,8 @@ import { FileService } from "src/services/file.service";
 import { FileInterceptor } from "@nestjs/platform-express";
 import { SetupBrandDto } from "src/dto/panel/account.dto";
 import { I18nContext } from "nestjs-i18n";
+import { StaffRoleDefaultDocument } from "src/models/StaffRoleDefaults.schema";
+import { StaffRoleDocument } from "src/models/StaffRoles.schema";
 
 @Controller("account")
 export class AccountController {
@@ -21,6 +23,8 @@ export class AccountController {
         @InjectModel("User") private readonly UserModel: Model<UserDocument>,
         @InjectModel("Brand") private readonly BrandModel: Model<BrandDocument>,
         @InjectModel("Branch") private readonly BranchModel: Model<BranchDocument>,
+        @InjectModel("StaffRoleDefault") private readonly StaffRoleDefaultModel: Model<StaffRoleDefaultDocument>,
+        @InjectModel("StaffRole") private readonly StaffRoleModel: Model<StaffRoleDocument>,
     ) {}
 
     @Post("/setup-brand")
@@ -55,6 +59,13 @@ export class AccountController {
             telephoneNumbers: input.tel,
             createdAt: new Date(Date.now()),
         });
+
+        // adding default roles to brand staff roles
+        const defaultRoles = await this.StaffRoleDefaultModel.find().exec();
+        const roles = defaultRoles.map((role) => {
+            return { brand: newBrand.id, name: role.name, permissions: role.permissions, translation: role.translation };
+        });
+        await this.StaffRoleModel.insertMany(roles);
 
         return res.json({
             newId: newBrand.id,
