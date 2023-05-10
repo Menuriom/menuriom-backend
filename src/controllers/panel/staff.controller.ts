@@ -12,7 +12,7 @@ import { I18nContext } from "nestjs-i18n";
 import { BranchDocument } from "src/models/Branches.schema";
 import { StaffDocument } from "src/models/Staff.schema";
 import { SetPermissions } from "src/decorators/authorization.decorator";
-import { AuthorizeUser } from "src/guards/authorizeUser.guard";
+import { AuthorizeUserInSelectedBrand } from "src/guards/authorizeUser.guard";
 
 @Controller("panel/staff")
 export class StaffController {
@@ -25,7 +25,7 @@ export class StaffController {
 
     @Get("/")
     @SetPermissions("main-panel.staff.view")
-    @UseGuards(AuthorizeUser)
+    @UseGuards(AuthorizeUserInSelectedBrand)
     async getList(@Req() req: Request, @Res() res: Response): Promise<void | Response> {
         const brandID = req.headers["brand"];
         // TODO : aggrigate this query and add pp and search filter
@@ -39,7 +39,7 @@ export class StaffController {
 
     @Delete("/:id")
     @SetPermissions("main-panel.staff.delete")
-    @UseGuards(AuthorizeUser)
+    @UseGuards(AuthorizeUserInSelectedBrand)
     async deleteSingleRecord(@Param() params: IDBranchDto, @Req() req: Request, @Res() res: Response): Promise<void | Response> {
         return res.end();
     }

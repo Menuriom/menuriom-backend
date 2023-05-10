@@ -6,7 +6,7 @@ import { BrandDocument } from "src/models/Brands.schema";
 import { StaffDocument } from "src/models/Staff.schema";
 
 @Injectable()
-export class AuthorizeUser implements CanActivate {
+export class AuthorizeUserInSelectedBrand implements CanActivate {
     constructor(
         private reflector: Reflector,
         @InjectModel("Brand") private readonly BrandModel: Model<BrandDocument>,

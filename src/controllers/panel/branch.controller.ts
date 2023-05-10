@@ -12,7 +12,7 @@ import { languages } from "src/interfaces/Translation.interface";
 import { I18nContext } from "nestjs-i18n";
 import { BranchDocument } from "src/models/Branches.schema";
 import { SetPermissions } from "src/decorators/authorization.decorator";
-import { AuthorizeUser } from "src/guards/authorizeUser.guard";
+import { AuthorizeUserInSelectedBrand } from "src/guards/authorizeUser.guard";
 
 @Controller("panel/branches")
 export class BranchController {
@@ -24,7 +24,7 @@ export class BranchController {
 
     @Get("/")
     @SetPermissions("main-panel.branches.view")
-    @UseGuards(AuthorizeUser)
+    @UseGuards(AuthorizeUserInSelectedBrand)
     async getList(@Req() req: Request, @Res() res: Response): Promise<void | Response> {
         const brandID = req.headers["brand"];
         const branches = await this.BranchModel.find({ brand: brandID }).select("name address telephoneNumbers postalCode gallery translation").exec();
@@ -37,7 +37,7 @@ export class BranchController {
 
     @Get("/:id")
     @SetPermissions("main-panel.branches.view")
-    @UseGuards(AuthorizeUser)
+    @UseGuards(AuthorizeUserInSelectedBrand)
     async getSingleRecord(@Param() params: IDBranchDto, @Req() req: Request, @Res() res: Response): Promise<void | Response> {
         const branch = await this.BranchModel.findOne({ _id: params.id }).exec();
         if (!branch) {
@@ -60,7 +60,7 @@ export class BranchController {
 
     @Post("/")
     @SetPermissions("main-panel.branches.add")
-    @UseGuards(AuthorizeUser)
+    @UseGuards(AuthorizeUserInSelectedBrand)
     @UseInterceptors(FilesInterceptor("gallery"))
     async addRecord(
         @UploadedFiles() gallery: Express.Multer.File[],
@@ -104,7 +104,7 @@ export class BranchController {
 
     @Put("/:id")
     @SetPermissions("main-panel.branches.edit")
-    @UseGuards(AuthorizeUser)
+    @UseGuards(AuthorizeUserInSelectedBrand)
     @UseInterceptors(FilesInterceptor("gallery"))
     async editRecord(
         @UploadedFiles() gallery: Express.Multer.File[],
@@ -165,7 +165,7 @@ export class BranchController {
 
     @Delete("/:id")
     @SetPermissions("main-panel.branches.delete")
-    @UseGuards(AuthorizeUser)
+    @UseGuards(AuthorizeUserInSelectedBrand)
     async deleteSingleRecord(@Param() params: IDBranchDto, @Req() req: Request, @Res() res: Response): Promise<void | Response> {
         const branch = await this.BranchModel.findOne({ _id: params.id }).select("logo name slogan").exec();
 

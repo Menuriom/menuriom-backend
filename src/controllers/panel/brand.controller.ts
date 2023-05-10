@@ -13,7 +13,7 @@ import { unlink } from "fs/promises";
 import { FileInterceptor } from "@nestjs/platform-express";
 import { EditBrandDto, IDBrandDto, SaveBrandSettingsDto } from "src/dto/panel/brand.dto";
 import { I18nContext } from "nestjs-i18n";
-import { AuthorizeUser } from "src/guards/authorizeUser.guard";
+import { AuthorizeUserInSelectedBrand } from "src/guards/authorizeUser.guard";
 import { SetPermissions } from "src/decorators/authorization.decorator";
 import { languages } from "src/interfaces/Translation.interface";
 
@@ -28,7 +28,7 @@ export class BrandController {
 
     @Get("/:id/settings")
     @SetPermissions("main-panel.settings")
-    @UseGuards(AuthorizeUser)
+    @UseGuards(AuthorizeUserInSelectedBrand)
     async getBrandSettings(@Param() params: IDBrandDto, @Req() req: Request, @Res() res: Response): Promise<void | Response> {
         const brand = await this.BrandModel.findOne({ _id: params.id }).select("languages currency").exec();
         if (!brand) {
@@ -46,7 +46,7 @@ export class BrandController {
 
     @Post("/:id/settings")
     @SetPermissions("main-panel.settings")
-    @UseGuards(AuthorizeUser)
+    @UseGuards(AuthorizeUserInSelectedBrand)
     async saveBrandSettings(@Param() params: IDBrandDto, @Body() body: SaveBrandSettingsDto, @Req() req: Request, @Res() res: Response): Promise<void | Response> {
         const brand = await this.BrandModel.findOne({ _id: params.id }).select("languages currency").exec();
         if (!brand) {
