@@ -13,6 +13,7 @@ import { BranchController } from "src/controllers/panel/branch.controller";
 import { StaffController } from "src/controllers/panel/staff.controller";
 import { StaffRolesController } from "src/controllers/panel/staffRoles.controller";
 import { StaffRoleDefaultSchema } from "src/models/StaffRoleDefaults.schema";
+import { InviteSchema } from "src/models/Invites.schema";
 
 @Module({
     imports: [
@@ -26,6 +27,7 @@ import { StaffRoleDefaultSchema } from "src/models/StaffRoleDefaults.schema";
             { name: "Staff", schema: StaffSchema },
             { name: "StaffRole", schema: StaffRoleSchema },
             { name: "StaffRoleDefault", schema: StaffRoleDefaultSchema },
+            { name: "Invite", schema: InviteSchema },
         ]),
     ],
     controllers: [BrandController, BranchController, StaffController, StaffRolesController],
