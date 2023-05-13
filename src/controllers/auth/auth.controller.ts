@@ -159,7 +159,7 @@ export class AuthController {
             ]);
         }
         // update user's info and set status to active
-        await this.UserModel.updateOne({ id: user.id }, { name: inputs.name, family: inputs.family, mobile: inputs.mobile, status: "active" }).exec();
+        await this.UserModel.updateOne({ _id: user._id }, { name: inputs.name, family: inputs.family, mobile: inputs.mobile, status: "active" }).exec();
 
         // generate token
         const sessionID = await this.authService.createSession(req, user.id);

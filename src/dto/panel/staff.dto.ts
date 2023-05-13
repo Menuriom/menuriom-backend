@@ -1,7 +1,7 @@
 import { IsNotEmpty, Length, IsString, IsPhoneNumber, IsMongoId, IsArray, IsOptional, IsMobilePhone, IsEmail } from "class-validator";
 import { i18nValidationMessage } from "nestjs-i18n";
 
-export class SendInviteDTO {
+export class SendInviteDto {
     @IsEmail({}, { message: i18nValidationMessage("validation.IsEmail") })
     @IsNotEmpty({ message: i18nValidationMessage("validation.IsNotEmpty") })
     readonly email: string;

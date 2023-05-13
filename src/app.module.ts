@@ -30,6 +30,7 @@ import { StaffSchema } from "./models/Staff.schema";
 import { StaffRoleSchema } from "./models/StaffRoles.schema";
 import { StaffPermissionSchema } from "./models/StaffPermissions.schema";
 import { UserSchema } from "./models/Users.schema";
+import { InviteSchema } from "./models/Invites.schema";
 import { SessionSchema } from "./models/Sessions.schema";
 import { AcceptLanguageResolver, CookieResolver, I18nModule } from "nestjs-i18n";
 import * as path from "path";
@@ -67,6 +68,7 @@ import { UserController } from "./controllers/user.controller";
             { name: "Staff", schema: StaffSchema },
             { name: "StaffRole", schema: StaffRoleSchema },
             { name: "StaffPermission", schema: StaffPermissionSchema },
+            { name: "Invite", schema: InviteSchema },
             { name: "User", schema: UserSchema },
             { name: "Session", schema: SessionSchema },
         ]),

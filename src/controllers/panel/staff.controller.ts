@@ -6,7 +6,7 @@ import { InjectModel } from "@nestjs/mongoose";
 import { Model, Types } from "mongoose";
 import { FileService } from "src/services/file.service";
 import { FileInterceptor, FilesInterceptor } from "@nestjs/platform-express";
-import { IdDto, SendInviteDTO } from "src/dto/panel/staff.dto";
+import { IdDto, SendInviteDto } from "src/dto/panel/staff.dto";
 import { languages } from "src/interfaces/Translation.interface";
 import { I18nContext } from "nestjs-i18n";
 import { BranchDocument } from "src/models/Branches.schema";
@@ -46,7 +46,7 @@ export class StaffController {
     @Post("/invite")
     @SetPermissions("main-panel.staff.invite")
     @UseGuards(AuthorizeUserInSelectedBrand)
-    async send(@Body() body: SendInviteDTO, @Req() req: Request, @Res() res: Response): Promise<void | Response> {
+    async send(@Body() body: SendInviteDto, @Req() req: Request, @Res() res: Response): Promise<void | Response> {
         const brandID = req.headers["brand"];
 
         // check if the user is already in brand or not

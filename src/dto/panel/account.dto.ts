@@ -1,5 +1,12 @@
-import { IsNotEmpty, Length, IsString, IsPhoneNumber, IsMobilePhone, IsNumber, IsOptional } from "class-validator";
+import { IsNotEmpty, Length, IsString, IsPhoneNumber, IsMobilePhone, IsNumber, IsOptional, IsArray, IsMongoId } from "class-validator";
 import { i18nValidationMessage } from "nestjs-i18n";
+
+export class acceptInvitesDto {
+    @IsArray({ message: i18nValidationMessage("validation.IsArray") })
+    @IsMongoId({ message: i18nValidationMessage("validation.IsMongoId"), each: true })
+    @IsNotEmpty({ message: i18nValidationMessage("validation.IsNotEmpty") })
+    readonly invites: string[];
+}
 
 export class SetupBrandDto {
     @Length(1, 100, { message: i18nValidationMessage("validation.Length") })

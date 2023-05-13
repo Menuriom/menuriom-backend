@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Post, Req, Res, UploadedFile, UseInterceptors } from "@nestjs/common";
+import { Body, Controller, Delete, ForbiddenException, Get, Post, Req, Res, UploadedFile, UseInterceptors } from "@nestjs/common";
 import { NotFoundException, UnprocessableEntityException } from "@nestjs/common";
 import { Response } from "express";
 import { Request } from "src/interfaces/Request.interface";
@@ -7,13 +7,14 @@ import { Model } from "mongoose";
 import { UserDocument } from "src/models/Users.schema";
 import { BrandDocument } from "src/models/Brands.schema";
 import { BranchDocument } from "src/models/Branches.schema";
-import { unlink } from "fs/promises";
 import { FileService } from "src/services/file.service";
 import { FileInterceptor } from "@nestjs/platform-express";
-import { SetupBrandDto } from "src/dto/panel/account.dto";
+import { SetupBrandDto, acceptInvitesDto } from "src/dto/panel/account.dto";
 import { I18nContext } from "nestjs-i18n";
 import { StaffRoleDefaultDocument } from "src/models/StaffRoleDefaults.schema";
 import { StaffRoleDocument } from "src/models/StaffRoles.schema";
+import { InviteDocument } from "src/models/Invites.schema";
+import { StaffDocument } from "src/models/Staff.schema";
 
 @Controller("account")
 export class AccountController {
@@ -21,11 +22,55 @@ export class AccountController {
         // ...
         private readonly fileService: FileService,
         @InjectModel("User") private readonly UserModel: Model<UserDocument>,
+        @InjectModel("Invite") private readonly InviteModel: Model<InviteDocument>,
         @InjectModel("Brand") private readonly BrandModel: Model<BrandDocument>,
         @InjectModel("Branch") private readonly BranchModel: Model<BranchDocument>,
+        @InjectModel("Staff") private readonly StaffModel: Model<StaffDocument>,
         @InjectModel("StaffRoleDefault") private readonly StaffRoleDefaultModel: Model<StaffRoleDefaultDocument>,
         @InjectModel("StaffRole") private readonly StaffRoleModel: Model<StaffRoleDocument>,
     ) {}
+
+    @Get("/invitation-list")
+    async invitationList(@Req() req: Request, @Res() res: Response): Promise<void | Response> {
+        const user = await this.UserModel.findOne({ _id: req.session.userID }).select("_id email").exec();
+        if (!user) throw new ForbiddenException();
+
+        const invites = await this.InviteModel.find({ email: user.email, status: "sent" })
+            .select("_id brand role branches createdAt")
+            .populate("brand", "logo name")
+            .populate("role", "name")
+            .populate("branches", "name")
+            .exec();
+        return res.json({ invites });
+    }
+
+    @Post("/invites")
+    async acceptInvites(@Body() body: acceptInvitesDto, @Req() req: Request, @Res() res: Response): Promise<void | Response> {
+        const user = await this.UserModel.findOne({ _id: req.session.userID }).select("_id email").exec();
+        if (!user) throw new ForbiddenException();
+
+        const invites = await this.InviteModel.find({ _id: { $in: body.invites }, email: user.email, status: "sent" })
+            .populate("brand", "_id logo name")
+            .populate("role", "name permissions")
+            .limit(3)
+            .exec();
+
+        // put user in brands staff list
+        const brands = {};
+        const staffInsert = [];
+        for (let i = 0; i < invites.length; i++) {
+            const invite = invites[i];
+            brands[invite.brand._id.toString()] = { logo: invite.brand.logo, name: invite.brand.name, role: invite.role.name, permissions: invite.role.permissions };
+            staffInsert.push({ user: user._id, brand: invite.brand, role: invite.role, branches: invite.branches });
+        }
+        await this.StaffModel.insertMany(staffInsert);
+
+        // change status of invites
+        const inviteValidIds = invites.map((invite) => invite._id);
+        await this.InviteModel.updateMany({ _id: { $in: inviteValidIds } }, { status: "accepted" }).exec();
+
+        return res.json({ brands });
+    }
 
     @Post("/setup-brand")
     @UseInterceptors(FileInterceptor("logo"))
