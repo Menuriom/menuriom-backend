@@ -29,6 +29,6 @@ export interface Invite {
     brand: Brand & Types.ObjectId;
     role: StaffRole & Types.ObjectId;
     branches: Array<Branch | Types.ObjectId>;
-    status: "sent" | "accepted" | "rejected";
+    status?: "sent" | "accepted" | "rejected";
     createdAt: Date;
 }

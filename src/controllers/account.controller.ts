@@ -1,19 +1,19 @@
-import { Body, Controller, Delete, ForbiddenException, Get, Post, Req, Res, UploadedFile, UseInterceptors } from "@nestjs/common";
-import { NotFoundException, UnprocessableEntityException } from "@nestjs/common";
+import { Body, Controller, Delete, ForbiddenException, Get, Post, Req, Res, Query, UploadedFile, UseInterceptors } from "@nestjs/common";
+import { NotFoundException, InternalServerErrorException, UnprocessableEntityException } from "@nestjs/common";
 import { Response } from "express";
 import { Request } from "src/interfaces/Request.interface";
 import { InjectModel } from "@nestjs/mongoose";
-import { Model } from "mongoose";
+import { FilterQuery, Model, Types } from "mongoose";
 import { UserDocument } from "src/models/Users.schema";
 import { BrandDocument } from "src/models/Brands.schema";
 import { BranchDocument } from "src/models/Branches.schema";
 import { FileService } from "src/services/file.service";
 import { FileInterceptor } from "@nestjs/platform-express";
-import { SetupBrandDto, acceptInvitesDto } from "src/dto/panel/account.dto";
+import { SetupBrandDto, acceptInvitesDto, invitationListDto } from "src/dto/panel/account.dto";
 import { I18nContext } from "nestjs-i18n";
 import { StaffRoleDefaultDocument } from "src/models/StaffRoleDefaults.schema";
 import { StaffRoleDocument } from "src/models/StaffRoles.schema";
-import { InviteDocument } from "src/models/Invites.schema";
+import { Invite, InviteDocument } from "src/models/Invites.schema";
 import { StaffDocument } from "src/models/Staff.schema";
 
 @Controller("account")
@@ -31,17 +31,38 @@ export class AccountController {
     ) {}
 
     @Get("/invitation-list")
-    async invitationList(@Req() req: Request, @Res() res: Response): Promise<void | Response> {
+    async invitationList(@Query() query: invitationListDto, @Req() req: Request, @Res() res: Response): Promise<void | Response> {
         const user = await this.UserModel.findOne({ _id: req.session.userID }).select("_id email").exec();
         if (!user) throw new ForbiddenException();
 
-        const invites = await this.InviteModel.find({ email: user.email, status: "sent" })
-            .select("_id brand role branches createdAt")
-            .populate("brand", "logo name")
-            .populate("role", "name")
-            .populate("branches", "name")
-            .exec();
-        return res.json({ invites });
+        // sort
+        let sort: any = { _id: -1 };
+
+        // the base query object
+        let matchQuery: FilterQuery<any> = { email: user.email, status: "sent" };
+        if (query.lastRecordID) matchQuery = { _id: { $lt: new Types.ObjectId(query.lastRecordID) }, ...matchQuery };
+
+        // making the model with query
+        let data = this.InviteModel.aggregate();
+        data.sort(sort);
+        data.match(matchQuery);
+        data.limit(Number(query.pp));
+        data.lookup({ from: "brands", localField: "brand", foreignField: "_id", as: "brand" });
+        data.lookup({ from: "staffroles", localField: "role", foreignField: "_id", as: "role" });
+        data.lookup({ from: "branches", localField: "branches", foreignField: "_id", as: "branches" });
+        data.project({ _id: 1, createdAt: 1, "brand.logo": 1, "brand.name": 1, "role.name": 1, "branches.name": 1 });
+
+        // executing query and getting the results
+        let error;
+        const exec: any[] = await data.exec().catch((e) => (error = e));
+        if (error) throw new InternalServerErrorException();
+        const invites: Invite[] = exec.map<Invite>((record): Invite => {
+            return { _id: record._id, brand: record.brand[0], role: record.role[0], branches: record.branches, createdAt: record.createdAt };
+        });
+
+        const totalBrands = await this.StaffModel.countDocuments({ user: req.session.userID }).exec();
+
+        return res.json({ invites, totalBrands });
     }
 
     @Post("/invites")
