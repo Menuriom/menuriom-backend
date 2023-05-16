@@ -7,7 +7,7 @@ import { SendCodeDto } from "src/dto/auth/sendCode.dto";
 import { VerifyDto } from "src/dto/auth/verify.dto";
 import { RegisterDto } from "src/dto/auth/register.dto";
 import { InjectModel } from "@nestjs/mongoose";
-import { Model } from "mongoose";
+import { Model, Types } from "mongoose";
 import { I18nContext } from "nestjs-i18n";
 import { UserDocument } from "src/models/Users.schema";
 import { SessionDocument } from "src/models/Sessions.schema";
@@ -159,7 +159,7 @@ export class AuthController {
             ]);
         }
         // update user's info and set status to active
-        await this.UserModel.updateOne({ id: user.id }, { name: inputs.name, family: inputs.family, mobile: inputs.mobile, status: "active" }).exec();
+        await this.UserModel.updateOne({ _id: user._id }, { name: inputs.name, family: inputs.family, mobile: inputs.mobile, status: "active" }).exec();
 
         // generate token
         const sessionID = await this.authService.createSession(req, user.id);
@@ -226,7 +226,7 @@ export class AuthController {
         const userID = req.session.userID;
         // const FamilyLength = parseInt(process.env.ACCESS_TOKEN_FAMILY_LENGTH);
 
-        const session = await this.SessionModel.findOne({ _id: sessionID, user: userID, status: "active" }).exec();
+        const session = await this.SessionModel.findOne({ _id: new Types.ObjectId(sessionID), user: new Types.ObjectId(userID), status: "active" }).exec();
 
         // check the updatedAt field and if it is passed the refresh rate mark
         const refreshInterval = 60 * 15; // 15 minutes

@@ -12,7 +12,7 @@ import { languages } from "src/interfaces/Translation.interface";
 import { I18nContext } from "nestjs-i18n";
 import { BranchDocument } from "src/models/Branches.schema";
 import { SetPermissions } from "src/decorators/authorization.decorator";
-import { AuthorizeUser } from "src/guards/authorizeUser.guard";
+import { AuthorizeUserInSelectedBrand } from "src/guards/authorizeUser.guard";
 
 @Controller("panel/branches")
 export class BranchController {
@@ -22,11 +22,9 @@ export class BranchController {
         @InjectModel("Branch") private readonly BranchModel: Model<BranchDocument>,
     ) {}
 
-    // TODO : set permission check on every method - we can try custom decorators for this
-
     @Get("/")
     @SetPermissions("main-panel.branches.view")
-    @UseGuards(AuthorizeUser)
+    @UseGuards(AuthorizeUserInSelectedBrand)
     async getList(@Req() req: Request, @Res() res: Response): Promise<void | Response> {
         const brandID = req.headers["brand"];
         const branches = await this.BranchModel.find({ brand: brandID }).select("name address telephoneNumbers postalCode gallery translation").exec();
@@ -39,7 +37,7 @@ export class BranchController {
 
     @Get("/:id")
     @SetPermissions("main-panel.branches.view")
-    @UseGuards(AuthorizeUser)
+    @UseGuards(AuthorizeUserInSelectedBrand)
     async getSingleRecord(@Param() params: IDBranchDto, @Req() req: Request, @Res() res: Response): Promise<void | Response> {
         const branch = await this.BranchModel.findOne({ _id: params.id }).exec();
         if (!branch) {
@@ -62,7 +60,7 @@ export class BranchController {
 
     @Post("/")
     @SetPermissions("main-panel.branches.add")
-    @UseGuards(AuthorizeUser)
+    @UseGuards(AuthorizeUserInSelectedBrand)
     @UseInterceptors(FilesInterceptor("gallery"))
     async addRecord(
         @UploadedFiles() gallery: Express.Multer.File[],
@@ -70,12 +68,15 @@ export class BranchController {
         @Req() req: Request,
         @Res() res: Response,
     ): Promise<void | Response> {
-        // TODO : check if user has access to this brand and has permission to create branches
-        // TODO : check branch limit
+        // TODO : check brand limit for creating branches
+
+        // limit user to upload at max 5 images
+        if (gallery.length > 5) {
+            throw new UnprocessableEntityException([{ property: "", errors: [I18nContext.current().t("file.max file count is n", { args: { count: 5 } })] }]);
+        }
 
         const brandID = req.headers["brand"];
         const galleryLinks = await this.fileService.saveUploadedImages(gallery, "gallery", 2 * 1_048_576, ["png", "jpeg", "jpg", "webp"], 768, "public", "/gallery");
-        // TODO : limit user to upload at max 5 images
 
         const translation = {};
         for (const lang in languages) {
@@ -103,7 +104,7 @@ export class BranchController {
 
     @Put("/:id")
     @SetPermissions("main-panel.branches.edit")
-    @UseGuards(AuthorizeUser)
+    @UseGuards(AuthorizeUserInSelectedBrand)
     @UseInterceptors(FilesInterceptor("gallery"))
     async editRecord(
         @UploadedFiles() gallery: Express.Multer.File[],
@@ -112,13 +113,30 @@ export class BranchController {
         @Req() req: Request,
         @Res() res: Response,
     ): Promise<void | Response> {
-        const galleryLinks = await this.fileService.saveUploadedImages(gallery, "gallery", 2 * 1_048_576, ["png", "jpeg", "jpg", "webp"], 768, "public", "/gallery");
-        // TODO : limit user to upload at max 5 images
+        const branch = await this.BranchModel.findOne({ _id: params.id }).exec();
+        if (!branch) {
+            throw new UnprocessableEntityException([
+                { property: "", errors: [I18nContext.current().t("panel.brand.no record was found, or you are not authorized to do this action")] },
+            ]);
+        }
 
-        // TODO
-        // get old image list
-        // get new image list
-        // compare the two and alter old list base on new list and delete the ones that dont exist
+        let branchGallery = branch.gallery;
+        const newGalleryList = body.galleryList;
+        for (let i = 0; i < branchGallery.length; i++) {
+            if (newGalleryList.includes(branchGallery[i])) continue;
+            await unlink(branchGallery[i].replace("/file/", "storage/public/")).catch((e) => {});
+            branchGallery[i] = null;
+        }
+        branchGallery = branchGallery.filter((image) => image !== null);
+
+        // limit user to upload at max 5 images
+        if (branchGallery.length + gallery.length > 5) {
+            throw new UnprocessableEntityException([{ property: "", errors: [I18nContext.current().t("file.max file count is n", { args: { count: 5 } })] }]);
+        }
+
+        // upload new images
+        const galleryLinks = await this.fileService.saveUploadedImages(gallery, "gallery", 2 * 1_048_576, ["png", "jpeg", "jpg", "webp"], 768, "public", "/gallery");
+        branchGallery = [...branchGallery, ...galleryLinks];
 
         const translation = {};
         for (const lang in languages) {
@@ -137,17 +155,17 @@ export class BranchController {
                 address: body["address.default"],
                 telephoneNumbers: body.telephoneNumbers,
                 postalCode: body.postalCode,
-                gallery: galleryLinks,
+                gallery: branchGallery,
                 translation: translation,
             },
         );
 
-        return res.end();
+        return res.json({ gallery: branchGallery });
     }
 
     @Delete("/:id")
     @SetPermissions("main-panel.branches.delete")
-    @UseGuards(AuthorizeUser)
+    @UseGuards(AuthorizeUserInSelectedBrand)
     async deleteSingleRecord(@Param() params: IDBranchDto, @Req() req: Request, @Res() res: Response): Promise<void | Response> {
         const branch = await this.BranchModel.findOne({ _id: params.id }).select("logo name slogan").exec();
 
@@ -162,6 +180,7 @@ export class BranchController {
 
         // delete branch
         await this.BranchModel.deleteOne({ _id: params.id }).exec();
+        // TODO : delete branch images
         // TODO : delete branch staff
         // TODO : delete branch custom menu
 

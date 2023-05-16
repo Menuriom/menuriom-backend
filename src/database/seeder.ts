@@ -5,13 +5,16 @@ import { InjectModel } from "@nestjs/mongoose";
 import { Model } from "mongoose";
 import { UserDocument } from "src/models/users.schema";
 import { StaffPermissionDocument } from "src/models/StaffPermissions.schema";
+import { StaffRoleDefaultDocument } from "src/models/StaffRoleDefaults.schema";
 import { records as staffPermissionRecords } from "src/database/seeds/staffPermissions.seed";
+import { records as staffDefaultRoles } from "src/database/seeds/staffDefaultRoles.seed";
 
 @Controller("seeder")
 export class Seeder {
     constructor(
         @InjectModel("User") private readonly UserModel: Model<UserDocument>,
         @InjectModel("StaffPermission") private readonly StaffPermissionModel: Model<StaffPermissionDocument>,
+        @InjectModel("StaffRoleDefault") private readonly StaffRoleDefaultModel: Model<StaffRoleDefaultDocument>,
     ) {}
 
     @Get("/seed/all")
@@ -20,13 +23,13 @@ export class Seeder {
         // ->
 
         await this.seedPermissions(req, res, false);
-        // await this.seedPermissionGroups(req, res, false);
+        await this.seedStaffDefaultRoles(req, res, false);
         // await this.seedDefaultSuperAdmin(req, res, false);
 
         return res.json({ seedAll: 1 });
     }
 
-    @Get("/seed/permissions")
+    @Get("/seed/staff-permissions")
     async seedPermissions(@Req() req: Request, @Res() res: Response, end = true): Promise<void | Response> {
         this.StaffPermissionModel.collection.drop().catch((e) => {
             throw new InternalServerErrorException(e);
@@ -43,8 +46,22 @@ export class Seeder {
         if (end) return res.json({ seedPermissions: 1 });
     }
 
-    // @Get("/seed/permission-groups")
-    // async seedPermissionGroups(@Req() req: Request, @Res() res: Response, end = true): Promise<void | Response> {}
+    @Get("/seed/staff-default-roles")
+    async seedStaffDefaultRoles(@Req() req: Request, @Res() res: Response, end = true): Promise<void | Response> {
+        this.StaffRoleDefaultModel.collection.drop().catch((e) => {
+            throw new InternalServerErrorException(e);
+        });
+
+        const records = staffDefaultRoles.map((role) => {
+            return { ...role.record, translation: role.translation };
+        });
+
+        await this.StaffRoleDefaultModel.insertMany(records).catch((e) => {
+            throw new InternalServerErrorException(e);
+        });
+
+        if (end) return res.json({ seedStaffDefaultRoles: 1 });
+    }
 
     // @Get("/seed/super-admin")
     // async seedDefaultSuperAdmin(@Req() req: Request, @Res() res: Response, end = true): Promise<void | Response> {}

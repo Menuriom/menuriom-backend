@@ -8,14 +8,11 @@ export const InviteSchema = new Schema({
     email: { type: String, lowercase: true },
     mobile: { type: String },
     brand: { type: Schema.Types.ObjectId, ref: "Brand", required: true },
-    brandPermissions: [{ type: String }],
-    branches: new Schema({
-        branch: { type: Schema.Types.ObjectId, ref: "Branch", required: true },
-        role: { type: Schema.Types.ObjectId, ref: "UserRole", required: true },
-    }),
+    role: { type: Schema.Types.ObjectId, ref: "StaffRole", required: true },
+    branches: [{ type: Schema.Types.ObjectId, ref: "Branch", required: true }],
     status: {
         type: String,
-        enum: ["sent", "rejected"],
+        enum: ["sent", "accepted", "rejected"],
         default: "sent",
         required: true,
     },
@@ -29,12 +26,9 @@ export interface Invite {
     _id: Types.ObjectId;
     email?: string;
     mobile?: string;
-    brand: Brand | Types.ObjectId;
-    brandPermissions: string[];
-    branches: {
-        branch: Branch | Types.ObjectId;
-        role: StaffRole | Types.ObjectId;
-    };
-    status: "sent" | "rejected";
+    brand: Brand & Types.ObjectId;
+    role: StaffRole & Types.ObjectId;
+    branches: Array<Branch | Types.ObjectId>;
+    status?: "sent" | "accepted" | "rejected";
     createdAt: Date;
 }

@@ -26,6 +26,9 @@ export class CreateNewBranchDto {
 }
 
 export class EditBranchDto {
+    @IsNotEmpty({ message: i18nValidationMessage("validation.IsNotEmpty") })
+    readonly galleryList: string | string[] = [];
+
     @Length(1, 100, { message: i18nValidationMessage("validation.Length") })
     @IsString({ message: i18nValidationMessage("validation.IsString") })
     @IsNotEmpty({ message: i18nValidationMessage("validation.IsNotEmpty") })
@@ -40,7 +43,7 @@ export class EditBranchDto {
     @IsArray({ message: i18nValidationMessage("validation.IsArray") })
     @IsPhoneNumber("IR", { message: i18nValidationMessage("validation.IsPhoneNumber"), each: true })
     @IsNotEmpty({ message: i18nValidationMessage("validation.IsNotEmpty"), each: true })
-    readonly telephoneNumbers: string[];
+    readonly telephoneNumbers: string[] = [];
 
     @IsOptional()
     @Length(10, 10, { message: i18nValidationMessage("validation.Length") })

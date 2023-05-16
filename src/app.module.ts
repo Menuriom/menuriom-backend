@@ -7,6 +7,7 @@ import { serverOnly } from "./middlewares/server.middleware";
 import { AuthCheckMiddleware, GuestMiddleware } from "./middlewares/auth.middleware";
 // services
 import { AppService } from "./app.service";
+import { FileService } from "./services/file.service";
 // modules
 import { AuthModule } from "./modules/auth.module";
 import { BrandPanelModule } from "./modules/panel.module";
@@ -29,13 +30,14 @@ import { StaffSchema } from "./models/Staff.schema";
 import { StaffRoleSchema } from "./models/StaffRoles.schema";
 import { StaffPermissionSchema } from "./models/StaffPermissions.schema";
 import { UserSchema } from "./models/Users.schema";
+import { InviteSchema } from "./models/Invites.schema";
 import { SessionSchema } from "./models/Sessions.schema";
 import { AcceptLanguageResolver, CookieResolver, I18nModule } from "nestjs-i18n";
 import * as path from "path";
+import { Seeder } from "./database/seeder";
 import { FilesController } from "./controllers/files.controller";
 import { AccountController } from "./controllers/account.controller";
 import { UserController } from "./controllers/user.controller";
-import { FileService } from "./services/file.service";
 
 @Module({
     imports: [
@@ -66,11 +68,12 @@ import { FileService } from "./services/file.service";
             { name: "Staff", schema: StaffSchema },
             { name: "StaffRole", schema: StaffRoleSchema },
             { name: "StaffPermission", schema: StaffPermissionSchema },
+            { name: "Invite", schema: InviteSchema },
             { name: "User", schema: UserSchema },
             { name: "Session", schema: SessionSchema },
         ]),
     ],
-    controllers: [AppController, AccountController, UserController, FilesController],
+    controllers: [Seeder, AppController, AccountController, UserController, FilesController],
     providers: [AppService, FileService],
 })
 export class AppModule implements NestModule {

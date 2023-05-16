@@ -2,7 +2,7 @@ import { Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { sign } from "jsonwebtoken";
 import { payload, Request } from "src/interfaces/Request.interface";
-import { Model } from "mongoose";
+import { Model, Types } from "mongoose";
 import { SessionDocument } from "src/models/Sessions.schema";
 import { UserDocument } from "src/models/Users.schema";
 import { BrandDocument } from "src/models/Brands.schema";
@@ -39,7 +39,7 @@ export class AuthService {
         const userAgent = req.headers["user-agent"];
 
         await this.SessionModel.updateOne(
-            { _id: sessionID },
+            { _id: new Types.ObjectId(sessionID) },
             {
                 ip: ip,
                 userAgent: userAgent,
