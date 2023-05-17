@@ -65,15 +65,21 @@ export class AccountController {
         return res.json({ invites, totalBrands });
     }
 
-    @Post("/invites")
+    @Post("/accept-invites")
     async acceptInvites(@Body() body: acceptInvitesDto, @Req() req: Request, @Res() res: Response): Promise<void | Response> {
         const user = await this.UserModel.findOne({ _id: req.session.userID }).select("_id email").exec();
         if (!user) throw new ForbiddenException();
 
+        // checking how many brands this user is staff of
+        const staffLimit: number = await this.StaffModel.countDocuments({ user: new Types.ObjectId(req.session.userID) }).exec();
+        if (staffLimit >= 3) {
+            throw new ForbiddenException([{ property: "", errors: [I18nContext.current().t("panel.brand.You can join three brands at a max!")] }]);
+        }
+
         const invites = await this.InviteModel.find({ _id: { $in: body.invites }, email: user.email, status: "sent" })
             .populate("brand", "_id logo name")
             .populate("role", "name permissions")
-            .limit(3)
+            .limit(3 - staffLimit)
             .exec();
 
         // put user in brands staff list
@@ -91,6 +97,17 @@ export class AccountController {
         await this.InviteModel.updateMany({ _id: { $in: inviteValidIds } }, { status: "accepted" }).exec();
 
         return res.json({ brands });
+    }
+
+    @Post("/reject-invites")
+    async rejectInvites(@Body() body: acceptInvitesDto, @Req() req: Request, @Res() res: Response): Promise<void | Response> {
+        const user = await this.UserModel.findOne({ _id: req.session.userID }).select("_id email").exec();
+        if (!user) throw new ForbiddenException();
+
+        // change status of invites
+        await this.InviteModel.updateMany({ _id: { $in: body.invites }, email: user.email, status: "sent" }, { status: "rejected" }).exec();
+
+        return res.end();
     }
 
     @Post("/setup-brand")

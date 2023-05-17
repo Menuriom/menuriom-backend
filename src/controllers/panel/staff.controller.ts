@@ -1,16 +1,16 @@
 import { Body, Param, Query, Controller, Delete, Get, UseGuards, Post, Put, Req, Res, UploadedFiles, UseInterceptors } from "@nestjs/common";
-import { NotFoundException, UnprocessableEntityException, ForbiddenException } from "@nestjs/common";
+import { NotFoundException, UnprocessableEntityException, InternalServerErrorException, ForbiddenException } from "@nestjs/common";
 import { Response, query } from "express";
 import { Request } from "src/interfaces/Request.interface";
 import { InjectModel } from "@nestjs/mongoose";
-import { Model, Types } from "mongoose";
+import { FilterQuery, Model, Types } from "mongoose";
 import { FileService } from "src/services/file.service";
 import { FileInterceptor, FilesInterceptor } from "@nestjs/platform-express";
-import { IdDto, SendInviteDto } from "src/dto/panel/staff.dto";
+import { IdDto, ListingDto, SendInviteDto } from "src/dto/panel/staff.dto";
 import { languages } from "src/interfaces/Translation.interface";
 import { I18nContext } from "nestjs-i18n";
 import { BranchDocument } from "src/models/Branches.schema";
-import { StaffDocument } from "src/models/Staff.schema";
+import { Staff, StaffDocument } from "src/models/Staff.schema";
 import { SetPermissions } from "src/decorators/authorization.decorator";
 import { AuthorizeUserInSelectedBrand } from "src/guards/authorizeUser.guard";
 import { InviteDocument } from "src/models/Invites.schema";
@@ -32,15 +32,39 @@ export class StaffController {
     @Get("/")
     @SetPermissions("main-panel.staff.view")
     @UseGuards(AuthorizeUserInSelectedBrand)
-    async getList(@Req() req: Request, @Res() res: Response): Promise<void | Response> {
+    async getList(@Query() query: ListingDto, @Req() req: Request, @Res() res: Response): Promise<void | Response> {
         const brandID = req.headers["brand"];
-        // TODO : aggrigate this query and add pp and search filter
-        const staff = await this.StaffModel.find({ brand: brandID }).select("user role").populate("user", "avatar name family email mobile").exec();
+
+        // sort
+        let sort: any = { _id: -1 };
+
+        // the base query object
+        let matchQuery: FilterQuery<any> = {};
+        if (query.lastRecordID) matchQuery = { _id: { $lt: new Types.ObjectId(query.lastRecordID) }, ...matchQuery };
+
+        // making the model with query
+        let data = this.StaffModel.aggregate();
+        data.sort(sort);
+        data.match(matchQuery);
+        data.limit(Number(query.pp));
+        data.lookup({ from: "users", localField: "user", foreignField: "_id", as: "user" });
+        data.lookup({ from: "staffroles", localField: "role", foreignField: "_id", as: "role" });
+        data.project({ _id: 1, "user.avatar": 1, "user.name": 1, "user.family": 1, "user.email": 1, "user.mobile": 1, "role.name": 1 });
+
+        // executing query and getting the results
+        let error;
+        const exec: any[] = await data.exec().catch((e) => (error = e));
+        if (error) throw new InternalServerErrorException();
+        const staff = exec.map((record) => {
+            return { _id: record._id, user: record.user[0], role: record.role[0] };
+        });
+
+        const total = await this.StaffModel.countDocuments().exec();
 
         // TODO : check if plans staff limit is passed or not this is per branch
         const canInviteNewMembers = true;
 
-        return res.json({ records: staff, total: staff.length, canInviteNewMembers });
+        return res.json({ records: staff, total: total, canInviteNewMembers });
     }
 
     @Post("/invite")
