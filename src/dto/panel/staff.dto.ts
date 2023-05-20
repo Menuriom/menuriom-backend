@@ -10,6 +10,11 @@ export class ListingDto {
     @IsString({ message: i18nValidationMessage("validation.IsString") })
     @IsNotEmpty({ message: i18nValidationMessage("validation.IsNotEmpty") })
     readonly pp: string = "25";
+
+    @IsOptional()
+    @IsString({ message: i18nValidationMessage("validation.IsString") })
+    @IsNotEmpty({ message: i18nValidationMessage("validation.IsNotEmpty") })
+    readonly searchQuery: string;
 }
 
 export class SendInviteDto {
@@ -17,6 +22,17 @@ export class SendInviteDto {
     @IsNotEmpty({ message: i18nValidationMessage("validation.IsNotEmpty") })
     readonly email: string;
 
+    @IsMongoId({ message: i18nValidationMessage("validation.IsMongoId") })
+    @IsNotEmpty({ message: i18nValidationMessage("validation.IsNotEmpty") })
+    readonly selectedRole: string;
+
+    @IsArray({ message: i18nValidationMessage("validation.IsString") })
+    @IsMongoId({ message: i18nValidationMessage("validation.IsMongoId"), each: true })
+    @IsNotEmpty({ message: i18nValidationMessage("validation.IsNotEmpty") })
+    readonly selectedBranches: string[];
+}
+
+export class EditStaffAccessDto {
     @IsMongoId({ message: i18nValidationMessage("validation.IsMongoId") })
     @IsNotEmpty({ message: i18nValidationMessage("validation.IsNotEmpty") })
     readonly selectedRole: string;
