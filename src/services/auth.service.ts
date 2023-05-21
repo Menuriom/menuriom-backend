@@ -69,24 +69,4 @@ export class AuthService {
 
         return token;
     }
-
-    async isUserAuthorize(req: Request, brandID: string, permissionsToCheck: string[] = [], operator: "OR" | "AND" = "OR"): Promise<boolean> {
-        // check if user is owner
-        const isUserOwner = await this.BrandModel.exists({ _id: brandID, creator: req.session.userID }).exec();
-        if (isUserOwner) return true;
-
-        const staff = await this.StaffModel.findOne({ brand: brandID, user: req.session.userID }).populate("role", "name permissions").exec();
-        if (!staff) return false;
-        const userPermissions = [...staff.role.permissions];
-
-        // then check the requested permission list agains it
-        if (operator == "AND") {
-            for (let i = 0; i < permissionsToCheck.length; i++) if (userPermissions.indexOf(permissionsToCheck[i]) == -1) return false;
-            return true;
-        } else {
-            for (let i = 0; i < permissionsToCheck.length; i++) if (userPermissions.indexOf(permissionsToCheck[i]) != -1) return true;
-            return false;
-        }
-        return false;
-    }
 }
