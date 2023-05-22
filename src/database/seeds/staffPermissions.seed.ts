@@ -25,7 +25,7 @@ export const records = [
             groupLabel: "داشبورد",
             group: "dashboard",
         },
-        translation: { en: { label: "View Dashboard", desc: "", groupLabel: "Dashboard" } },
+        translation: { en: { label: "View Dashboard", desc: "Can view analytics and general info on the dashboard page", groupLabel: "Dashboard" } },
     },
     // ----------------------------------
 
@@ -63,18 +63,18 @@ export const records = [
     },
     {
         record: { _id: "main-panel.staff.alter", label: "تغییر دسترسی اعضا", desc: "تغییر نقش اختصاص یافته به اعضا", groupLabel: "خدمه", group: "staff" },
-        translation: { en: { label: "Alter Staff Member Roles", desc: "", groupLabel: "Staff" } },
+        translation: { en: { label: "Alter Staff Member Roles", desc: "Changing the role assigned to staff", groupLabel: "Staff" } },
     },
     {
         record: { _id: "main-panel.staff.roles", label: "مدیریت نقش های خدمه", desc: "ساخت و ویرایش نقش های خدمه", groupLabel: "خدمه", group: "staff" },
-        translation: { en: { label: "Staff Roles", desc: "", groupLabel: "Staff" } },
+        translation: { en: { label: "Staff Roles", desc: "Create and edit staff roles", groupLabel: "Staff" } },
     },
     // ----------------------------------
 
     // settings ----------------------------------
     {
         record: { _id: "main-panel.settings", label: "تغییر تنظیمات برند", desc: "امکان تغییر و ویرایش تنظیمات کلی برند", groupLabel: "تنظیمات", group: "settings" },
-        translation: { en: { label: "Change brand settings", desc: "", groupLabel: "Settings" } },
+        translation: { en: { label: "Change brand settings", desc: "Ability to change and edit general brand settings", groupLabel: "Settings" } },
     },
     // ----------------------------------
 

@@ -5,16 +5,15 @@ import { Request } from "src/interfaces/Request.interface";
 import { InjectModel } from "@nestjs/mongoose";
 import { Model, Types } from "mongoose";
 import { FileService } from "src/services/file.service";
-import { CreateNewBranchDto, EditBranchDto, IDBranchDto, IDBrandDto } from "src/dto/panel/branch.dto";
-import { languages } from "src/interfaces/Translation.interface";
 import { I18nContext } from "nestjs-i18n";
 import { BranchDocument } from "src/models/Branches.schema";
 import { StaffDocument } from "src/models/Staff.schema";
 import { SetPermissions } from "src/decorators/authorization.decorator";
 import { AuthorizeUserInSelectedBrand } from "src/guards/authorizeUser.guard";
-import { StaffRoleDefault } from "src/models/StaffRoleDefaults.schema";
-import { StaffRole } from "src/models/StaffRoles.schema";
+import { StaffRoleDocument } from "src/models/StaffRoles.schema";
 import { StaffPermissionDocument } from "src/models/StaffPermissions.schema";
+import { NewRoleDto } from "src/dto/panel/staffRole.dto";
+import { IdDto } from "src/dto/panel/staff.dto";
 
 @Controller("panel/staff-roles")
 export class StaffRolesController {
@@ -23,7 +22,7 @@ export class StaffRolesController {
         private readonly fileService: FileService,
         @InjectModel("Branch") private readonly BranchModel: Model<BranchDocument>,
         @InjectModel("Staff") private readonly StaffModel: Model<StaffDocument>,
-        @InjectModel("StaffRole") private readonly StaffRoleModel: Model<StaffRoleDefault>,
+        @InjectModel("StaffRole") private readonly StaffRoleModel: Model<StaffRoleDocument>,
         @InjectModel("StaffPermission") private readonly StaffPermissionModel: Model<StaffPermissionDocument>,
     ) {}
 
@@ -44,12 +43,6 @@ export class StaffRolesController {
             }
             list.push({ ...permissions[i].toObject() });
         }
-        // const groupedPermissions = {};
-        // for (let i = 0; i < permissions.length; i++) {
-        //     if (!groupedPermissions.hasOwnProperty(permissions[i].group)) groupedPermissions[permissions[i].group] = [];
-        //     const permission = permissions[i].toObject();
-        //     groupedPermissions[permissions[i].group].push({ ...permission });
-        // }
 
         return res.json({ permissions: groupedPermissions });
     }
@@ -106,10 +99,63 @@ export class StaffRolesController {
         return res.json({ records: results, canCreateNewRoles });
     }
 
+    @Post("/")
+    @SetPermissions("main-panel.staff.roles")
+    @UseGuards(AuthorizeUserInSelectedBrand)
+    async addRecord(@Body() body: NewRoleDto, @Req() req: Request, @Res() res: Response): Promise<void | Response> {
+        const brandID = req.headers["brand"].toString();
+
+        // check brand limit for creating roles
+        const roleCount = await this.StaffRoleModel.countDocuments({ brand: brandID }).exec();
+        if (roleCount >= 15) {
+            throw new ForbiddenException([
+                { property: "", errors: [I18nContext.current().t("panel.staff.You have reached your max role limit! try to delete your unused roles")] },
+            ]);
+        }
+
+        // check if all permissions are valid
+        const permissionList = await this.StaffPermissionModel.find({ _id: { $in: body.permissions } })
+            .select("_id")
+            .exec();
+        if (permissionList.length !== body.permissions.length) throw new ForbiddenException();
+
+        await this.StaffRoleModel.create({
+            name: body.roleName,
+            permissions: body.permissions,
+            brand: brandID,
+            createdAt: new Date(Date.now()),
+        });
+
+        return res.end();
+    }
+
     @Delete("/:id")
     @SetPermissions("main-panel.staff.roles")
     @UseGuards(AuthorizeUserInSelectedBrand)
-    async deleteSingleRecord(@Param() params: IDBranchDto, @Req() req: Request, @Res() res: Response): Promise<void | Response> {
+    async deleteSingleRecord(@Param() params: IdDto, @Req() req: Request, @Res() res: Response): Promise<void | Response> {
+        const brandID = req.headers["brand"].toString();
+
+        const staffRole = await this.StaffRoleModel.findOne({ _id: params.id, brand: brandID }).exec();
+        if (!staffRole) {
+            throw new UnprocessableEntityException([
+                { property: "", errors: [I18nContext.current().t("panel.brand.no record was found, or you are not authorized to do this action")] },
+            ]);
+        }
+
+        const roleInUse = await this.StaffModel.exists({ role: params.id, brand: brandID }).exec();
+        if (roleInUse) {
+            throw new UnprocessableEntityException([
+                {
+                    property: "",
+                    errors: [
+                        I18nContext.current().t("panel.staff.This role is in use! unassigned it from all staff members that are using this role then try again"),
+                    ],
+                },
+            ]);
+        }
+
+        await this.StaffRoleModel.deleteOne({ _id: params.id, brand: brandID }).exec();
+
         return res.end();
     }
 }

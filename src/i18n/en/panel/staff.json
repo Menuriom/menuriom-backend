@@ -1,5 +1,7 @@
 {
     "The role you've chosen is not in your brand's role list": "The role you've chosen is not in your brand's role list",
     "Some of the branches you choose are not from your brand": "Some of the branches you choose are not from your brand",
-    "This user is already on your staff team": "This user is already on your staff team"
+    "This user is already on your staff team": "This user is already on your staff team",
+    "You have reached your max role limit! try to delete your unused roles": "You have reached your max role limit! try to delete your unused roles",
+    "This role is in use! unassigned it from all staff members that are using this role then try again": "This role is in use! unassigned it from all staff members that are using this role then try again"
 }
