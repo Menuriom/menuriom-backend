@@ -1,6 +1,4 @@
 export const records = [
-    // TODO : add desc to roles beside labels to descripe better what each permission does exacly
-
     // panels ----------------------------------
     {
         record: { _id: "main-panel", label: "دسترسی به پنل اصلی", desc: "", groupLabel: "پنل ها", group: "panels" },
@@ -80,8 +78,16 @@ export const records = [
 
     // billing ----------------------------------
     {
-        record: { _id: "main-main-panel.billing", label: "صورتحساب و ارتقا پلن", desc: "", groupLabel: "بخش مالی", group: "billing" },
-        translation: { en: { label: "Billing and plan upgrade", desc: "", groupLabel: "Billing" } },
+        record: { _id: "main-panel.billing.access", label: "دسترسی به بخش مالی", desc: "", groupLabel: "بخش مالی", group: "billing" },
+        translation: { en: { label: "Access to billing section", desc: "", groupLabel: "Billing" } },
+    },
+    {
+        record: { _id: "main-panel.billing.change-plan", label: "امکان تغییر پلن فعلی", desc: "", groupLabel: "بخش مالی", group: "billing" },
+        translation: { en: { label: "Can change current plan", desc: "", groupLabel: "Billing" } },
+    },
+    {
+        record: { _id: "main-panel.billing.pay", label: "امکان پرداخت صورتحساب", desc: "", groupLabel: "بخش مالی", group: "billing" },
+        translation: { en: { label: "Can pay bills", desc: "", groupLabel: "Billing" } },
     },
     // ----------------------------------
 ];

@@ -99,6 +99,22 @@ export class StaffRolesController {
         return res.json({ records: results, canCreateNewRoles });
     }
 
+    @Get("/:id")
+    @SetPermissions("main-panel.staff.roles")
+    @UseGuards(AuthorizeUserInSelectedBrand)
+    async getSingleRecord(@Param() params: IdDto, @Req() req: Request, @Res() res: Response): Promise<void | Response> {
+        const brandID = req.headers["brand"].toString();
+
+        const role = await this.StaffRoleModel.findOne({ _id: params.id, brand: brandID }).exec();
+        if (!role) {
+            throw new UnprocessableEntityException([
+                { property: "", errors: [I18nContext.current().t("panel.brand.no record was found, or you are not authorized to do this action")] },
+            ]);
+        }
+
+        return res.json({ permissions: role.permissions, name: role.name });
+    }
+
     @Post("/")
     @SetPermissions("main-panel.staff.roles")
     @UseGuards(AuthorizeUserInSelectedBrand)
@@ -125,6 +141,23 @@ export class StaffRolesController {
             brand: brandID,
             createdAt: new Date(Date.now()),
         });
+
+        return res.end();
+    }
+
+    @Put("/:id")
+    @SetPermissions("main-panel.staff.roles")
+    @UseGuards(AuthorizeUserInSelectedBrand)
+    async editRecord(@Param() params: IdDto, @Body() body: NewRoleDto, @Req() req: Request, @Res() res: Response): Promise<void | Response> {
+        const brandID = req.headers["brand"].toString();
+
+        // check if all permissions are valid
+        const permissionList = await this.StaffPermissionModel.find({ _id: { $in: body.permissions } })
+            .select("_id")
+            .exec();
+        if (permissionList.length !== body.permissions.length) throw new ForbiddenException();
+
+        await this.StaffRoleModel.updateOne({ _id: params.id, brand: brandID }, { name: body.roleName, permissions: body.permissions }).exec();
 
         return res.end();
     }
