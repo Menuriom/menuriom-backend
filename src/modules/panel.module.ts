@@ -13,7 +13,9 @@ import { BranchController } from "src/controllers/panel/branch.controller";
 import { StaffController } from "src/controllers/panel/staff.controller";
 import { StaffRolesController } from "src/controllers/panel/staffRoles.controller";
 import { StaffRoleDefaultSchema } from "src/models/StaffRoleDefaults.schema";
+import { BrandsPlanSchema } from "src/models/BrandsPlans.schema";
 import { InviteSchema } from "src/models/Invites.schema";
+import { PlanSchema } from "src/models/Plans.schema";
 
 @Module({
     imports: [
@@ -22,7 +24,9 @@ import { InviteSchema } from "src/models/Invites.schema";
             { name: "User", schema: UserSchema },
             { name: "Role", schema: StaffRoleSchema },
             { name: "Brand", schema: BrandSchema },
+            { name: "BrandsPlan", schema: BrandsPlanSchema },
             { name: "Branch", schema: BranchSchema },
+            { name: "Plan", schema: PlanSchema },
             { name: "Staff", schema: StaffSchema },
             { name: "StaffRole", schema: StaffRoleSchema },
             { name: "StaffRoleDefault", schema: StaffRoleDefaultSchema },

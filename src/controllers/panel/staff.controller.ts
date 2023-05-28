@@ -9,13 +9,13 @@ import { FileInterceptor, FilesInterceptor } from "@nestjs/platform-express";
 import { EditStaffAccessDto, IdDto, ListingDto, SendInviteDto } from "src/dto/panel/staff.dto";
 import { languages } from "src/interfaces/Translation.interface";
 import { I18nContext } from "nestjs-i18n";
-import { BranchDocument } from "src/models/Branches.schema";
+import { Branch, BranchDocument } from "src/models/Branches.schema";
 import { Staff, StaffDocument } from "src/models/Staff.schema";
 import { SetPermissions } from "src/decorators/authorization.decorator";
 import { AuthorizeUserInSelectedBrand } from "src/guards/authorizeUser.guard";
 import { Invite, InviteDocument } from "src/models/Invites.schema";
-import { StaffRoleDocument } from "src/models/StaffRoles.schema";
-import { UserDocument } from "src/models/Users.schema";
+import { StaffRole, StaffRoleDocument } from "src/models/StaffRoles.schema";
+import { User, UserDocument } from "src/models/Users.schema";
 
 @Controller("panel/staff")
 export class StaffController {

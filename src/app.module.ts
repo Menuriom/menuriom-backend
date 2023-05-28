@@ -53,7 +53,7 @@ import { UserController } from "./controllers/user.controller";
         MongooseModule.forFeature([
             { name: "Analytic", schema: AnalyticSchema },
             { name: "Branch", schema: BranchSchema },
-            { name: "BrandPlan", schema: BrandsPlanSchema },
+            { name: "BrandsPlan", schema: BrandsPlanSchema },
             { name: "Brand", schema: BrandSchema },
             { name: "BrandType", schema: BrandTypeSchema },
             { name: "StaffRoleDefault", schema: StaffRoleDefaultSchema },

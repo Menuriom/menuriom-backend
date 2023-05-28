@@ -5,16 +5,18 @@ import { Request } from "src/interfaces/Request.interface";
 import { InjectModel } from "@nestjs/mongoose";
 import { FilterQuery, Model, Types } from "mongoose";
 import { UserDocument } from "src/models/Users.schema";
-import { BrandDocument } from "src/models/Brands.schema";
+import { Brand, BrandDocument } from "src/models/Brands.schema";
 import { BranchDocument } from "src/models/Branches.schema";
 import { FileService } from "src/services/file.service";
 import { FileInterceptor } from "@nestjs/platform-express";
 import { SetupBrandDto, acceptInvitesDto, invitationListDto } from "src/dto/panel/account.dto";
 import { I18nContext } from "nestjs-i18n";
 import { StaffRoleDefaultDocument } from "src/models/StaffRoleDefaults.schema";
-import { StaffRoleDocument } from "src/models/StaffRoles.schema";
+import { StaffRole, StaffRoleDocument } from "src/models/StaffRoles.schema";
 import { Invite, InviteDocument } from "src/models/Invites.schema";
 import { StaffDocument } from "src/models/Staff.schema";
+import { BrandsPlanDocument } from "src/models/BrandsPlans.schema";
+import { PlanDocument } from "src/models/Plans.schema";
 
 @Controller("account")
 export class AccountController {
@@ -24,6 +26,8 @@ export class AccountController {
         @InjectModel("User") private readonly UserModel: Model<UserDocument>,
         @InjectModel("Invite") private readonly InviteModel: Model<InviteDocument>,
         @InjectModel("Brand") private readonly BrandModel: Model<BrandDocument>,
+        @InjectModel("BrandsPlan") private readonly BrandsPlanModel: Model<BrandsPlanDocument>,
+        @InjectModel("Plan") private readonly PlanModel: Model<PlanDocument>,
         @InjectModel("Branch") private readonly BranchModel: Model<BranchDocument>,
         @InjectModel("Staff") private readonly StaffModel: Model<StaffDocument>,
         @InjectModel("StaffRoleDefault") private readonly StaffRoleDefaultModel: Model<StaffRoleDefaultDocument>,
@@ -77,8 +81,8 @@ export class AccountController {
         }
 
         const invites = await this.InviteModel.find({ _id: { $in: body.invites }, email: user.email, status: "sent" })
-            .populate("brand", "_id logo name")
-            .populate("role", "name permissions")
+            .populate<{ brand: Brand }>("brand", "_id logo name")
+            .populate<{ role: StaffRole }>("role", "name permissions")
             .limit(3 - staffLimit)
             .exec();
 
@@ -113,7 +117,6 @@ export class AccountController {
     @Post("/setup-brand")
     @UseInterceptors(FileInterceptor("logo"))
     async setupBrand(@UploadedFile() logo: Express.Multer.File, @Body() input: SetupBrandDto, @Req() req: Request, @Res() res: Response): Promise<void | Response> {
-        // check if user already has a brand then dont allow new brand creation
         const userBrand = await this.BrandModel.exists({ creator: req.session.userID, $or: [{ deletedAt: { $exists: false } }, { deletedAt: null }] }).exec();
         if (userBrand) {
             throw new UnprocessableEntityException([{ property: "", errors: [I18nContext.current().t("panel.brand.You can only create 1 brand!")] }]);
@@ -124,7 +127,6 @@ export class AccountController {
         }
         const logoLink = await this.fileService.saveUploadedImages([logo], "logo", 1_048_576, ["png", "jpeg", "jpg", "webp"], 256, "public", "/logos");
 
-        // creating user's first brand
         const newBrand = await this.BrandModel.create({
             logo: logoLink[0],
             name: input.name,
@@ -134,7 +136,15 @@ export class AccountController {
             createdAt: new Date(Date.now()),
         });
 
-        // creating user's first branch
+        const firstFreePlan = await this.PlanModel.findOne({ monthlyPrice: 0, halfYearPrice: 0, yearlyPrice: 0 }).select("_id").exec();
+        await this.BrandsPlanModel.create({
+            brand: newBrand.id,
+            currentPlan: firstFreePlan._id,
+            period: "monthly",
+            startTime: new Date(Date.now()),
+            createdAt: new Date(Date.now()),
+        });
+
         await this.BranchModel.create({
             brand: newBrand.id,
             name: I18nContext.current().t("panel.brand.Main Branch"),

@@ -1,4 +1,4 @@
-import { Document, Schema, Types } from "mongoose";
+import { Document, PopulatedDoc, Schema, Types } from "mongoose";
 import { Branch } from "./Branches.schema";
 import { Brand } from "./Brands.schema";
 import { Menu } from "./Menus.schema";
@@ -32,9 +32,9 @@ export const AnalyticSchema = new Schema({
 
 export interface Analytic {
     _id: Types.ObjectId;
-    brand?: Brand | Types.ObjectId;
-    branch?: Branch | Types.ObjectId;
-    menu?: Menu | Types.ObjectId;
+    brand?: PopulatedDoc<Brand>;
+    branch?: PopulatedDoc<Branch>;
+    menu?: PopulatedDoc<Menu>;
     name: "QrScans" | "orders" | "likes";
     forGroup: "total" | "brand" | "branch" | "menu";
     type: "daily" | "monthly";
