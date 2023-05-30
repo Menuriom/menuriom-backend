@@ -16,6 +16,7 @@ import { StaffRoleDefaultSchema } from "src/models/StaffRoleDefaults.schema";
 import { BrandsPlanSchema } from "src/models/BrandsPlans.schema";
 import { InviteSchema } from "src/models/Invites.schema";
 import { PlanSchema } from "src/models/Plans.schema";
+import { BillingController } from "src/controllers/panel/billing.controller";
 
 @Module({
     imports: [
@@ -34,7 +35,7 @@ import { PlanSchema } from "src/models/Plans.schema";
             { name: "Invite", schema: InviteSchema },
         ]),
     ],
-    controllers: [BrandController, BranchController, StaffController, StaffRolesController],
+    controllers: [BrandController, BranchController, StaffController, StaffRolesController, BillingController],
     providers: [FileService],
     exports: [],
 })

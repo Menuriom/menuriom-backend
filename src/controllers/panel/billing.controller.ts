@@ -29,14 +29,15 @@ export class BillingController {
         const brandID = req.headers["brand"].toString();
 
         const brandsPlan = await this.BrandsPlanModel.findOne({ brand: brandID })
-            .populate<{ currentPlan: Plan }>("currentPlan", "icon name limitations monthlyPrice yearlyPrice")
+            .populate<{ currentPlan: Plan }>("currentPlan", "icon name limitations monthlyPrice yearlyPrice translation")
             .exec();
+        if (!brandsPlan) throw new NotFoundException();
 
         let branchLimit = "0";
         let staffLimit = "0";
         for (let i = 0; i < brandsPlan.currentPlan.limitations.length; i++) {
-            if (brandsPlan.currentPlan.limitations[i].limit === "branch-limit-count") branchLimit = brandsPlan.currentPlan.limitations[i].limit.toString();
-            if (brandsPlan.currentPlan.limitations[i].limit === "staff-limit-count") staffLimit = brandsPlan.currentPlan.limitations[i].limit.toString();
+            if (brandsPlan.currentPlan.limitations[i].limit === "branch-limit-count") branchLimit = brandsPlan.currentPlan.limitations[i].value.toString();
+            if (brandsPlan.currentPlan.limitations[i].limit === "staff-limit-count") staffLimit = brandsPlan.currentPlan.limitations[i].value.toString();
         }
 
         // calculating remaining days of current plan
@@ -48,7 +49,7 @@ export class BillingController {
 
         return res.json({
             currentPlan: {
-                plan: { icon: brandsPlan.currentPlan.icon, name: brandsPlan.currentPlan.name },
+                plan: { icon: brandsPlan.currentPlan.icon, name: brandsPlan.currentPlan.name, translation: brandsPlan.currentPlan.translation },
                 branchLimit: branchLimit,
                 staffLimit: staffLimit,
                 daysRemaining: daysRemaining,

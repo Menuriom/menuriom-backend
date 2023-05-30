@@ -2,7 +2,7 @@ export const records = [
     {
         record: {
             icon: "/pricing/basic-g.png",
-            name: "پایه",
+            name: "پلن پایه",
             desc: "برای اشخاص و رستوران / کافی شاپ های کوچک",
             limitations: [
                 { limit: "qr-scan-limit", value: Infinity, valueType: "Number" },
@@ -31,12 +31,12 @@ export const records = [
             halfYearPrice: 0,
             yearlyPrice: 0,
         },
-        translation: { en: { name: "Basic", desc: "For individuals or small restaurants and small coffee shops" } },
+        translation: { en: { name: "Basic Plan", desc: "For individuals or small restaurants and small coffee shops" } },
     },
     {
         record: {
             icon: "/pricing/standard-g.png",
-            name: "استاندارد",
+            name: "پلن استاندارد",
             desc: "برای کسب و کار ها و رستوران هایی که بیش از یک شعبه دارند",
             limitations: [
                 { limit: "qr-scan-limit", value: Infinity, valueType: "Number" },
@@ -61,16 +61,16 @@ export const records = [
                 { limit: "customizable-category-logo", value: false, valueType: "Boolean" },
                 { limit: "customer-review", value: false, valueType: "Boolean" },
             ],
-            monthlyPrice: 200_000,
-            halfYearPrice: 1_200_000,
-            yearlyPrice: 2_160_000,
+            monthlyPrice: 150_000,
+            halfYearPrice: 900_000,
+            yearlyPrice: 1_620_000,
         },
-        translation: { en: { name: "Standard", desc: "For businesses and restaurants with more than one branch" } },
+        translation: { en: { name: "Standard Plan", desc: "For businesses and restaurants with more than one branch" } },
     },
     {
         record: {
             icon: "/pricing/pro-g.png",
-            name: "حرفه ای",
+            name: "پلن حرفه ای",
             desc: "برای کسب و کارهایی که به بیش از یک منو دیجیتال نیاز دارند",
             limitations: [
                 { limit: "qr-scan-limit", value: Infinity, valueType: "Number" },
@@ -99,6 +99,6 @@ export const records = [
             halfYearPrice: 2_100_000,
             yearlyPrice: 3_780_000,
         },
-        translation: { en: { name: "Pro", desc: "For businesses that need more than a digital menu" } },
+        translation: { en: { name: "Pro Plan", desc: "For businesses that need more than a digital menu" } },
     },
 ];
