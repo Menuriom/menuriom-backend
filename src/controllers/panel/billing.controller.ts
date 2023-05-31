@@ -60,4 +60,24 @@ export class BillingController {
     }
 
     // ===============================================
+
+    // TODO
+
+    // factor will be generated 3 days before remaining days ending
+
+    // From Free =>
+    // create factor and user pays that factor
+
+    // From Standard Monthly to Yearly =>
+    // if still days remaining they user buys full year and remaining days will be added to limit
+    // From Standard Yearly to Monthly =>
+    // period will be changed
+
+    // From Standard Monthly to Pro Yearly
+    // period change will be same
+    // if plan is upgrading then only the plan is updated
+
+    // From Pro Monthly to Standard Yearly
+    // period change will be same as before
+    // plan downgrade will be by removing any exsess branch, staff, ... from the brand
 }

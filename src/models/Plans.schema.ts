@@ -14,6 +14,7 @@ export const PlanSchema = new Schema({
             valueType: { type: String, enum: ["Number", "Boolean"], required: true },
         },
     ],
+    listings: [{ type: String }],
     monthlyPrice: { type: Number, default: 0, required: true }, // in toman
     halfYearPrice: { type: Number, default: 0, required: true }, // in toman
     yearlyPrice: { type: Number, default: 0, required: true }, // in toman
@@ -34,6 +35,7 @@ export interface Plan {
         value: number | boolean;
         valueType: "Number" | "Boolean";
     }>;
+    listings: string[];
     monthlyPrice: number;
     halfYearPrice: number;
     yearlyPrice: number;
