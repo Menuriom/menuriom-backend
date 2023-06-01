@@ -29,7 +29,7 @@ export class BillingController {
         const brandID = req.headers["brand"].toString();
 
         const brandsPlan = await this.BrandsPlanModel.findOne({ brand: brandID })
-            .populate<{ currentPlan: Plan }>("currentPlan", "icon name limitations monthlyPrice yearlyPrice translation")
+            .populate<{ currentPlan: Plan }>("currentPlan", "_id icon name limitations monthlyPrice yearlyPrice translation")
             .exec();
         if (!brandsPlan) throw new NotFoundException();
 
@@ -49,7 +49,12 @@ export class BillingController {
 
         return res.json({
             currentPlan: {
-                plan: { icon: brandsPlan.currentPlan.icon, name: brandsPlan.currentPlan.name, translation: brandsPlan.currentPlan.translation },
+                plan: {
+                    _id: brandsPlan.currentPlan._id,
+                    icon: brandsPlan.currentPlan.icon,
+                    name: brandsPlan.currentPlan.name,
+                    translation: brandsPlan.currentPlan.translation,
+                },
                 branchLimit: branchLimit,
                 staffLimit: staffLimit,
                 daysRemaining: daysRemaining,

@@ -14,7 +14,7 @@ export class PricingController {
 
     @Get("/purchasable-plans")
     async getPurchasablePlans(@Req() req: Request, @Res() res: Response): Promise<void | Response> {
-        const plans = await this.PlanModel.find().select("icon name desc limitations listings monthlyPrice yearlyPrice translation").exec();
+        const plans = await this.PlanModel.find().select("_id icon name desc limitations listings monthlyPrice yearlyPrice translation").exec();
 
         return res.json({ plans });
     }
