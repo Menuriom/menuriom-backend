@@ -41,9 +41,10 @@ export class BillingController {
         }
 
         // calculating remaining days of current plan
-        let daysRemaining = "";
+        let daysRemaining = null;
+        let secondsPassed = 0;
         if (brandsPlan.nextInvoice && brandsPlan.invoiceStartAt) {
-            const secondsPassed = brandsPlan.nextInvoice.getTime() - brandsPlan.invoiceStartAt.getTime();
+            secondsPassed = brandsPlan.nextInvoice.getTime() - brandsPlan.invoiceStartAt.getTime();
             daysRemaining = humanizeDuration(secondsPassed, { language: I18nContext.current().lang, largest: 1 });
         }
 
@@ -53,11 +54,14 @@ export class BillingController {
                     _id: brandsPlan.currentPlan._id,
                     icon: brandsPlan.currentPlan.icon,
                     name: brandsPlan.currentPlan.name,
+                    monthlyPrice: brandsPlan.currentPlan.monthlyPrice,
+                    yearlyPrice: brandsPlan.currentPlan.yearlyPrice,
                     translation: brandsPlan.currentPlan.translation,
                 },
                 branchLimit: branchLimit,
                 staffLimit: staffLimit,
                 daysRemaining: daysRemaining,
+                secondsPassed: secondsPassed / 1000,
                 price: brandsPlan.period === "monthly" ? brandsPlan.currentPlan.monthlyPrice : brandsPlan.currentPlan.yearlyPrice,
                 period: brandsPlan.period,
             },
