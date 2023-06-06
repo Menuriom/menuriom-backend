@@ -44,7 +44,8 @@ export class BillingController {
         let daysRemaining = null;
         let secondsPassed = 0;
         if (brandsPlan.nextInvoice && brandsPlan.invoiceStartAt) {
-            secondsPassed = brandsPlan.nextInvoice.getTime() - brandsPlan.invoiceStartAt.getTime();
+            // secondsPassed = brandsPlan.nextInvoice.getTime() - brandsPlan.invoiceStartAt.getTime();
+            secondsPassed = brandsPlan.nextInvoice.getTime() - Date.now();
             daysRemaining = humanizeDuration(secondsPassed, { language: I18nContext.current().lang, largest: 1 });
         }
 
