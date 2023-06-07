@@ -17,6 +17,7 @@ import { BrandsPlanSchema } from "src/models/BrandsPlans.schema";
 import { InviteSchema } from "src/models/Invites.schema";
 import { PlanSchema } from "src/models/Plans.schema";
 import { BillingController } from "src/controllers/panel/billing.controller";
+import { BillingService } from "src/services/billing.service";
 
 @Module({
     imports: [
@@ -36,7 +37,7 @@ import { BillingController } from "src/controllers/panel/billing.controller";
         ]),
     ],
     controllers: [BrandController, BranchController, StaffController, StaffRolesController, BillingController],
-    providers: [FileService],
+    providers: [FileService, BillingService],
     exports: [],
 })
 export class BrandPanelModule {}

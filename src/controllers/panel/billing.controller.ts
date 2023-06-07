@@ -10,15 +10,22 @@ import { UserDocument } from "src/models/Users.schema";
 import { BrandDocument } from "src/models/Brands.schema";
 import { BrandsPlan, BrandsPlanDocument } from "src/models/BrandsPlans.schema";
 import { Plan, PlanDocument } from "src/models/Plans.schema";
+import { BranchDocument } from "src/models/Branches.schema";
+import { StaffDocument } from "src/models/Staff.schema";
+import { planChangeDto } from "src/dto/panel/billing.dto";
 import * as humanizeDuration from "humanize-duration";
 import { I18nContext } from "nestjs-i18n";
+import { BillingService } from "src/services/billing.service";
 
 @Controller("panel/billing")
 export class BillingController {
     constructor(
         // ...
+        private readonly billingService: BillingService,
         @InjectModel("User") private readonly UserModel: Model<UserDocument>,
         @InjectModel("BrandsPlan") private readonly BrandsPlanModel: Model<BrandsPlanDocument>,
+        @InjectModel("Branch") private readonly BranchModel: Model<BranchDocument>,
+        @InjectModel("Staff") private readonly StaffModel: Model<StaffDocument>,
         @InjectModel("Plan") private readonly PlanModel: Model<PlanDocument>,
     ) {}
 
@@ -27,67 +34,49 @@ export class BillingController {
     @UseGuards(AuthorizeUserInSelectedBrand)
     async getCurrentPlan(@Req() req: Request, @Res() res: Response): Promise<void | Response> {
         const brandID = req.headers["brand"].toString();
-
-        const brandsPlan = await this.BrandsPlanModel.findOne({ brand: brandID })
-            .populate<{ currentPlan: Plan }>("currentPlan", "_id icon name limitations monthlyPrice yearlyPrice translation")
-            .exec();
-        if (!brandsPlan) throw new NotFoundException();
-
-        let branchLimit = "0";
-        let staffLimit = "0";
-        for (let i = 0; i < brandsPlan.currentPlan.limitations.length; i++) {
-            if (brandsPlan.currentPlan.limitations[i].limit === "branch-limit-count") branchLimit = brandsPlan.currentPlan.limitations[i].value.toString();
-            if (brandsPlan.currentPlan.limitations[i].limit === "staff-limit-count") staffLimit = brandsPlan.currentPlan.limitations[i].value.toString();
-        }
-
-        // calculating remaining days of current plan
-        let daysRemaining = null;
-        let secondsPassed = 0;
-        if (brandsPlan.nextInvoice && brandsPlan.invoiceStartAt) {
-            // secondsPassed = brandsPlan.nextInvoice.getTime() - brandsPlan.invoiceStartAt.getTime();
-            secondsPassed = brandsPlan.nextInvoice.getTime() - Date.now();
-            daysRemaining = humanizeDuration(secondsPassed, { language: I18nContext.current().lang, largest: 1 });
-        }
-
-        return res.json({
-            currentPlan: {
-                plan: {
-                    _id: brandsPlan.currentPlan._id,
-                    icon: brandsPlan.currentPlan.icon,
-                    name: brandsPlan.currentPlan.name,
-                    monthlyPrice: brandsPlan.currentPlan.monthlyPrice,
-                    yearlyPrice: brandsPlan.currentPlan.yearlyPrice,
-                    translation: brandsPlan.currentPlan.translation,
-                },
-                branchLimit: branchLimit,
-                staffLimit: staffLimit,
-                daysRemaining: daysRemaining,
-                secondsPassed: secondsPassed / 1000,
-                price: brandsPlan.period === "monthly" ? brandsPlan.currentPlan.monthlyPrice : brandsPlan.currentPlan.yearlyPrice,
-                period: brandsPlan.period,
-            },
-        });
+        return res.json({ currentPlan: await this.billingService.getBrandsCurrentPlan(brandID) });
     }
 
     // ===============================================
 
+    @Post("/plan-change")
+    @SetPermissions("main-panel.billing.change-plan")
+    async planChange(@Body() body: planChangeDto, @Req() req: Request, @Res() res: Response): Promise<void | Response> {
+        const brandID = req.headers["brand"].toString();
+        const selectedGateway = body.selectedGateway || "zarinpal";
+        const selectedPlan = body.selectedPlan;
+        const selectedPaymentPeriod = body.selectedPaymentPeriod || "monthly";
+
+        // TODO
+        // check if user is downgrading and dont allow until the limit is reached
+
+        const plan = await this.PlanModel.findOne({ _id: selectedPlan }).exec();
+        if (!plan) {
+            throw new UnprocessableEntityException([
+                { property: "", errors: [I18nContext.current().t("panel.billing.the plan you selected is not available right now")] },
+            ]);
+        }
+
+        const currentPlan = await this.billingService.getBrandsCurrentPlan(brandID);
+        const price = await this.billingService.calculatePrice(currentPlan, plan, selectedPaymentPeriod);
+
+        if (price > 0) {
+            // TODO
+            // ... generate a plan change factor
+            // ... send the gateway link
+        } else {
+            // TODO
+            // if its not payable
+            // ... change the plan right away
+        }
+
+        // TODO
+        // save the successful plan change records some where (who did it, from what plan to what, in what time, old invoice info and days remaining and such)
+    }
+
+    @Get("plan-change/:method")
+    async planChangeCallback(@Req() req: Request, @Res() res: Response): Promise<void | Response> {}
+
     // TODO
-
-    // factor will be generated 3 days before remaining days ending
-
-    // From Free =>
-    // create factor and user pays that factor
-
-    // From Standard Monthly to Yearly =>
-    // if still days remaining they user buys full year and remaining days will be added to limit
-    // From Standard Yearly to Monthly =>
-    // period will be changed
-
-    // From Standard Monthly to Pro Yearly
-    // period change will be same
-    // if plan is upgrading then only the plan is updated
-
-    // From Pro Monthly to Standard Yearly
-    // period change will be same as before
-    // plan downgrade will be by removing any exsess branch, staff, ... from the brand
+    // factor will be generated 4 days before remaining days ending
 }

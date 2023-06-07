@@ -63,5 +63,6 @@
     "IsMobilePhone": "Mobile number is not valid",
     "IsMongoId": "Must be a valid ID",
     "IsArray": "Must be an array",
-    "IsPostalCode": "Must be a valid postal code"
+    "IsPostalCode": "Must be a valid postal code",
+    "IsIn": "Selected value is not valid"
 }
