@@ -18,6 +18,8 @@ import { InviteSchema } from "src/models/Invites.schema";
 import { PlanSchema } from "src/models/Plans.schema";
 import { BillingController } from "src/controllers/panel/billing.controller";
 import { BillingService } from "src/services/billing.service";
+import { PlanChangeRecordSchema } from "src/models/PlanChangeRecords.schema";
+import { BillSchema } from "src/models/Bills.schema";
 
 @Module({
     imports: [
@@ -29,6 +31,8 @@ import { BillingService } from "src/services/billing.service";
             { name: "BrandsPlan", schema: BrandsPlanSchema },
             { name: "Branch", schema: BranchSchema },
             { name: "Plan", schema: PlanSchema },
+            { name: "PlanChangeRecord", schema: PlanChangeRecordSchema },
+            { name: "Bill", schema: BillSchema },
             { name: "Staff", schema: StaffSchema },
             { name: "StaffRole", schema: StaffRoleSchema },
             { name: "StaffRoleDefault", schema: StaffRoleDefaultSchema },

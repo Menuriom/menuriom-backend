@@ -7,6 +7,9 @@ import { BrandsPlanDocument } from "src/models/BrandsPlans.schema";
 import { Plan, PlanDocument } from "src/models/Plans.schema";
 import * as humanizeDuration from "humanize-duration";
 import { I18nContext } from "nestjs-i18n";
+import { GatewayInterface } from "src/interfaces/Gateway";
+import { ZarinpalGateway } from "src/paymentGateways/zarinpal.payment";
+import { WalletGateway } from "src/paymentGateways/wallet.payment";
 
 @Injectable()
 export class BillingService {
@@ -90,6 +93,24 @@ export class BillingService {
             branchCount,
             staffCount,
         };
+    }
+
+    getGateway(method: string): GatewayInterface | null {
+        let gateway = null;
+        switch (method) {
+            case "zarinpal":
+                gateway = new ZarinpalGateway(process.env.ZARINPAL_KEY);
+                break;
+            case "wallet":
+                gateway = new WalletGateway();
+                break;
+        }
+        return gateway;
+    }
+
+    async generateBillNumber(): Promise<number> {
+        // TODO
+        return 2;
     }
 }
 
