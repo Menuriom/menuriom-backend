@@ -5,7 +5,7 @@ import { Response } from "express";
 import { Request } from "src/interfaces/Request.interface";
 import { InjectModel } from "@nestjs/mongoose";
 import { Model, Types } from "mongoose";
-import { BrandDocument } from "src/models/Brands.schema";
+import { Brand, BrandDocument } from "src/models/Brands.schema";
 import { StaffDocument } from "src/models/Staff.schema";
 import { FileService } from "src/services/file.service";
 import { AuthService } from "src/services/auth.service";
@@ -16,6 +16,7 @@ import { I18nContext } from "nestjs-i18n";
 import { AuthorizeUserInSelectedBrand } from "src/guards/authorizeUser.guard";
 import { SetPermissions } from "src/decorators/authorization.decorator";
 import { languages } from "src/interfaces/Translation.interface";
+import { StaffRole } from "src/models/StaffRoles.schema";
 
 @Controller("panel/brands")
 export class BrandController {
@@ -76,8 +77,8 @@ export class BrandController {
 
         // from staff document get brands that user is part of
         const staff = await this.StaffModel.find({ user: req.session.userID })
-            .populate("brand", "_id logo name slogan deletedAt")
-            .populate("role", "name permissions")
+            .populate<{ brand: Brand }>("brand", "_id logo name slogan deletedAt")
+            .populate<{ role: StaffRole }>("role", "name permissions")
             .exec();
         for (let i = 0; i < staff.length; i++) {
             const member = staff[i];

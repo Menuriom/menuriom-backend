@@ -4,8 +4,17 @@ import { PlanLimitation } from "./PlansLimitations.schema";
 export type PlanDocument = Plan & Document;
 
 export const PlanSchema = new Schema({
+    icon: { type: String, required: true },
     name: { type: String, required: true },
-    limitations: [{ type: Schema.Types.ObjectId, ref: "PlanLimitation", required: true }],
+    desc: { type: String },
+    limitations: [
+        {
+            limit: { type: String, ref: "PlanLimitation", required: true },
+            value: { type: Schema.Types.Mixed, required: true },
+            valueType: { type: String, enum: ["Number", "Boolean"], required: true },
+        },
+    ],
+    listings: [{ type: String }],
     monthlyPrice: { type: Number, default: 0, required: true }, // in toman
     halfYearPrice: { type: Number, default: 0, required: true }, // in toman
     yearlyPrice: { type: Number, default: 0, required: true }, // in toman
@@ -18,8 +27,15 @@ export const PlanSchema = new Schema({
 
 export interface Plan {
     _id: Types.ObjectId;
+    icon: string;
     name: string;
-    limitations: Array<PlanLimitation | Types.ObjectId>;
+    desc?: string;
+    limitations: Array<{
+        limit: PlanLimitation | String;
+        value: number | boolean;
+        valueType: "Number" | "Boolean";
+    }>;
+    listings: string[];
     monthlyPrice: number;
     halfYearPrice: number;
     yearlyPrice: number;

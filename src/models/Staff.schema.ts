@@ -1,4 +1,4 @@
-import { Document, Schema, Types } from "mongoose";
+import { Document, PopulatedDoc, Schema, Types } from "mongoose";
 import { Branch } from "./Branches.schema";
 import { StaffRole } from "./StaffRoles.schema";
 import { User } from "./Users.schema";
@@ -18,9 +18,9 @@ export const StaffSchema = new Schema({
 
 export interface Staff {
     _id: Types.ObjectId;
-    user: User | Types.ObjectId;
+    user: PopulatedDoc<User>;
     brand: Brand & Types.ObjectId;
     role: StaffRole & Types.ObjectId;
-    branches: Array<Branch | Types.ObjectId>;
+    branches:  PopulatedDoc<Branch>[];
     createdAt: Date;
 }

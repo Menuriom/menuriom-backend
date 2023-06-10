@@ -1,4 +1,4 @@
-import { Document, Schema, Types } from "mongoose";
+import { Document, PopulatedDoc, Schema, Types } from "mongoose";
 import { Translation, TranslationSchema } from "src/interfaces/Translation.interface";
 import { BrandType } from "./BrandTypes.schema";
 import { User } from "./Users.schema";
@@ -28,10 +28,10 @@ export interface Brand {
     _id: Types.ObjectId;
     logo?: string;
     name: string;
-    brandType: BrandType | Types.ObjectId;
+    brandType: PopulatedDoc<BrandType>;
     slogan?: string;
     branchSize: number;
-    creator: User | Types.ObjectId;
+    creator: PopulatedDoc<User>;
     socials?: {
         instagram?: string;
         twitter?: string;

@@ -17,19 +17,19 @@ export const languages = {
 };
 
 export interface Translation {
-    fa?: unknown; // farsi
-    en?: unknown; // english
-    ar?: unknown; // arabic
-    it?: unknown; // italian
-    de?: unknown; // german
-    fr?: unknown; // french
-    tr?: unknown; // turkish
-    ja?: unknown; // japanese
-    ko?: unknown; // korean
-    cn?: unknown; // chinese
-    hi?: unknown; // hindi
-    es?: unknown; // spanish
-    ru?: unknown; // russian
+    fa?: any; // farsi
+    en?: any; // english
+    ar?: any; // arabic
+    it?: any; // italian
+    de?: any; // german
+    fr?: any; // french
+    tr?: any; // turkish
+    ja?: any; // japanese
+    ko?: any; // korean
+    cn?: any; // chinese
+    hi?: any; // hindi
+    es?: any; // spanish
+    ru?: any; // russian
 }
 
 export const TranslationSchema = new Schema({

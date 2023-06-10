@@ -5,13 +5,13 @@ import { Request } from "src/interfaces/Request.interface";
 import { InjectModel } from "@nestjs/mongoose";
 import { Model, Types } from "mongoose";
 import { StaffPermissionDocument } from "src/models/StaffPermissions.schema";
-import { StaffRoleDocument } from "src/models/StaffRoles.schema";
+import { StaffRole, StaffRoleDocument } from "src/models/StaffRoles.schema";
 import { UserDocument } from "src/models/Users.schema";
 import { unlink } from "fs/promises";
 import { FilesInterceptor } from "@nestjs/platform-express";
 import { CompleteInfoDto, EditUserInfoDto } from "src/dto/panel/user.dto";
 import { I18nContext } from "nestjs-i18n";
-import { BrandDocument } from "src/models/Brands.schema";
+import { Brand, BrandDocument } from "src/models/Brands.schema";
 import { StaffDocument } from "src/models/Staff.schema";
 
 @Controller("user")
@@ -41,7 +41,10 @@ export class UserController {
         }
 
         // from staff document get brands that user has with permissions
-        const staff = await this.StaffModel.find({ user: user.id }).populate("brand", "_id logo name slogan deletedAt").populate("role", "name permissions").exec();
+        const staff = await this.StaffModel.find({ user: user.id })
+            .populate<{ brand: Brand }>("brand", "_id logo name slogan deletedAt")
+            .populate<{ role: StaffRole }>("role", "name permissions")
+            .exec();
         for (let i = 0; i < staff.length; i++) {
             const member = staff[i];
             if (!!member.brand.deletedAt) continue;

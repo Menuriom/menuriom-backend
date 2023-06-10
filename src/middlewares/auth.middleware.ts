@@ -37,8 +37,6 @@ export class AuthCheckMiddleware implements NestMiddleware {
 
         // check if token matches the current access token
         if (token !== session.currentlyInUseToken) {
-            console.log({ token, currentlyInUseToken: session.currentlyInUseToken });
-
             // check the token family list and if token is in that list then revoke the whole session and return 401
             // if (session.accessTokenFamily.includes(token)) await this.SessionModel.updateOne({ _id: session.id }, { status: "revoked" });
 

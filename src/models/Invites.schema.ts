@@ -1,4 +1,4 @@
-import { Document, Schema, Types } from "mongoose";
+import { Document, PopulatedDoc, Schema, Types } from "mongoose";
 import { Branch } from "./Branches.schema";
 import { Brand } from "./Brands.schema";
 import { StaffRole } from "./StaffRoles.schema";
@@ -28,7 +28,7 @@ export interface Invite {
     mobile?: string;
     brand: Brand & Types.ObjectId;
     role: StaffRole & Types.ObjectId;
-    branches: Array<Branch | Types.ObjectId>;
+    branches: PopulatedDoc<Branch>[];
     status?: "sent" | "accepted" | "rejected";
     createdAt: Date;
 }

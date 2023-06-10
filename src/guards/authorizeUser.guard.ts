@@ -4,6 +4,7 @@ import { InjectModel } from "@nestjs/mongoose";
 import { Model } from "mongoose";
 import { BrandDocument } from "src/models/Brands.schema";
 import { StaffDocument } from "src/models/Staff.schema";
+import { StaffRole } from "src/models/StaffRoles.schema";
 
 @Injectable()
 export class AuthorizeUserInSelectedBrand implements CanActivate {
@@ -28,7 +29,9 @@ export class AuthorizeUserInSelectedBrand implements CanActivate {
             throw new ForbiddenException();
         }
 
-        const staff = await this.StaffModel.findOne({ brand: brandID, user: request.session.userID }).populate("role", "name permissions").exec();
+        const staff = await this.StaffModel.findOne({ brand: brandID, user: request.session.userID })
+            .populate<{ role: StaffRole }>("role", "name permissions")
+            .exec();
         if (!staff) return false;
         const userPermissions = [...staff.role.permissions];
 

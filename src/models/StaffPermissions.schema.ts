@@ -5,6 +5,7 @@ export type StaffPermissionDocument = StaffPermission & Document;
 export const StaffPermissionSchema = new Schema({
     _id: { type: String },
     label: { type: String, required: true },
+    desc: { type: String },
     group: { type: String, required: true },
     groupLabel: { type: String, required: true },
     createdAt: {
@@ -17,6 +18,7 @@ export const StaffPermissionSchema = new Schema({
 export interface StaffPermission {
     _id: string;
     label: string;
+    desc?: string;
     group: string;
     groupLabel: string;
     createdAt: Date;

@@ -13,7 +13,14 @@ import { BranchController } from "src/controllers/panel/branch.controller";
 import { StaffController } from "src/controllers/panel/staff.controller";
 import { StaffRolesController } from "src/controllers/panel/staffRoles.controller";
 import { StaffRoleDefaultSchema } from "src/models/StaffRoleDefaults.schema";
+import { BrandsPlanSchema } from "src/models/BrandsPlans.schema";
 import { InviteSchema } from "src/models/Invites.schema";
+import { PlanSchema } from "src/models/Plans.schema";
+import { BillingController } from "src/controllers/panel/billing.controller";
+import { BillingService } from "src/services/billing.service";
+import { PlanChangeRecordSchema } from "src/models/PlanChangeRecords.schema";
+import { BillSchema } from "src/models/Bills.schema";
+import { TransactionSchema } from "src/models/Transactions.schema";
 
 @Module({
     imports: [
@@ -21,17 +28,22 @@ import { InviteSchema } from "src/models/Invites.schema";
             { name: "Session", schema: SessionSchema },
             { name: "User", schema: UserSchema },
             { name: "Role", schema: StaffRoleSchema },
-            { name: "Permission", schema: StaffPermissionSchema },
             { name: "Brand", schema: BrandSchema },
+            { name: "BrandsPlan", schema: BrandsPlanSchema },
             { name: "Branch", schema: BranchSchema },
+            { name: "Plan", schema: PlanSchema },
+            { name: "PlanChangeRecord", schema: PlanChangeRecordSchema },
+            { name: "Bill", schema: BillSchema },
+            { name: "Transaction", schema: TransactionSchema },
             { name: "Staff", schema: StaffSchema },
             { name: "StaffRole", schema: StaffRoleSchema },
             { name: "StaffRoleDefault", schema: StaffRoleDefaultSchema },
+            { name: "StaffPermission", schema: StaffPermissionSchema },
             { name: "Invite", schema: InviteSchema },
         ]),
     ],
-    controllers: [BrandController, BranchController, StaffController, StaffRolesController],
-    providers: [FileService],
+    controllers: [BrandController, BranchController, StaffController, StaffRolesController, BillingController],
+    providers: [FileService, BillingService],
     exports: [],
 })
 export class BrandPanelModule {}

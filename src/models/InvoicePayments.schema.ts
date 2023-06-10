@@ -1,4 +1,4 @@
-import { Document, Schema, Types } from "mongoose";
+import { Document, PopulatedDoc, Schema, Types } from "mongoose";
 import { Brand } from "./Brands.schema";
 import { BrandsPlan } from "./BrandsPlans.schema";
 import { User } from "./Users.schema";
@@ -31,9 +31,9 @@ export const InvoicePaymentSchema = new Schema({
 
 export interface InvoicePayment {
     _id: Types.ObjectId;
-    brand: Brand | Types.ObjectId;
-    brandsPlan: BrandsPlan | Types.ObjectId;
-    payedByUser: User | Types.ObjectId;
+    brand: PopulatedDoc<Brand>;
+    brandsPlan: PopulatedDoc<BrandsPlan>;
+    payedByUser: PopulatedDoc<User>;
 
     authority: string;
     transactionCode?: string;

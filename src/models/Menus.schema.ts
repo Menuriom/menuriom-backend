@@ -1,4 +1,4 @@
-import { Document, Schema, Types } from "mongoose";
+import { Document, PopulatedDoc, Schema, Types } from "mongoose";
 import { Translation, TranslationSchema } from "src/interfaces/Translation.interface";
 import { Branch } from "./Branches.schema";
 export type MenuDocument = Menu & Document;
@@ -25,7 +25,7 @@ export const MenuSchema = new Schema({
 export interface Menu {
     _id: Types.ObjectId;
     name: string;
-    branch: Branch | Types.ObjectId;
+    branch: PopulatedDoc<Branch>;
     type: string;
     categories: Category;
     colors: Color;

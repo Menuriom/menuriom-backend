@@ -38,6 +38,7 @@ import { Seeder } from "./database/seeder";
 import { FilesController } from "./controllers/files.controller";
 import { AccountController } from "./controllers/account.controller";
 import { UserController } from "./controllers/user.controller";
+import { PricingController } from "./controllers/pricing.controller";
 
 @Module({
     imports: [
@@ -53,7 +54,7 @@ import { UserController } from "./controllers/user.controller";
         MongooseModule.forFeature([
             { name: "Analytic", schema: AnalyticSchema },
             { name: "Branch", schema: BranchSchema },
-            { name: "BrandPlan", schema: BrandsPlanSchema },
+            { name: "BrandsPlan", schema: BrandsPlanSchema },
             { name: "Brand", schema: BrandSchema },
             { name: "BrandType", schema: BrandTypeSchema },
             { name: "StaffRoleDefault", schema: StaffRoleDefaultSchema },
@@ -73,7 +74,7 @@ import { UserController } from "./controllers/user.controller";
             { name: "Session", schema: SessionSchema },
         ]),
     ],
-    controllers: [Seeder, AppController, AccountController, UserController, FilesController],
+    controllers: [Seeder, AppController, AccountController, UserController, PricingController, FilesController],
     providers: [AppService, FileService],
 })
 export class AppModule implements NestModule {

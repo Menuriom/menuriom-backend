@@ -1,4 +1,4 @@
-import { Document, Schema, Types } from "mongoose";
+import { Document, PopulatedDoc, Schema, Types } from "mongoose";
 import { User } from "./Users.schema";
 export type SessionDocument = Session & Document;
 
@@ -32,7 +32,7 @@ export const SessionSchema = new Schema({
 
 export interface Session {
     _id: Types.ObjectId;
-    user: User | Types.ObjectId;
+    user: PopulatedDoc<User>;
     userAgent: string;
     ip: string;
     accessTokenFamily?: string[];
