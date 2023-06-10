@@ -18,9 +18,9 @@ export class planChangeDto {
     readonly selectedPlan: string;
 }
 
-export class IDBrandDto {
-    @IsMongoId({ message: i18nValidationMessage("validation.IsMongoId") })
+export class gatewayDto {
     @IsString({ message: i18nValidationMessage("validation.IsString") })
+    @IsIn(["zarinpal"], { message: i18nValidationMessage("validation.IsIn") })
     @IsNotEmpty({ message: i18nValidationMessage("validation.IsNotEmpty") })
-    readonly id: string;
+    readonly method: string = "zarinpal";
 }

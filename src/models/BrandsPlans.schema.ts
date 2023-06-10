@@ -9,7 +9,6 @@ export const BrandsPlanSchema = new Schema({
     currentPlan: { type: Schema.Types.ObjectId, ref: "Plan", required: true },
     period: { type: String, enum: ["monthly", "yearly"], default: "monthly", required: true },
     startTime: { type: Date, default: new Date(Date.now()) },
-    invoiceStartAt: { type: Date },
     nextInvoice: { type: Date },
     createdAt: { type: Date, default: new Date(Date.now()) },
     translation: TranslationSchema,
@@ -21,7 +20,6 @@ export interface BrandsPlan {
     currentPlan: PopulatedDoc<Plan>;
     period: "monthly" | "yearly";
     startTime: Date;
-    invoiceStartAt?: Date;
     nextInvoice?: Date;
     createdAt: Date;
     translation?: Translation;

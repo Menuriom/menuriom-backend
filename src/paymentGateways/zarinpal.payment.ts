@@ -41,22 +41,21 @@ export class ZarinpalGateway implements GatewayInterface {
     public getTransactionResponse(req: Request): TransactionResponse {
         return {
             status: req.query.Status == "OK" ? "OK" : "NOK",
-            identifier: req.query.Authority.toString(),
+            identifier: req.query.Authority ? req.query.Authority.toString() : "",
         };
     }
 
-    public async verify(identifier: string, extra?): Promise<VerficationResponseInterface> {
+    public async verify(identifier: string, price: number): Promise<VerficationResponseInterface> {
         const verficationResponse: VerficationResponseInterface = {
             transactionCode: "",
             status: 0,
         };
 
+        let url = `https://www.zarinpal.com/pg/rest/WebGate/PaymentVerification.json`;
+        if (process.env.PAYMENT_IN_TEST == "true") url = `https://sandbox.zarinpal.com/pg/rest/WebGate/PaymentVerification.json`;
+
         await axios
-            .post("https://www.zarinpal.com/pg/rest/WebGate/PaymentVerification.json", {
-                MerchantID: this.apiKey,
-                Amount: extra.amount,
-                Authority: identifier,
-            })
+            .post(url, { MerchantID: this.apiKey, Amount: price, Authority: identifier })
             .then((response) => {
                 verficationResponse.transactionCode = response.data.RefID || "";
                 verficationResponse.status = response.data.Status || 0;

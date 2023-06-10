@@ -24,7 +24,7 @@ export class WalletGateway implements GatewayInterface {
         };
     }
 
-    public async verify(identifier: string, extra?): Promise<VerficationResponseInterface> {
+    public async verify(identifier: string, price: number): Promise<VerficationResponseInterface> {
         return {
             transactionCode: randomUUID(),
             status: 1,

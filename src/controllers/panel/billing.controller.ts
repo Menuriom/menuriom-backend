@@ -12,7 +12,7 @@ import { Plan, PlanDocument } from "src/models/Plans.schema";
 import { PlanChangeRecordDocument } from "src/models/PlanChangeRecords.schema";
 import { BranchDocument } from "src/models/Branches.schema";
 import { StaffDocument } from "src/models/Staff.schema";
-import { planChangeDto } from "src/dto/panel/billing.dto";
+import { gatewayDto, planChangeDto } from "src/dto/panel/billing.dto";
 import { I18nContext } from "nestjs-i18n";
 import { BillingService } from "src/services/billing.service";
 import { BillDocument } from "src/models/Bills.schema";
@@ -43,6 +43,7 @@ export class BillingController {
 
     @Post("/plan-change")
     @SetPermissions("main-panel.billing.change-plan")
+    @UseGuards(AuthorizeUserInSelectedBrand)
     async planChange(@Body() body: planChangeDto, @Req() req: Request, @Res() res: Response): Promise<void | Response> {
         const brandID = req.headers["brand"].toString();
         const selectedGateway = body.selectedGateway || "zarinpal";
@@ -62,40 +63,37 @@ export class BillingController {
         }
 
         const currentPlan = await this.billingService.getBrandsCurrentPlan(brandID);
-        const price = await this.billingService.calculatePrice(currentPlan, plan, selectedPaymentPeriod);
+        const { calculatedPrice: price, extraSeconds } = await this.billingService.calculatePriceAndExtraSeconds(currentPlan, plan, selectedPaymentPeriod);
 
         const user = await this.UserModel.findOne({ _id: req.session.userID }).exec();
+        const selectedPlanRecord = await this.PlanModel.findOne({ _id: selectedPlan }).exec();
 
         if (price > 0) {
-            // TODO
-            // generate a plan change factor
-            // create a gateway and get identifier and url for payment
-            // update the factor
-
-            // TODO : gateway description
-            const description = "";
+            const description_fa = `تغییر اشتراک از ${currentPlan.plan.translation["fa"].name} به ${selectedPlanRecord.translation["fa"].name}`;
+            const description_en = `For plan change from ${currentPlan.plan.translation["en"].name} to ${selectedPlanRecord.translation["en"].name}`;
 
             const paymentGateway = this.billingService.getGateway(selectedGateway);
             const identifier = await paymentGateway
-                .getIdentifier(price, `${process.env.PAYMENT_CALLBACK_BASE_URL}/${selectedGateway}`, description, user.mobile)
+                .getIdentifier(price, `${process.env.PAYMENT_CALLBACK_BASE_URL}/${selectedGateway}`, description_fa, user.mobile)
                 .catch(() => {
                     throw new UnprocessableEntityException([
                         { property: "", errors: [I18nContext.current().t("panel.billing.failed to retrieve the payment identifier")] },
                     ]);
                 });
 
-            this.BillModel.create({
+            await this.BillModel.create({
                 billNumber: this.billingService.generateBillNumber(),
                 type: "planChange",
-                // TODO : bill description
-                description: "",
+                description: description_fa,
                 creator: req.session.userID,
                 brand: brandID,
                 plan: selectedPlan,
                 payablePrice: price,
                 status: "pendingPayment",
-                transaction: [{ user: req.session.userID, method: selectedGateway, authority: identifier, status: "pending" }],
+                secondsAddedToInvoice: extraSeconds,
+                transactions: [{ user: req.session.userID, method: selectedGateway, authority: identifier, status: "pending", createdAt: new Date(Date.now()) }],
                 createdAt: new Date(Date.now()),
+                translation: { en: { description: description_en }, fa: { description: description_fa } },
             });
 
             type = "withPayment";
@@ -123,12 +121,86 @@ export class BillingController {
         return res.json({ type, url });
     }
 
-    @Get("plan-change/:method")
-    async planChangeCallback(@Req() req: Request, @Res() res: Response): Promise<void | Response> {
-        // TODO
-        // save the successful plan change records some where (who did it, from what plan to what, in what time, old invoice info and days remaining and such)
-        // TODO
-        // after successful payable downgrade/upgrade any renewal bill will be canceled
+    @Get("plan-change-payment-callback/:method")
+    async planChangeCallback(@Param() param: gatewayDto, @Req() req: Request, @Res() res: Response): Promise<void | Response> {
+        const ip: string = req.headers["x-forwarded-for"].toString() || "";
+        const paymentGateway = this.billingService.getGateway(param.method);
+        const transactionResponse = paymentGateway.getTransactionResponse(req);
+        if (transactionResponse.identifier === "") {
+            // TODO : log the error
+            return res.json({ errorCode: "405", errorMessage: "MethodNotDefined" });
+        }
+
+        const user = await this.UserModel.findOne({ _id: req.session.userID }).exec();
+        if (!user) return res.json({ errorCode: "403", errorMessage: "ForbiddenUser" });
+
+        const bill = await this.BillModel.findOne({ "transactions.authority": transactionResponse.identifier }).exec();
+        if (!bill) {
+            // TODO : Log the incorrect authority
+            return res.json({ errorCode: "406", errorMessage: "IncorrectIdentifier" });
+        }
+
+        const transaction = bill.transactions.filter((transaction) => transaction.authority === transactionResponse.identifier).at(0);
+
+        if (transactionResponse.status !== "OK") {
+            await this.billingService.updateBillTransactionRecord(bill.id, transaction._id, "canceled", ip);
+            return res.json({ errorCode: "417", errorMessage: "TransactionCanceled" });
+        }
+
+        let verficationResponse = null;
+        const transactionVerified = await paymentGateway
+            .verify(transactionResponse.identifier, bill.payablePrice)
+            .then((response) => {
+                verficationResponse = response;
+                if (response.status > 0) return true;
+                return false;
+            })
+            .catch(async (error) => {
+                const errorText = error.response ? error.response : error;
+                await this.billingService.updateBillTransactionRecord(bill.id, transaction._id, "error", ip, errorText);
+                return false;
+            });
+
+        if (!transactionVerified) {
+            // TODO : Log the error
+            return res.json({ errorCode: "412", errorMessage: "TransactionFailedAndWillBounce" });
+        }
+
+        // mark the bill as paid and transaction record
+        await this.BillModel.updateOne({ _id: bill.id }, { status: "paid" }).exec();
+        await this.billingService.updateBillTransactionRecord(bill.id, transaction._id, "ok", ip, "", verficationResponse.transactionCode, bill.payablePrice);
+
+        const brandCurrentPlan = await this.BrandsPlanModel.findOne({ brand: bill.brand }).exec();
+        const nextInvoiceInSeconds = brandCurrentPlan.nextInvoice ? brandCurrentPlan.nextInvoice.getTime() / 1000 : Date.now() / 1000;
+
+        // update the invoice dates and brand's plan
+        await this.BrandsPlanModel.updateOne(
+            { brand: bill.brand },
+            {
+                currentPlan: bill.plan,
+                period: bill.planPeriod,
+                startTime: new Date(Date.now()),
+                nextInvoice: new Date((nextInvoiceInSeconds + bill.secondsAddedToInvoice) * 1000),
+            },
+        ).exec();
+
+        // keep record of plan changes
+        await this.PlanChangeRecordModel.create({
+            brand: bill.brand,
+            user: req.session.userID,
+            previusPlan: brandCurrentPlan.currentPlan,
+            newPlan: bill.plan,
+            previusPeriod: brandCurrentPlan.period,
+            newPeriod: bill.planPeriod,
+            createdAt: new Date(Date.now()),
+        });
+
+        if (bill.secondsAddedToInvoice > 0) {
+            // after successful payable downgrade/upgrade any renewal bill will be canceled
+            await this.BillModel.updateOne({ brand: bill.brand, type: "renewal" }, { status: "canceled" }).exec();
+        }
+
+        return res.json({ redirectUrl: "/purchase-result?status=200&message=Success" });
     }
 
     // TODO

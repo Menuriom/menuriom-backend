@@ -10,6 +10,7 @@ import { I18nContext } from "nestjs-i18n";
 import { GatewayInterface } from "src/interfaces/Gateway";
 import { ZarinpalGateway } from "src/paymentGateways/zarinpal.payment";
 import { WalletGateway } from "src/paymentGateways/wallet.payment";
+import { BillDocument } from "src/models/Bills.schema";
 
 @Injectable()
 export class BillingService {
@@ -19,10 +20,16 @@ export class BillingService {
         @InjectModel("BrandsPlan") private readonly BrandsPlanModel: Model<BrandsPlanDocument>,
         @InjectModel("Branch") private readonly BranchModel: Model<BranchDocument>,
         @InjectModel("Plan") private readonly PlanModel: Model<PlanDocument>,
+        @InjectModel("Bill") private readonly BillModel: Model<BillDocument>,
     ) {}
 
-    async calculatePrice(currentPlan: CurrentPlan, selectedPlan: Plan, selectedPaymentPeriod: "monthly" | "yearly"): Promise<number> {
+    async calculatePriceAndExtraSeconds(
+        currentPlan: CurrentPlan,
+        selectedPlan: Plan,
+        selectedPaymentPeriod: "monthly" | "yearly",
+    ): Promise<{ calculatedPrice: number; extraSeconds: number }> {
         let calculatedPrice: number = 0;
+        let extraSeconds: number = 0;
         const devider = selectedPaymentPeriod === "monthly" ? 30 : 365;
         const remainingDays = currentPlan.secondsPassed ? Math.floor(Number(currentPlan.secondsPassed) / (3600 * 24)) : Infinity;
 
@@ -30,11 +37,13 @@ export class BillingService {
 
         if (currentPlan.plan.name === purchasablePlans[0].name) {
             calculatedPrice = selectedPlan[`${selectedPaymentPeriod}Price`];
+            extraSeconds = devider * 24 * 60 * 60;
         }
 
         if (currentPlan.plan.name === purchasablePlans[1].name) {
             if (remainingDays <= 5) {
                 calculatedPrice = selectedPlan[`${selectedPaymentPeriod}Price`];
+                extraSeconds = devider * 24 * 60 * 60;
             } else {
                 if (selectedPlan.name === purchasablePlans[2].name) {
                     const diff = purchasablePlans[2][`${selectedPaymentPeriod}Price`] - purchasablePlans[1][`${selectedPaymentPeriod}Price`];
@@ -45,9 +54,10 @@ export class BillingService {
 
         if (currentPlan.plan.name === purchasablePlans[2].name && remainingDays <= 5) {
             calculatedPrice = selectedPlan[`${selectedPaymentPeriod}Price`];
+            extraSeconds = devider * 24 * 60 * 60;
         }
 
-        return calculatedPrice;
+        return { calculatedPrice, extraSeconds };
     }
 
     async getBrandsCurrentPlan(brandID: string): Promise<CurrentPlan> {
@@ -69,8 +79,7 @@ export class BillingService {
         // calculating remaining days of current plan
         let daysRemaining = null;
         let secondsPassed = Infinity;
-        if (brandsPlan.nextInvoice && brandsPlan.invoiceStartAt) {
-            // secondsPassed = brandsPlan.nextInvoice.getTime() - brandsPlan.invoiceStartAt.getTime();
+        if (brandsPlan.nextInvoice) {
             secondsPassed = brandsPlan.nextInvoice.getTime() - Date.now();
             daysRemaining = humanizeDuration(secondsPassed, { language: I18nContext.current().lang, largest: 1 });
         }
@@ -111,6 +120,25 @@ export class BillingService {
     async generateBillNumber(): Promise<number> {
         // TODO
         return 2;
+    }
+
+    async updateBillTransactionRecord(
+        billID: Types.ObjectId | string,
+        transactionID: Types.ObjectId | string,
+        status: "pending" | "ok" | "canceled" | "error",
+        ip?: string,
+        error?: string,
+        code?: string,
+        paidPrice?: number,
+    ): Promise<void> {
+        const set = { "transactions.status": status };
+
+        if (ip) set["transactions.ip"] = ip;
+        if (error) set["transactions.error"] = error;
+        if (code) set["transactions.code"] = code;
+        if (paidPrice) set["transactions.paidPrice"] = paidPrice;
+
+        await this.BillModel.updateOne({ _id: billID }, { $set: set }, { arrayFilters: [{ "transactions._id": transactionID }] }).exec();
     }
 }
 

@@ -6,7 +6,7 @@ export interface GatewayInterface {
     getIdentifier(amount: number, callback: string, description: string, mobile?: string): Promise<string>;
     getGatewayUrl(identifier: string): string;
     getTransactionResponse(req: Request): TransactionResponse;
-    verify(identifier: string, extra?): Promise<VerficationResponseInterface>;
+    verify(identifier: string, price: number): Promise<VerficationResponseInterface>;
 }
 
 export interface VerficationResponseInterface {
@@ -16,6 +16,6 @@ export interface VerficationResponseInterface {
 }
 
 export interface TransactionResponse {
-    status: string;
+    status: "OK" | "NOK";
     identifier: string;
 }
