@@ -11,6 +11,7 @@ import { GatewayInterface } from "src/interfaces/Gateway";
 import { ZarinpalGateway } from "src/paymentGateways/zarinpal.payment";
 import { WalletGateway } from "src/paymentGateways/wallet.payment";
 import { BillDocument } from "src/models/Bills.schema";
+import { TransactionDocument } from "src/models/Transactions.schema";
 
 @Injectable()
 export class BillingService {
@@ -21,6 +22,7 @@ export class BillingService {
         @InjectModel("Branch") private readonly BranchModel: Model<BranchDocument>,
         @InjectModel("Plan") private readonly PlanModel: Model<PlanDocument>,
         @InjectModel("Bill") private readonly BillModel: Model<BillDocument>,
+        @InjectModel("Transaction") private readonly TransactionModel: Model<TransactionDocument>,
     ) {}
 
     async calculatePriceAndExtraSeconds(
@@ -33,7 +35,7 @@ export class BillingService {
         const devider = selectedPaymentPeriod === "monthly" ? 30 : 365;
         const remainingDays = currentPlan.secondsPassed ? Math.floor(Number(currentPlan.secondsPassed) / (3600 * 24)) : Infinity;
 
-        const purchasablePlans = this.PlanModel.find().select("_id icon name desc limitations listings monthlyPrice yearlyPrice translation").exec();
+        const purchasablePlans = await this.PlanModel.find().select("_id icon name desc limitations listings monthlyPrice yearlyPrice translation").exec();
 
         if (currentPlan.plan.name === purchasablePlans[0].name) {
             calculatedPrice = selectedPlan[`${selectedPaymentPeriod}Price`];
@@ -118,8 +120,15 @@ export class BillingService {
     }
 
     async generateBillNumber(): Promise<number> {
-        // TODO
-        return 2;
+        let billNumberExists: boolean = true;
+        let billNumber: number = 0;
+
+        while (billNumberExists) {
+            billNumber = Math.floor(100000000 + Math.random() * 900000000);
+            billNumberExists = (await this.BillModel.exists({ billNumber: billNumber }).exec()) ? true : false;
+        }
+
+        return billNumber;
     }
 
     async updateBillTransactionRecord(
@@ -131,14 +140,14 @@ export class BillingService {
         code?: string,
         paidPrice?: number,
     ): Promise<void> {
-        const set = { "transactions.status": status };
+        const set = { status: status };
 
-        if (ip) set["transactions.ip"] = ip;
-        if (error) set["transactions.error"] = error;
-        if (code) set["transactions.code"] = code;
-        if (paidPrice) set["transactions.paidPrice"] = paidPrice;
+        if (ip) set["ip"] = ip;
+        if (error) set["error"] = error;
+        if (code) set["code"] = code;
+        if (paidPrice) set["paidPrice"] = paidPrice;
 
-        await this.BillModel.updateOne({ _id: billID }, { $set: set }, { arrayFilters: [{ "transactions._id": transactionID }] }).exec();
+        await this.TransactionModel.updateOne({ _id: transactionID }, { ...set }).exec();
     }
 }
 

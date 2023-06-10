@@ -16,6 +16,7 @@ import { gatewayDto, planChangeDto } from "src/dto/panel/billing.dto";
 import { I18nContext } from "nestjs-i18n";
 import { BillingService } from "src/services/billing.service";
 import { BillDocument } from "src/models/Bills.schema";
+import { TransactionDocument } from "src/models/Transactions.schema";
 
 @Controller("panel/billing")
 export class BillingController {
@@ -29,6 +30,7 @@ export class BillingController {
         @InjectModel("Plan") private readonly PlanModel: Model<PlanDocument>,
         @InjectModel("PlanChangeRecord") private readonly PlanChangeRecordModel: Model<PlanChangeRecordDocument>,
         @InjectModel("Bill") private readonly BillModel: Model<BillDocument>,
+        @InjectModel("Transaction") private readonly TransactionModel: Model<TransactionDocument>,
     ) {}
 
     @Get("/current-plan")
@@ -68,10 +70,14 @@ export class BillingController {
         const user = await this.UserModel.findOne({ _id: req.session.userID }).exec();
         const selectedPlanRecord = await this.PlanModel.findOne({ _id: selectedPlan }).exec();
 
-        if (price > 0) {
-            const description_fa = `تغییر اشتراک از ${currentPlan.plan.translation["fa"].name} به ${selectedPlanRecord.translation["fa"].name}`;
-            const description_en = `For plan change from ${currentPlan.plan.translation["en"].name} to ${selectedPlanRecord.translation["en"].name}`;
+        const fromPlan_fa = currentPlan.plan.translation?.["fa"]?.name || currentPlan.plan.name;
+        const fromPlan_en = currentPlan.plan.translation?.["en"]?.name || currentPlan.plan.name;
+        const toPlan_fa = selectedPlanRecord.translation?.["fa"]?.name || selectedPlanRecord.name;
+        const toPlan_en = selectedPlanRecord.translation?.["en"]?.name || selectedPlanRecord.name;
+        const description_fa = `تغییر اشتراک از ${fromPlan_fa} به ${toPlan_fa}`;
+        const description_en = `For plan change from ${fromPlan_en} to ${toPlan_en}`;
 
+        if (price > 0) {
             const paymentGateway = this.billingService.getGateway(selectedGateway);
             const identifier = await paymentGateway
                 .getIdentifier(price, `${process.env.PAYMENT_CALLBACK_BASE_URL}/${selectedGateway}`, description_fa, user.mobile)
@@ -81,19 +87,28 @@ export class BillingController {
                     ]);
                 });
 
-            await this.BillModel.create({
-                billNumber: this.billingService.generateBillNumber(),
+            const bill = await this.BillModel.create({
+                billNumber: await this.billingService.generateBillNumber(),
                 type: "planChange",
                 description: description_fa,
                 creator: req.session.userID,
                 brand: brandID,
                 plan: selectedPlan,
+                planPeriod: selectedPaymentPeriod,
                 payablePrice: price,
                 status: "pendingPayment",
                 secondsAddedToInvoice: extraSeconds,
-                transactions: [{ user: req.session.userID, method: selectedGateway, authority: identifier, status: "pending", createdAt: new Date(Date.now()) }],
                 createdAt: new Date(Date.now()),
                 translation: { en: { description: description_en }, fa: { description: description_fa } },
+            });
+            await this.TransactionModel.create({
+                brand: brandID,
+                bill: bill.id,
+                user: req.session.userID,
+                method: selectedGateway,
+                authority: identifier,
+                status: "pending",
+                createdAt: new Date(Date.now()),
             });
 
             type = "withPayment";
@@ -134,13 +149,11 @@ export class BillingController {
         const user = await this.UserModel.findOne({ _id: req.session.userID }).exec();
         if (!user) return res.json({ errorCode: "403", errorMessage: "ForbiddenUser" });
 
-        const bill = await this.BillModel.findOne({ "transactions.authority": transactionResponse.identifier }).exec();
-        if (!bill) {
-            // TODO : Log the incorrect authority
-            return res.json({ errorCode: "406", errorMessage: "IncorrectIdentifier" });
-        }
+        const transaction = await this.TransactionModel.findOne({ authority: transactionResponse.identifier }).exec();
+        if (!transaction) return res.json({ errorCode: "406", errorMessage: "IncorrectIdentifier" });
 
-        const transaction = bill.transactions.filter((transaction) => transaction.authority === transactionResponse.identifier).at(0);
+        const bill = await this.BillModel.findOne({ _id: transaction.bill }).exec();
+        if (!transaction) return res.json({ errorCode: "408", errorMessage: "IncorrectTransaction" });
 
         if (transactionResponse.status !== "OK") {
             await this.billingService.updateBillTransactionRecord(bill.id, transaction._id, "canceled", ip);
@@ -195,12 +208,10 @@ export class BillingController {
             createdAt: new Date(Date.now()),
         });
 
-        if (bill.secondsAddedToInvoice > 0) {
-            // after successful payable downgrade/upgrade any renewal bill will be canceled
-            await this.BillModel.updateOne({ brand: bill.brand, type: "renewal" }, { status: "canceled" }).exec();
-        }
+        // after successful payable downgrade/upgrade (that extends the invoice time) any renewal bill will be canceled
+        if (bill.secondsAddedToInvoice > 0) await this.BillModel.updateOne({ brand: bill.brand, type: "renewal" }, { status: "canceled" }).exec();
 
-        return res.json({ redirectUrl: "/purchase-result?status=200&message=Success" });
+        return res.end();
     }
 
     // TODO

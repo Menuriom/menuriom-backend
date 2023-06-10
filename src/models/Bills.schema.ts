@@ -21,20 +21,6 @@ export const BillSchema = new Schema({
 
     secondsAddedToInvoice: { type: Number, default: 0, required: true },
 
-    transactions: [
-        new Schema({
-            user: { type: Schema.Types.ObjectId, ref: "User" },
-            code: { type: String },
-            method: { type: String, required: true },
-            authority: { type: String, required: true },
-            paidPrice: { type: Number, default: 0, required: true }, // In Toman
-            status: { type: String, enum: ["pending", "ok", "canceled", "error"], default: "pending", required: true },
-            error: { type: String },
-            ip: { type: String },
-            createdAt: { type: Date, default: new Date(Date.now()) },
-        }),
-    ],
-
     createdAt: { type: Date, default: new Date(Date.now()) },
     translation: TranslationSchema,
 });
@@ -55,19 +41,6 @@ export interface Bill {
     status: "notPaid" | "pendingPayment" | "paid" | "canceled";
 
     secondsAddedToInvoice: number;
-
-    transactions: Array<{
-        _id: Types.ObjectId;
-        user: PopulatedDoc<User>;
-        code?: string;
-        method: string;
-        authority: string;
-        paidPrice: number;
-        status: "pending" | "ok" | "canceled" | "error";
-        error?: string;
-        ip?: string;
-        createdAt: Date;
-    }>;
 
     createdAt: Date;
     translation: Translation;
