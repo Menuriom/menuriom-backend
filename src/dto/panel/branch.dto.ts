@@ -59,11 +59,4 @@ export class IDBrandDto {
     readonly brandID: string;
 }
 
-export class IDBranchDto {
-    @IsMongoId({ message: i18nValidationMessage("validation.IsMongoId") })
-    @IsString({ message: i18nValidationMessage("validation.IsString") })
-    @IsNotEmpty({ message: i18nValidationMessage("validation.IsNotEmpty") })
-    readonly id: string;
-}
-
 // ========================================

@@ -11,10 +11,3 @@ export class NewRoleDto {
     @IsNotEmpty({ message: i18nValidationMessage("validation.IsNotEmpty") })
     readonly permissions: string[] = [];
 }
-
-export class IdDto {
-    @IsMongoId({ message: i18nValidationMessage("validation.IsMongoId") })
-    @IsString({ message: i18nValidationMessage("validation.IsString") })
-    @IsNotEmpty({ message: i18nValidationMessage("validation.IsNotEmpty") })
-    readonly id: string;
-}

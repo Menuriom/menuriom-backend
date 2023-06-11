@@ -7,12 +7,13 @@ import { Model, Types } from "mongoose";
 import { FileService } from "src/services/file.service";
 import { unlink } from "fs/promises";
 import { FileInterceptor, FilesInterceptor } from "@nestjs/platform-express";
-import { CreateNewBranchDto, EditBranchDto, IDBranchDto, IDBrandDto } from "src/dto/panel/branch.dto";
+import { CreateNewBranchDto, EditBranchDto, IDBrandDto } from "src/dto/panel/branch.dto";
 import { languages } from "src/interfaces/Translation.interface";
 import { I18nContext } from "nestjs-i18n";
 import { BranchDocument } from "src/models/Branches.schema";
 import { SetPermissions } from "src/decorators/authorization.decorator";
 import { AuthorizeUserInSelectedBrand } from "src/guards/authorizeUser.guard";
+import { IdDto } from "src/dto/general.dto";
 
 @Controller("panel/branches")
 export class BranchController {
@@ -38,7 +39,7 @@ export class BranchController {
     @Get("/:id")
     @SetPermissions("main-panel.branches.view")
     @UseGuards(AuthorizeUserInSelectedBrand)
-    async getSingleRecord(@Param() params: IDBranchDto, @Req() req: Request, @Res() res: Response): Promise<void | Response> {
+    async getSingleRecord(@Param() params: IdDto, @Req() req: Request, @Res() res: Response): Promise<void | Response> {
         const branch = await this.BranchModel.findOne({ _id: params.id }).exec();
         if (!branch) {
             throw new UnprocessableEntityException([
@@ -108,7 +109,7 @@ export class BranchController {
     @UseInterceptors(FilesInterceptor("gallery"))
     async editRecord(
         @UploadedFiles() gallery: Express.Multer.File[],
-        @Param() params: IDBranchDto,
+        @Param() params: IdDto,
         @Body() body: EditBranchDto,
         @Req() req: Request,
         @Res() res: Response,
@@ -166,7 +167,7 @@ export class BranchController {
     @Delete("/:id")
     @SetPermissions("main-panel.branches.delete")
     @UseGuards(AuthorizeUserInSelectedBrand)
-    async deleteSingleRecord(@Param() params: IDBranchDto, @Req() req: Request, @Res() res: Response): Promise<void | Response> {
+    async deleteSingleRecord(@Param() params: IdDto, @Req() req: Request, @Res() res: Response): Promise<void | Response> {
         const branch = await this.BranchModel.findOne({ _id: params.id }).select("logo name slogan").exec();
 
         if (!branch) {

@@ -6,7 +6,7 @@ import { InjectModel } from "@nestjs/mongoose";
 import { FilterQuery, Model, Types } from "mongoose";
 import { FileService } from "src/services/file.service";
 import { FileInterceptor, FilesInterceptor } from "@nestjs/platform-express";
-import { EditStaffAccessDto, IdDto, ListingDto, SendInviteDto } from "src/dto/panel/staff.dto";
+import { EditStaffAccessDto, ListingDto, SendInviteDto } from "src/dto/panel/staff.dto";
 import { languages } from "src/interfaces/Translation.interface";
 import { I18nContext } from "nestjs-i18n";
 import { Branch, BranchDocument } from "src/models/Branches.schema";
@@ -16,6 +16,7 @@ import { AuthorizeUserInSelectedBrand } from "src/guards/authorizeUser.guard";
 import { Invite, InviteDocument } from "src/models/Invites.schema";
 import { StaffRole, StaffRoleDocument } from "src/models/StaffRoles.schema";
 import { User, UserDocument } from "src/models/Users.schema";
+import { IdDto } from "src/dto/general.dto";
 
 @Controller("panel/staff")
 export class StaffController {

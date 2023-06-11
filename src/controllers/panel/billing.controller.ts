@@ -143,21 +143,21 @@ export class BillingController {
         const transactionResponse = paymentGateway.getTransactionResponse(req);
         if (transactionResponse.identifier === "") {
             // TODO : log the error
-            return res.json({ errorCode: "405", errorMessage: "MethodNotDefined" });
+            return res.json({ statusCode: "405", message: "MethodNotDefined" });
         }
 
         const user = await this.UserModel.findOne({ _id: req.session.userID }).exec();
-        if (!user) return res.json({ errorCode: "403", errorMessage: "ForbiddenUser" });
+        if (!user) return res.json({ statusCode: "403", message: "ForbiddenUser" });
 
         const transaction = await this.TransactionModel.findOne({ authority: transactionResponse.identifier }).exec();
-        if (!transaction) return res.json({ errorCode: "406", errorMessage: "IncorrectIdentifier" });
+        if (!transaction) return res.json({ statusCode: "406", message: "IncorrectIdentifier" });
 
         const bill = await this.BillModel.findOne({ _id: transaction.bill }).exec();
-        if (!transaction) return res.json({ errorCode: "408", errorMessage: "IncorrectTransaction" });
+        if (!transaction) return res.json({ statusCode: "408", message: "IncorrectTransaction", transactionID: transaction._id });
 
         if (transactionResponse.status !== "OK") {
             await this.billingService.updateBillTransactionRecord(bill.id, transaction._id, "canceled", ip);
-            return res.json({ errorCode: "417", errorMessage: "TransactionCanceled" });
+            return res.json({ statusCode: "417", message: "TransactionCanceled", transactionID: transaction._id });
         }
 
         let verficationResponse = null;
@@ -176,7 +176,7 @@ export class BillingController {
 
         if (!transactionVerified) {
             // TODO : Log the error
-            return res.json({ errorCode: "412", errorMessage: "TransactionFailedAndWillBounce" });
+            return res.json({ statusCode: "412", message: "TransactionFailedAndWillBounce", transactionID: transaction._id });
         }
 
         // mark the bill as paid and transaction record
@@ -211,7 +211,7 @@ export class BillingController {
         // after successful payable downgrade/upgrade (that extends the invoice time) any renewal bill will be canceled
         if (bill.secondsAddedToInvoice > 0) await this.BillModel.updateOne({ brand: bill.brand, type: "renewal" }, { status: "canceled" }).exec();
 
-        return res.end();
+        return res.json({ statusCode: "200", message: "SuccessfulPayment", transactionID: transaction._id });
     }
 
     // TODO

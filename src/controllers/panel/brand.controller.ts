@@ -11,12 +11,13 @@ import { FileService } from "src/services/file.service";
 import { AuthService } from "src/services/auth.service";
 import { unlink } from "fs/promises";
 import { FileInterceptor } from "@nestjs/platform-express";
-import { EditBrandDto, IDBrandDto, SaveBrandSettingsDto } from "src/dto/panel/brand.dto";
+import { EditBrandDto, SaveBrandSettingsDto } from "src/dto/panel/brand.dto";
 import { I18nContext } from "nestjs-i18n";
 import { AuthorizeUserInSelectedBrand } from "src/guards/authorizeUser.guard";
 import { SetPermissions } from "src/decorators/authorization.decorator";
 import { languages } from "src/interfaces/Translation.interface";
 import { StaffRole } from "src/models/StaffRoles.schema";
+import { IdDto } from "src/dto/general.dto";
 
 @Controller("panel/brands")
 export class BrandController {
@@ -30,7 +31,7 @@ export class BrandController {
     @Get("/:id/settings")
     @SetPermissions("main-panel.settings")
     @UseGuards(AuthorizeUserInSelectedBrand)
-    async getBrandSettings(@Param() params: IDBrandDto, @Req() req: Request, @Res() res: Response): Promise<void | Response> {
+    async getBrandSettings(@Param() params: IdDto, @Req() req: Request, @Res() res: Response): Promise<void | Response> {
         const brand = await this.BrandModel.findOne({ _id: params.id }).select("languages currency").exec();
         if (!brand) {
             throw new UnprocessableEntityException([
@@ -48,7 +49,7 @@ export class BrandController {
     @Post("/:id/settings")
     @SetPermissions("main-panel.settings")
     @UseGuards(AuthorizeUserInSelectedBrand)
-    async saveBrandSettings(@Param() params: IDBrandDto, @Body() body: SaveBrandSettingsDto, @Req() req: Request, @Res() res: Response): Promise<void | Response> {
+    async saveBrandSettings(@Param() params: IdDto, @Body() body: SaveBrandSettingsDto, @Req() req: Request, @Res() res: Response): Promise<void | Response> {
         const brand = await this.BrandModel.findOne({ _id: params.id }).select("languages currency").exec();
         if (!brand) {
             throw new UnprocessableEntityException([
@@ -101,7 +102,7 @@ export class BrandController {
     }
 
     @Get("/:id")
-    async getSingleRecord(@Param() params: IDBrandDto, @Req() req: Request, @Res() res: Response): Promise<void | Response> {
+    async getSingleRecord(@Param() params: IdDto, @Req() req: Request, @Res() res: Response): Promise<void | Response> {
         const brand = await this.BrandModel.findOne({ creator: req.session.userID, _id: params.id }).select("logo name slogan socials translation").exec();
         // check if user authorize to edit this record - user must be owner of brand
         if (!brand) {
@@ -126,7 +127,7 @@ export class BrandController {
     @UseInterceptors(FileInterceptor("logo"))
     async editRecord(
         @UploadedFile() logo: Express.Multer.File,
-        @Param() params: IDBrandDto,
+        @Param() params: IdDto,
         @Body() body: EditBrandDto,
         @Req() req: Request,
         @Res() res: Response,
@@ -176,7 +177,7 @@ export class BrandController {
     }
 
     @Delete("/:id")
-    async deleteSingleRecord(@Param() input: IDBrandDto, @Req() req: Request, @Res() res: Response): Promise<void | Response> {
+    async deleteSingleRecord(@Param() input: IdDto, @Req() req: Request, @Res() res: Response): Promise<void | Response> {
         const brand = await this.BrandModel.findOne({ creator: req.session.userID, _id: input.id }).select("logo name slogan").exec();
         // check if user authorize to delete this record - user must be owner of brand
         if (!brand) {
@@ -192,7 +193,7 @@ export class BrandController {
     }
 
     @Delete("/leave/:id")
-    async leaveFromBrand(@Param() input: IDBrandDto, @Req() req: Request, @Res() res: Response): Promise<void | Response> {
+    async leaveFromBrand(@Param() input: IdDto, @Req() req: Request, @Res() res: Response): Promise<void | Response> {
         const staff = await this.StaffModel.findOne({ user: req.session.userID, brand: input.id }).exec();
         if (!staff) {
             throw new UnprocessableEntityException([

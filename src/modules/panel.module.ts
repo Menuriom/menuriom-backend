@@ -17,6 +17,7 @@ import { BrandsPlanSchema } from "src/models/BrandsPlans.schema";
 import { InviteSchema } from "src/models/Invites.schema";
 import { PlanSchema } from "src/models/Plans.schema";
 import { BillingController } from "src/controllers/panel/billing.controller";
+import { TransactionsController } from "src/controllers/panel/transactions.controller";
 import { BillingService } from "src/services/billing.service";
 import { PlanChangeRecordSchema } from "src/models/PlanChangeRecords.schema";
 import { BillSchema } from "src/models/Bills.schema";
@@ -42,7 +43,7 @@ import { TransactionSchema } from "src/models/Transactions.schema";
             { name: "Invite", schema: InviteSchema },
         ]),
     ],
-    controllers: [BrandController, BranchController, StaffController, StaffRolesController, BillingController],
+    controllers: [BrandController, BranchController, StaffController, StaffRolesController, BillingController, TransactionsController],
     providers: [FileService, BillingService],
     exports: [],
 })
