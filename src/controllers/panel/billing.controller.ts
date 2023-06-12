@@ -3,16 +3,17 @@ import { NotFoundException, UnprocessableEntityException, InternalServerErrorExc
 import { Response, query } from "express";
 import { Request } from "src/interfaces/Request.interface";
 import { InjectModel } from "@nestjs/mongoose";
-import { Model } from "mongoose";
+import { FilterQuery, Model, Types } from "mongoose";
 import { SetPermissions } from "src/decorators/authorization.decorator";
 import { AuthorizeUserInSelectedBrand } from "src/guards/authorizeUser.guard";
+import * as humanizeDuration from "humanize-duration";
 import { UserDocument } from "src/models/Users.schema";
-import { BrandsPlan, BrandsPlanDocument } from "src/models/BrandsPlans.schema";
-import { Plan, PlanDocument } from "src/models/Plans.schema";
+import { BrandsPlanDocument } from "src/models/BrandsPlans.schema";
+import { PlanDocument } from "src/models/Plans.schema";
 import { PlanChangeRecordDocument } from "src/models/PlanChangeRecords.schema";
 import { BranchDocument } from "src/models/Branches.schema";
 import { StaffDocument } from "src/models/Staff.schema";
-import { gatewayDto, planChangeDto } from "src/dto/panel/billing.dto";
+import { ListingDto, gatewayDto, planChangeDto } from "src/dto/panel/billing.dto";
 import { I18nContext } from "nestjs-i18n";
 import { BillingService } from "src/services/billing.service";
 import { BillDocument } from "src/models/Bills.schema";
@@ -42,6 +43,72 @@ export class BillingController {
     }
 
     // ===============================================
+
+    @Get("/list")
+    @SetPermissions("main-panel.billing.access")
+    @UseGuards(AuthorizeUserInSelectedBrand)
+    async getBillingHstory(@Query() query: ListingDto, @Req() req: Request, @Res() res: Response): Promise<void | Response> {
+        const brandID = req.headers["brand"].toString();
+
+        // sort
+        let sort: any = { _id: -1 };
+
+        // the base query object
+        let matchQuery: FilterQuery<any> = { brand: new Types.ObjectId(brandID) };
+        if (query.lastRecordID) matchQuery = { _id: { $lt: new Types.ObjectId(query.lastRecordID) }, ...matchQuery };
+
+        // making the model with query
+        let data = this.BillModel.aggregate();
+        data.sort(sort);
+        data.match(matchQuery);
+        data.lookup({ from: "plans", localField: "plan", foreignField: "_id", as: "plan" });
+        data.project({
+            _id: 1,
+            billNumber: 1,
+            type: 1,
+            description: 1,
+            planPeriod: 1,
+            payablePrice: 1,
+            secondsAddedToInvoice: 1,
+            status: 1,
+            dueDate: 1,
+            createdAt: 1,
+            translation: 1,
+            "plan.icon": 1,
+            "plan.name": 1,
+            "plan.monthlyPrice": 1,
+            "plan.yearlyPrice": 1,
+            "plan.translation": 1,
+        });
+        data.limit(Number(query.pp));
+
+        // executing query and getting the results
+        let error;
+        const exec: any[] = await data.exec().catch((e) => (error = e));
+        if (error) throw new InternalServerErrorException();
+        const bills: any[] = exec.map((record) => {
+            return {
+                _id: record._id,
+                billNumber: record.billNumber,
+                type: record.type,
+                description: record.description,
+                forHowLong: record.secondsAddedToInvoice
+                    ? humanizeDuration(record.secondsAddedToInvoice * 1000, { language: I18nContext.current().lang, largest: 1 })
+                    : "",
+                planPeriod: record.planPeriod,
+                payablePrice: record.payablePrice,
+                status: record.status,
+                dueDate: record.dueDate,
+                createdAt: record.createdAt,
+                translation: record.translation,
+                plan: record.plan[0],
+            };
+        });
+
+        const total = await this.BillModel.countDocuments({ brand: brandID }).exec();
+
+        return res.json({ records: bills, total: total });
+    }
 
     @Post("/plan-change")
     @SetPermissions("main-panel.billing.change-plan")
@@ -216,4 +283,5 @@ export class BillingController {
 
     // TODO
     // factor will be generated 4 days before remaining days ending
+    // if any brandPlan invoice time passes the current time, then that brand should be blocked to do anything until they pay up or convert to basic plan
 }
