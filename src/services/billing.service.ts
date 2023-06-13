@@ -106,6 +106,30 @@ export class BillingService {
         };
     }
 
+    async getLastBill(brandID: string): Promise<any> {
+        const query = (filter: {}) => {
+            return this.BillModel.findOne(filter).sort({ _id: "descending" }).populate<{ plan: Plan }>("plan", "_id icon name translation").exec();
+        };
+
+        let bill = await query({ brand: brandID, type: "renewal", status: { $in: ["notPaid", "pendingPayment"] } });
+        if (!bill) bill = await query({ brand: brandID });
+
+        return {
+            _id: bill._id,
+            billNumber: bill.billNumber,
+            type: bill.type,
+            description: bill.description,
+            forHowLong: bill.secondsAddedToInvoice ? humanizeDuration(bill.secondsAddedToInvoice * 1000, { language: I18nContext.current().lang, largest: 1 }) : "",
+            planPeriod: bill.planPeriod,
+            payablePrice: bill.payablePrice,
+            status: bill.status,
+            dueDate: bill.dueDate,
+            createdAt: bill.createdAt,
+            translation: bill.translation,
+            plan: bill.plan,
+        };
+    }
+
     getGateway(method: string): GatewayInterface | null {
         let gateway = null;
         switch (method) {

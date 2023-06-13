@@ -39,7 +39,10 @@ export class BillingController {
     @UseGuards(AuthorizeUserInSelectedBrand)
     async getCurrentPlan(@Req() req: Request, @Res() res: Response): Promise<void | Response> {
         const brandID = req.headers["brand"].toString();
-        return res.json({ currentPlan: await this.billingService.getBrandsCurrentPlan(brandID) });
+        return res.json({
+            currentPlan: await this.billingService.getBrandsCurrentPlan(brandID),
+            lastBill: await this.billingService.getLastBill(brandID),
+        });
     }
 
     // ===============================================
@@ -277,6 +280,10 @@ export class BillingController {
 
         // after successful payable downgrade/upgrade (that extends the invoice time) any renewal bill will be canceled
         if (bill.secondsAddedToInvoice > 0) await this.BillModel.updateOne({ brand: bill.brand, type: "renewal" }, { status: "canceled" }).exec();
+
+        // TODO
+        // add condition that handle both type of bills (renewal and plan change)
+        // also finish the design of last bill pay button and gateway selection
 
         return res.json({ statusCode: "200", message: "SuccessfulPayment", transactionID: transaction._id });
     }
