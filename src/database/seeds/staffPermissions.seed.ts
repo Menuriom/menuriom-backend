@@ -48,8 +48,8 @@ export const records = [
 
     // menu ----------------------------------
     {
-        record: { _id: "main-panel.menu.items", label: "ویرایش و مدیریت ایتم های منو", desc: "", groupLabel: "منو", group: "menu" },
-        translation: { en: { label: "Edit and manage menu items", desc: "", groupLabel: "Menu" } },
+        record: { _id: "main-panel.menu.items", label: "ویرایش و مدیریت ایتم و دسته بندی های منو", desc: "", groupLabel: "منو", group: "menu" },
+        translation: { en: { label: "Edit and manage menu items and categories", desc: "", groupLabel: "Menu" } },
     },
     {
         record: { _id: "main-panel.menu.style", label: "امکان تغییر استایل و ظاهر و کاور منو", desc: "", groupLabel: "منو", group: "menu" },

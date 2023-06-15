@@ -22,6 +22,9 @@ import { BillingService } from "src/services/billing.service";
 import { PlanChangeRecordSchema } from "src/models/PlanChangeRecords.schema";
 import { BillSchema } from "src/models/Bills.schema";
 import { TransactionSchema } from "src/models/Transactions.schema";
+import { IconsController } from "src/controllers/panel/icons.controller";
+import { MenuCategoriesController } from "src/controllers/panel/menuCategories.controller";
+import { MenuCategorySchema } from "src/models/MenuCategories.schema";
 
 @Module({
     imports: [
@@ -41,9 +44,19 @@ import { TransactionSchema } from "src/models/Transactions.schema";
             { name: "StaffRoleDefault", schema: StaffRoleDefaultSchema },
             { name: "StaffPermission", schema: StaffPermissionSchema },
             { name: "Invite", schema: InviteSchema },
+            { name: "MenuCategory", schema: MenuCategorySchema },
         ]),
     ],
-    controllers: [BrandController, BranchController, StaffController, StaffRolesController, BillingController, TransactionsController],
+    controllers: [
+        BrandController,
+        BranchController,
+        StaffController,
+        StaffRolesController,
+        BillingController,
+        TransactionsController,
+        IconsController,
+        MenuCategoriesController,
+    ],
     providers: [FileService, BillingService],
     exports: [],
 })

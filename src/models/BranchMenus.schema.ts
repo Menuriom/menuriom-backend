@@ -1,9 +1,9 @@
 import { Document, PopulatedDoc, Schema, Types } from "mongoose";
 import { Translation, TranslationSchema } from "src/interfaces/Translation.interface";
 import { Branch } from "./Branches.schema";
-export type MenuDocument = Menu & Document;
+export type BranchMenuDocument = BranchMenu & Document;
 
-export const MenuSchema = new Schema({
+export const BranchMenuSchema = new Schema({
     name: { type: String, required: true },
     branch: { type: Schema.Types.ObjectId, ref: "Branch", required: true },
     type: { type: String, required: true },
@@ -22,7 +22,7 @@ export const MenuSchema = new Schema({
     translation: TranslationSchema,
 });
 
-export interface Menu {
+export interface BranchMenu {
     _id: Types.ObjectId;
     name: string;
     branch: PopulatedDoc<Branch>;

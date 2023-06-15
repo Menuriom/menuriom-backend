@@ -18,9 +18,8 @@ import { BrandsPlanSchema } from "./models/BrandsPlans.schema";
 import { BrandSchema } from "./models/Brands.schema";
 import { BrandTypeSchema } from "./models/BrandTypes.schema";
 import { StaffRoleDefaultSchema } from "./models/StaffRoleDefaults.schema";
-import { InvoicePaymentSchema } from "./models/InvoicePayments.schema";
 import { MenuItemSchema } from "./models/MenuItems.schema";
-import { MenuSchema } from "./models/Menus.schema";
+import { BranchMenuSchema } from "./models/BranchMenus.schema";
 import { OrderSchema } from "./models/Orders.schema";
 import { PlanLimitationSchema } from "./models/PlansLimitations.schema";
 import { PlanSchema } from "./models/Plans.schema";
@@ -58,9 +57,8 @@ import { PricingController } from "./controllers/pricing.controller";
             { name: "Brand", schema: BrandSchema },
             { name: "BrandType", schema: BrandTypeSchema },
             { name: "StaffRoleDefault", schema: StaffRoleDefaultSchema },
-            { name: "InvoicePayment", schema: InvoicePaymentSchema },
             { name: "MenuesItem", schema: MenuItemSchema },
-            { name: "Menue", schema: MenuSchema },
+            { name: "Menue", schema: BranchMenuSchema },
             { name: "Order", schema: OrderSchema },
             { name: "PlanLimitation", schema: PlanLimitationSchema },
             { name: "Plan", schema: PlanSchema },

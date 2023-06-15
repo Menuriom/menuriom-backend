@@ -1,10 +1,10 @@
 import { Document, PopulatedDoc, Schema, Types } from "mongoose";
 import { Translation, TranslationSchema } from "src/interfaces/Translation.interface";
-import { Menu } from "./Menus.schema";
+import { BranchMenu } from "./BranchMenus.schema";
 export type MenuItemDocument = MenuItem & Document;
 
 export const MenuItemSchema = new Schema({
-    menu: { type: Schema.Types.ObjectId, ref: "Menu", required: true },
+    menu: { type: Schema.Types.ObjectId, ref: "BranchMenu", required: true },
     category: { type: String, required: true },
 
     images: [{ type: String }],
@@ -31,7 +31,7 @@ export const MenuItemSchema = new Schema({
 
 export interface MenuItem {
     _id: Types.ObjectId;
-    menu: PopulatedDoc<Menu>;
+    menu: PopulatedDoc<BranchMenu>;
     category: string;
 
     images: string[];

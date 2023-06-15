@@ -1,13 +1,13 @@
 import { Document, PopulatedDoc, Schema, Types } from "mongoose";
 import { Branch } from "./Branches.schema";
 import { Brand } from "./Brands.schema";
-import { Menu } from "./Menus.schema";
+import { BranchMenu } from "./BranchMenus.schema";
 export type AnalyticDocument = Analytic & Document;
 
 export const AnalyticSchema = new Schema({
     brand: { type: Schema.Types.ObjectId, ref: "Brand", required: true },
     branch: { type: Schema.Types.ObjectId, ref: "Branch", required: true },
-    menu: { type: Schema.Types.ObjectId, ref: "Menu", required: true },
+    menu: { type: Schema.Types.ObjectId, ref: "BranchMenu", required: true },
     name: {
         type: String,
         enum: ["QrScans", "orders", "likes"],
@@ -34,7 +34,7 @@ export interface Analytic {
     _id: Types.ObjectId;
     brand?: PopulatedDoc<Brand>;
     branch?: PopulatedDoc<Branch>;
-    menu?: PopulatedDoc<Menu>;
+    menu?: PopulatedDoc<BranchMenu>;
     name: "QrScans" | "orders" | "likes";
     forGroup: "total" | "brand" | "branch" | "menu";
     type: "daily" | "monthly";

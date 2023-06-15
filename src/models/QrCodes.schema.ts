@@ -1,5 +1,5 @@
 import { Document, PopulatedDoc, Schema, Types } from "mongoose";
-import { Menu } from "./Menus.schema";
+import { BranchMenu } from "./BranchMenus.schema";
 export type QrCodeDocument = QrCode & Document;
 
 export const QrCodeSchema = new Schema({
@@ -16,6 +16,6 @@ export interface QrCode {
     _id: Types.ObjectId;
     image: string;
     link: string;
-    menu: PopulatedDoc<Menu>;
+    menu: PopulatedDoc<BranchMenu>;
     createdAt: Date;
 }
