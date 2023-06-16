@@ -1,4 +1,4 @@
-import { Body, Param, Query, Controller, Delete, Get, UseGuards, Post, Put, Req, Res, UploadedFiles, UseInterceptors } from "@nestjs/common";
+import { Body, Param, Query, Controller, Delete, Get, UseGuards, Post, Put, Req, Res, UseInterceptors, UploadedFile } from "@nestjs/common";
 import { NotFoundException, UnprocessableEntityException, InternalServerErrorException, ForbiddenException } from "@nestjs/common";
 import { Response, query } from "express";
 import { Request } from "src/interfaces/Request.interface";
@@ -13,13 +13,18 @@ import { SetPermissions } from "src/decorators/authorization.decorator";
 import { AuthorizeUserInSelectedBrand } from "src/guards/authorizeUser.guard";
 import { ListingDto } from "src/dto/panel/billing.dto";
 import { MenuCategoryDocument } from "src/models/MenuCategories.schema";
-import { FilesInterceptor } from "@nestjs/platform-express";
+import { FileInterceptor, FilesInterceptor } from "@nestjs/platform-express";
+import { CreateNewCategoryDto } from "src/dto/panel/menuCategory.dto";
+import { BrandDocument } from "src/models/Brands.schema";
+import { BrandsPlanDocument } from "src/models/BrandsPlans.schema";
 
 @Controller("panel/menu-categories")
 export class MenuCategoriesController {
     constructor(
         // ...
         @InjectModel("User") private readonly UserModel: Model<UserDocument>,
+        @InjectModel("Brand") private readonly BrandModel: Model<BrandDocument>,
+        @InjectModel("BrandsPlan") private readonly BrandsPlanModel: Model<BrandsPlanDocument>,
         @InjectModel("MenuCategory") private readonly MenuCategoryModel: Model<MenuCategoryDocument>,
     ) {}
 
@@ -51,9 +56,24 @@ export class MenuCategoriesController {
     @Post("/")
     @SetPermissions("main-panel.menu.items")
     @UseGuards(AuthorizeUserInSelectedBrand)
-    @UseInterceptors(FilesInterceptor("gallery"))
-    async addRecord(@UploadedFiles() gallery: Express.Multer.File[], @Body() body, @Req() req: Request, @Res() res: Response): Promise<void | Response> {
+    @UseInterceptors(FileInterceptor("uploadedIcon"))
+    async addRecord(
+        @UploadedFile() uploadedIcon: Express.Multer.File,
+        @Body() body: CreateNewCategoryDto,
+        @Req() req: Request,
+        @Res() res: Response,
+    ): Promise<void | Response> {
+        // TODO
         // max category hard limit is 100
+        // check the icon mode
+        // base on icon mode check the limitation that if user can upload custom icons or not
+        // create new category
+
+        const brandID = req.headers["brand"];
+        const brand = await this.BrandModel.findOne({ _id: brandID }).exec();
+        const brandsPlan = await this.BrandsPlanModel.findOne({ brand: brandID }).exec();
+
+
         return res.end();
     }
 
@@ -62,7 +82,7 @@ export class MenuCategoriesController {
     @UseGuards(AuthorizeUserInSelectedBrand)
     @UseInterceptors(FilesInterceptor("gallery"))
     async editRecord(
-        @UploadedFiles() gallery: Express.Multer.File[],
+        @UploadedFile() gallery: Express.Multer.File[],
         @Param() params: IdDto,
         @Body() body,
         @Req() req: Request,

@@ -24,6 +24,7 @@ export default async () => {
         "storage/private",
         "storage/public/logos",
         "storage/public/gallery",
+        "storage/public/categoryIcons",
     ];
     for (let i = 0; i < staticFolderList.length; i++) await mkdir(`./${staticFolderList[i]}`, { recursive: true }).catch((e) => console.log(e));
 
