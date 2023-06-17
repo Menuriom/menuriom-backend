@@ -18,6 +18,7 @@ import { BrandsPlanDocument } from "src/models/BrandsPlans.schema";
 import { Plan } from "src/models/Plans.schema";
 import { PlanService } from "src/services/plan.service";
 import { FileService } from "src/services/file.service";
+import { unlink } from "fs/promises";
 
 @Controller("panel/menu-categories")
 export class MenuCategoriesController {
@@ -135,18 +136,20 @@ export class MenuCategoriesController {
     @SetPermissions("main-panel.menu.items")
     @UseGuards(AuthorizeUserInSelectedBrand)
     async deleteSingleRecord(@Param() params: IdDto, @Req() req: Request, @Res() res: Response): Promise<void | Response> {
-        const category = await this.MenuCategoryModel.findOne({ _id: params.id }).select("logo name slogan").exec();
+        const category = await this.MenuCategoryModel.findOne({ _id: params.id }).select("_id icon").exec();
         if (!category) {
             throw new UnprocessableEntityException([
                 { property: "", errors: [I18nContext.current().t("panel.brand.no record was found, or you are not authorized to do this action")] },
             ]);
         }
 
+        // TODO : delete all category items
+
+        // delete category custom image
+        if (category.icon && category.icon.includes("customCategoryIcons")) await unlink(category.icon.replace("/file/", "storage/public/")).catch((e) => {});
+
         // delete branch
         await this.MenuCategoryModel.deleteOne({ _id: params.id }).exec();
-        // TODO : delete category custom image
-        // TODO : delete all category items
-        // TODO : delete category from branch menus
 
         return res.end();
     }
