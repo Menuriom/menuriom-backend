@@ -19,7 +19,6 @@ import { BrandSchema } from "./models/Brands.schema";
 import { BrandTypeSchema } from "./models/BrandTypes.schema";
 import { StaffRoleDefaultSchema } from "./models/StaffRoleDefaults.schema";
 import { MenuItemSchema } from "./models/MenuItems.schema";
-import { BranchMenuSchema } from "./models/BranchMenus.schema";
 import { OrderSchema } from "./models/Orders.schema";
 import { PlanLimitationSchema } from "./models/PlansLimitations.schema";
 import { PlanSchema } from "./models/Plans.schema";
@@ -58,7 +57,6 @@ import { PricingController } from "./controllers/pricing.controller";
             { name: "BrandType", schema: BrandTypeSchema },
             { name: "StaffRoleDefault", schema: StaffRoleDefaultSchema },
             { name: "MenuesItem", schema: MenuItemSchema },
-            { name: "Menue", schema: BranchMenuSchema },
             { name: "Order", schema: OrderSchema },
             { name: "PlanLimitation", schema: PlanLimitationSchema },
             { name: "Plan", schema: PlanSchema },

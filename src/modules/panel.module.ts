@@ -25,6 +25,7 @@ import { TransactionSchema } from "src/models/Transactions.schema";
 import { IconsController } from "src/controllers/panel/icons.controller";
 import { MenuCategoriesController } from "src/controllers/panel/menuCategories.controller";
 import { MenuCategorySchema } from "src/models/MenuCategories.schema";
+import { PlanService } from "src/services/plan.service";
 
 @Module({
     imports: [
@@ -57,7 +58,7 @@ import { MenuCategorySchema } from "src/models/MenuCategories.schema";
         IconsController,
         MenuCategoriesController,
     ],
-    providers: [FileService, BillingService],
+    providers: [FileService, BillingService, PlanService],
     exports: [],
 })
 export class BrandPanelModule {}

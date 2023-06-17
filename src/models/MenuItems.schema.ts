@@ -1,11 +1,14 @@
 import { Document, PopulatedDoc, Schema, Types } from "mongoose";
 import { Translation, TranslationSchema } from "src/interfaces/Translation.interface";
-import { BranchMenu } from "./BranchMenus.schema";
+import { Brand } from "./Brands.schema";
+import { Branch } from "./Branches.schema";
+import { MenuCategory } from "./MenuCategories.schema";
 export type MenuItemDocument = MenuItem & Document;
 
 export const MenuItemSchema = new Schema({
-    menu: { type: Schema.Types.ObjectId, ref: "BranchMenu", required: true },
-    category: { type: String, required: true },
+    brand: { type: Schema.Types.ObjectId, ref: "Brand", required: true },
+    branches: [{ type: Schema.Types.ObjectId, ref: "BranchMenu", required: true }],
+    category: { type: Schema.Types.ObjectId, ref: "MenuCategory", required: true },
 
     images: [{ type: String }],
     name: { type: String, required: true },
@@ -31,8 +34,9 @@ export const MenuItemSchema = new Schema({
 
 export interface MenuItem {
     _id: Types.ObjectId;
-    menu: PopulatedDoc<BranchMenu>;
-    category: string;
+    brand: PopulatedDoc<Brand>;
+    branches: PopulatedDoc<Branch[]>;
+    category: PopulatedDoc<MenuCategory>;
 
     images: string[];
     name: string;

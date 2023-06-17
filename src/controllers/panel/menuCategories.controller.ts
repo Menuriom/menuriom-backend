@@ -3,25 +3,28 @@ import { NotFoundException, UnprocessableEntityException, InternalServerErrorExc
 import { Response, query } from "express";
 import { Request } from "src/interfaces/Request.interface";
 import { InjectModel } from "@nestjs/mongoose";
-import { FilterQuery, Model, Types } from "mongoose";
+import { Model } from "mongoose";
 import { UserDocument } from "src/models/Users.schema";
 import { I18nContext } from "nestjs-i18n";
-import { BillDocument } from "src/models/Bills.schema";
-import { TransactionDocument } from "src/models/Transactions.schema";
+import { languages } from "src/interfaces/Translation.interface";
 import { IdDto } from "src/dto/general.dto";
 import { SetPermissions } from "src/decorators/authorization.decorator";
 import { AuthorizeUserInSelectedBrand } from "src/guards/authorizeUser.guard";
-import { ListingDto } from "src/dto/panel/billing.dto";
 import { MenuCategoryDocument } from "src/models/MenuCategories.schema";
 import { FileInterceptor, FilesInterceptor } from "@nestjs/platform-express";
 import { CreateNewCategoryDto } from "src/dto/panel/menuCategory.dto";
 import { BrandDocument } from "src/models/Brands.schema";
 import { BrandsPlanDocument } from "src/models/BrandsPlans.schema";
+import { Plan } from "src/models/Plans.schema";
+import { PlanService } from "src/services/plan.service";
+import { FileService } from "src/services/file.service";
 
 @Controller("panel/menu-categories")
 export class MenuCategoriesController {
     constructor(
         // ...
+        readonly PlanService: PlanService,
+        readonly FileService: FileService,
         @InjectModel("User") private readonly UserModel: Model<UserDocument>,
         @InjectModel("Brand") private readonly BrandModel: Model<BrandDocument>,
         @InjectModel("BrandsPlan") private readonly BrandsPlanModel: Model<BrandsPlanDocument>,
@@ -63,16 +66,53 @@ export class MenuCategoriesController {
         @Req() req: Request,
         @Res() res: Response,
     ): Promise<void | Response> {
-        // TODO
-        // max category hard limit is 100
-        // check the icon mode
-        // base on icon mode check the limitation that if user can upload custom icons or not
-        // create new category
-
         const brandID = req.headers["brand"];
-        const brand = await this.BrandModel.findOne({ _id: brandID }).exec();
-        const brandsPlan = await this.BrandsPlanModel.findOne({ brand: brandID }).exec();
 
+        const categoryCount = await this.MenuCategoryModel.countDocuments({ brand: brandID }).exec();
+        if (categoryCount >= 100) {
+            throw new UnprocessableEntityException([{ property: "", errors: [I18nContext.current().t("panel.menu.noMoreCategoryAllowed")] }]);
+        }
+
+        const brandsPlan = await this.BrandsPlanModel.findOne({ brand: brandID }).populate<{ currentPlan: Plan }>("currentPlan", "_id limitations").exec();
+
+        let iconUrl: string = "";
+        if (body.iconMode == "upload") {
+            if (!this.PlanService.checkLimitations([["customizable-category-logo", true]], brandsPlan.currentPlan.limitations)) {
+                throw new UnprocessableEntityException([{ property: "", errors: [I18nContext.current().t("panel.menu.noCategoryUploadAllowed")] }]);
+            }
+            const uploadedFiles = await this.FileService.saveUploadedImages(
+                [uploadedIcon],
+                "",
+                1 * 1_048_576,
+                ["png", "jpeg", "jpg", "webp"],
+                100,
+                "public",
+                "/customCategoryIcons",
+            );
+            iconUrl = uploadedFiles[0];
+        } else {
+            iconUrl = body.selectedIcon || "";
+        }
+
+        const translation = {};
+        for (const lang in languages) {
+            translation[lang] = {
+                name: body[`name.${lang}`] || "",
+            };
+        }
+
+        await this.MenuCategoryModel.create({
+            brand: brandID,
+            branches: body.branches || [],
+            icon: iconUrl || "",
+            hidden: body.hide === "true" ? true : false,
+            showAsNew: body.showAsNew === "true" ? true : false,
+            name: body["name.default"],
+            createdAt: new Date(Date.now()),
+            translation: translation,
+        }).catch((e) => {
+            throw new InternalServerErrorException();
+        });
 
         return res.end();
     }
