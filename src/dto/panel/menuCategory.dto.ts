@@ -45,4 +45,18 @@ export class EditCategoryDto {
     @IsString({ message: i18nValidationMessage("validation.IsString") })
     @IsNotEmpty({ message: i18nValidationMessage("validation.IsNotEmpty") })
     readonly selectedIcon: string;
+
+    @IsIn(["true", "false"], { message: i18nValidationMessage("validation.IsIn") })
+    @IsNotEmpty({ message: i18nValidationMessage("validation.IsNotEmpty") })
+    readonly showAsNew: "true" | "false";
+
+    @IsIn(["true", "false"], { message: i18nValidationMessage("validation.IsIn") })
+    @IsNotEmpty({ message: i18nValidationMessage("validation.IsNotEmpty") })
+    readonly hide: "true" | "false";
+
+    @IsOptional()
+    @IsArray({ message: i18nValidationMessage("validation.IsArray") })
+    @IsMongoId({ message: i18nValidationMessage("validation.IsMongoId"), each: true })
+    @IsNotEmpty({ message: i18nValidationMessage("validation.IsNotEmpty") })
+    readonly branches: string[] = [];
 }

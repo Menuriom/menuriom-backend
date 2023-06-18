@@ -26,6 +26,7 @@ import { IconsController } from "src/controllers/panel/icons.controller";
 import { MenuCategoriesController } from "src/controllers/panel/menuCategories.controller";
 import { MenuCategorySchema } from "src/models/MenuCategories.schema";
 import { PlanService } from "src/services/plan.service";
+import { MenuService } from "src/services/menu.service";
 
 @Module({
     imports: [
@@ -58,7 +59,7 @@ import { PlanService } from "src/services/plan.service";
         IconsController,
         MenuCategoriesController,
     ],
-    providers: [FileService, BillingService, PlanService],
+    providers: [FileService, BillingService, PlanService, MenuService],
     exports: [],
 })
 export class BrandPanelModule {}
