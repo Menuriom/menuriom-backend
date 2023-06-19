@@ -11,6 +11,7 @@ export const MenuCategorySchema = new Schema({
     icon: { type: String },
     name: { type: String, required: true },
     description: { type: String },
+    order: { type: Number, default: 0 },
 
     hidden: { type: Boolean, default: false },
     showAsNew: { type: Boolean, default: false },
@@ -27,6 +28,7 @@ export interface MenuCategory {
     icon?: string;
     name: string;
     description?: string;
+    order: number;
 
     hidden: boolean;
     showAsNew: boolean;

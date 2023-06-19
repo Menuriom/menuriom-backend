@@ -60,3 +60,9 @@ export class EditCategoryDto {
     @IsNotEmpty({ message: i18nValidationMessage("validation.IsNotEmpty") })
     readonly branches: string[] = [];
 }
+
+export class updateOrderDto {
+    @IsArray({ message: i18nValidationMessage("validation.IsArray") })
+    @IsNotEmpty({ message: i18nValidationMessage("validation.IsNotEmpty") })
+    readonly orderedCategories: Array<{ _id: string; order: any }>;
+}

@@ -22,8 +22,8 @@ import { unlink } from "fs/promises";
 import { Branch } from "src/models/Branches.schema";
 import { MenuService } from "src/services/menu.service";
 
-@Controller("panel/menu-categories")
-export class MenuCategoriesController {
+@Controller("panel/menu-items")
+export class MenuItemsController {
     constructor(
         // ...
         readonly PlanService: PlanService,
@@ -46,7 +46,7 @@ export class MenuCategoriesController {
             .exec();
         const categoryCount = await this.MenuCategoryModel.countDocuments({ brand: brandID }).exec();
 
-        return res.json({ records: categories, canCreateNewCategory: categoryCount < 100 });
+        return res.json({ records: categories, canCreateNewCategory: categoryCount < 500 });
     }
 
     @Get("/:id")

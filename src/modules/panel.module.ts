@@ -27,6 +27,7 @@ import { MenuCategoriesController } from "src/controllers/panel/menuCategories.c
 import { MenuCategorySchema } from "src/models/MenuCategories.schema";
 import { PlanService } from "src/services/plan.service";
 import { MenuService } from "src/services/menu.service";
+import { MenuItemsController } from "src/controllers/panel/menuItems.controller";
 
 @Module({
     imports: [
@@ -58,6 +59,7 @@ import { MenuService } from "src/services/menu.service";
         TransactionsController,
         IconsController,
         MenuCategoriesController,
+        MenuItemsController,
     ],
     providers: [FileService, BillingService, PlanService, MenuService],
     exports: [],
