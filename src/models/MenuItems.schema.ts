@@ -13,22 +13,28 @@ export const MenuItemSchema = new Schema({
     images: [{ type: String }],
     name: { type: String, required: true },
     description: { type: String },
-
-    soldOut: { type: Boolean, default: false },
-    specialItem: { type: Boolean, default: false },
-    showAsNew: { type: Boolean, default: false },
-
     price: { type: Number, default: 0, required: true }, // in toman
+    discountPercentage: { type: Number, default: 0 }, // 0 - 100
 
-    subItems: new Schema({
-        name: { type: String, required: true },
-        extraCost: { type: Number, default: 0, required: true }, // in toman
-    }),
+    variants: [
+        {
+            name: { type: String, required: true },
+            price: { type: Number, default: 0, required: true }, // in toman
+            discountPercentage: { type: Number, default: 0 },
+        },
+    ],
+
+    hidden: { type: Boolean, default: false },
+    pinned: { type: Boolean, default: false },
+    soldOut: { type: Boolean, default: false },
+    showAsNew: { type: Boolean, default: false },
+    specialOfTheDay: { type: String, enum: ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"] },
+
+    tags: [{ type: String }],
+    sideItems: [{ type: Schema.Types.ObjectId, ref: "MenuSideGroup" }],
+
     likes: { type: Number, default: 0, required: true },
-    createdAt: {
-        type: Date,
-        default: new Date(Date.now()),
-    },
+    createdAt: { type: Date, default: new Date(Date.now()) },
     translation: TranslationSchema,
 });
 
@@ -41,20 +47,21 @@ export interface MenuItem {
     images: string[];
     name: string;
     description?: string;
-
-    soldOut: boolean;
-    specialItem: boolean;
-    showAsNew: boolean;
-
     price: number;
+    discountPercentage: number;
 
-    subItems: SubItem[];
+    variants: Array<{ name: string; price: number; discountPercentage: number }>;
+
+    hidden: boolean;
+    pinned: boolean;
+    soldOut: boolean;
+    showAsNew: boolean;
+    specialOfTheDay: "monday" | "tuesday" | "wednesday" | "thursday" | "friday" | "saturday" | "sunday";
+
+    tags: Array<string>;
+    sideItems: PopulatedDoc<MenuCategory[]>;
+
     likes: number;
     createdAt: Date;
     translation: Translation;
-}
-
-export interface SubItem {
-    name: string;
-    extraCost: number;
 }

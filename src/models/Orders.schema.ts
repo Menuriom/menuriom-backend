@@ -1,7 +1,7 @@
 import { Document, PopulatedDoc, Schema, Types } from "mongoose";
 import { Translation, TranslationSchema } from "src/interfaces/Translation.interface";
-import { SubItem } from "./MenuItems.schema";
 import { Table } from "./Tables.schema";
+import { MenuSideGroup } from "./MenuSideGroups.schema";
 export type OrderDocument = Order & Document;
 
 export const OrderSchema = new Schema({
@@ -49,5 +49,5 @@ export interface List {
     name: string;
     description: string;
     price: number;
-    subItems: SubItem;
+    subItems: MenuSideGroup;
 }
