@@ -28,6 +28,8 @@ import { MenuCategorySchema } from "src/models/MenuCategories.schema";
 import { PlanService } from "src/services/plan.service";
 import { MenuService } from "src/services/menu.service";
 import { MenuItemsController } from "src/controllers/panel/menuItems.controller";
+import { MenuSideGroupSchema } from "src/models/MenuSideGroups.schema";
+import { MenuSideGroupController } from "src/controllers/panel/menuSideGroup.controller";
 
 @Module({
     imports: [
@@ -48,6 +50,7 @@ import { MenuItemsController } from "src/controllers/panel/menuItems.controller"
             { name: "StaffPermission", schema: StaffPermissionSchema },
             { name: "Invite", schema: InviteSchema },
             { name: "MenuCategory", schema: MenuCategorySchema },
+            { name: "MenuSideGroup", schema: MenuSideGroupSchema },
         ]),
     ],
     controllers: [
@@ -60,6 +63,7 @@ import { MenuItemsController } from "src/controllers/panel/menuItems.controller"
         IconsController,
         MenuCategoriesController,
         MenuItemsController,
+        MenuSideGroupController,
     ],
     providers: [FileService, BillingService, PlanService, MenuService],
     exports: [],

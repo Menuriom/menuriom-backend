@@ -64,5 +64,6 @@
     "IsMongoId": "Must be a valid ID",
     "IsArray": "Must be an array",
     "IsPostalCode": "Must be a valid postal code",
-    "IsIn": "Selected value is not valid"
+    "IsIn": "Selected value is not valid",
+    "IsJSON": "This set is not in valid format"
 }

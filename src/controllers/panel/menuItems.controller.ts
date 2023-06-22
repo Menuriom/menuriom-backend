@@ -86,6 +86,27 @@ export class MenuItemsController {
     ): Promise<void | Response> {
         const brandID = req.headers["brand"];
 
+        // const items = [];
+        // for (const item of body.items) {
+        //     const itemObj = JSON.parse(item);
+        //     const { default: name, ...nameTranslations } = itemObj.name.values;
+
+        //     const translation = {};
+        //     for (const [lang, value] of Object.entries(nameTranslations)) {
+        //         if (!translation[lang]) translation[lang] = {};
+        //         if (value) translation[lang]["name"] = value;
+        //     }
+        //     items.push({ name: itemObj.name.values.default, price: itemObj.price, translation: translation });
+        // }
+
+        // const translation = {};
+        // for (const lang in languages) {
+        //     translation[lang] = {
+        //         name: body[`name.${lang}`] || "",
+        //         description: body[`description.${lang}`] || "",
+        //     };
+        // }
+
         const categoryCount = await this.MenuCategoryModel.countDocuments({ brand: brandID }).exec();
         if (categoryCount >= 100) {
             throw new UnprocessableEntityException([{ property: "", errors: [I18nContext.current().t("panel.menu.noMoreCategoryAllowed")] }]);

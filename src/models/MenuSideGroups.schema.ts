@@ -12,6 +12,7 @@ export const MenuSideGroupSchema = new Schema({
         {
             name: { type: String, required: true },
             price: { type: Number, default: 0, required: true },
+            translation: TranslationSchema,
         },
     ],
     maxNumberUserCanChoose: { type: Number, default: Infinity, required: true },
@@ -26,7 +27,7 @@ export interface MenuSideGroup {
 
     name: string;
     description?: string;
-    items: Array<{ name: string; price: number }>;
+    items: Array<{ name: string; price: number; translation: Translation }>;
     maxNumberUserCanChoose: number;
 
     createdAt: Date;

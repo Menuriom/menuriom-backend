@@ -20,6 +20,8 @@ import { PlanService } from "src/services/plan.service";
 import { FileService } from "src/services/file.service";
 import { Branch } from "src/models/Branches.schema";
 import { MenuService } from "src/services/menu.service";
+import { MenuSideGroupDocument } from "src/models/MenuSideGroups.schema";
+import { CreateNewSideGroupDto } from "src/dto/panel/sideGroup.dto";
 
 @Controller("panel/menu-sides")
 export class MenuSideGroupController {
@@ -32,6 +34,7 @@ export class MenuSideGroupController {
         @InjectModel("Brand") private readonly BrandModel: Model<BrandDocument>,
         @InjectModel("BrandsPlan") private readonly BrandsPlanModel: Model<BrandsPlanDocument>,
         @InjectModel("MenuCategory") private readonly MenuCategoryModel: Model<MenuCategoryDocument>,
+        @InjectModel("MenuSideGroup") private readonly MenuSideGroupModel: Model<MenuSideGroupDocument>,
     ) {}
 
     @Get("/")
@@ -39,99 +42,78 @@ export class MenuSideGroupController {
     @UseGuards(AuthorizeUserInSelectedBrand)
     async getList(@Req() req: Request, @Res() res: Response): Promise<void | Response> {
         const brandID = req.headers["brand"];
-        const categories = await this.MenuCategoryModel.find({ brand: brandID })
-            .select("_id icon name description order branches hidden showAsNew translation")
-            .sort({ order: "ascending" })
-            .exec();
-        const categoryCount = await this.MenuCategoryModel.countDocuments({ brand: brandID }).exec();
+        const groups = await this.MenuSideGroupModel.find({ brand: brandID }).select("_id name description items maxNumberUserCanChoose translation").exec();
+        const groupCount = await this.MenuSideGroupModel.countDocuments({ brand: brandID }).exec();
 
-        return res.json({ records: categories, canCreateNewCategory: categoryCount < 500 });
+        return res.json({ records: groups, canCreateNewGroup: groupCount < 100 });
     }
 
     @Get("/:id")
     @SetPermissions("main-panel.menu.items")
     @UseGuards(AuthorizeUserInSelectedBrand)
     async getSingleRecord(@Param() params: IdDto, @Req() req: Request, @Res() res: Response): Promise<void | Response> {
-        const category = await this.MenuCategoryModel.findOne({ _id: params.id })
-            .select("_id icon name description hidden showAsNew translation")
-            .populate<{ branches: Branch }>("branches", "_id name")
-            .exec();
-
-        if (!category) {
+        const group = await this.MenuSideGroupModel.findOne({ _id: params.id }).select("_id name description items maxNumberUserCanChoose translation").exec();
+        if (!group) {
             throw new UnprocessableEntityException([
                 { property: "", errors: [I18nContext.current().t("panel.brand.no record was found, or you are not authorized to do this action")] },
             ]);
         }
 
-        const name = { default: category.name };
+        const name = { default: group.name };
+        const description = { default: group.description };
         for (const lang in languages) {
-            if (category.translation && category.translation[lang]) {
-                name[lang] = category.translation[lang].name;
+            if (group.translation && group.translation[lang]) {
+                name[lang] = group.translation[lang].name;
+                description[lang] = group.translation[lang].description;
             }
         }
 
-        return res.json({ icon: category.icon, name, branches: category.branches, showAsNew: category.showAsNew, hide: category.hidden });
+        return res.json({ name, description, items: group.items, maximum: group.maxNumberUserCanChoose });
     }
 
     @Post("/")
     @SetPermissions("main-panel.menu.items")
     @UseGuards(AuthorizeUserInSelectedBrand)
-    @UseInterceptors(FileInterceptor("uploadedIcon"))
-    async addRecord(
-        @UploadedFile() uploadedIcon: Express.Multer.File,
-        @Body() body: CreateNewCategoryDto,
-        @Req() req: Request,
-        @Res() res: Response,
-    ): Promise<void | Response> {
+    @UseInterceptors(FileInterceptor("uploadedFile"))
+    async addRecord(@Body() body: CreateNewSideGroupDto, @Req() req: Request, @Res() res: Response): Promise<void | Response> {
         const brandID = req.headers["brand"];
 
-        const categoryCount = await this.MenuCategoryModel.countDocuments({ brand: brandID }).exec();
-        if (categoryCount >= 100) {
-            throw new UnprocessableEntityException([{ property: "", errors: [I18nContext.current().t("panel.menu.noMoreCategoryAllowed")] }]);
+        const groupCount = await this.MenuSideGroupModel.countDocuments({ brand: brandID }).exec();
+        if (groupCount >= 100) {
+            throw new UnprocessableEntityException([{ property: "", errors: [I18nContext.current().t("panel.menu.noMoreSideGroupAllowed")] }]);
         }
 
-        const brandsPlan = await this.BrandsPlanModel.findOne({ brand: brandID }).populate<{ currentPlan: Plan }>("currentPlan", "_id limitations").exec();
+        const items = [];
+        for (const item of body.items) {
+            const itemObj = JSON.parse(item);
+            const { default: name, ...nameTranslations } = itemObj.name.values;
 
-        let iconUrl: string = "";
-        if (body.iconMode == "upload") {
-            if (!this.PlanService.checkLimitations([["customizable-category-logo", true]], brandsPlan.currentPlan.limitations)) {
-                throw new UnprocessableEntityException([{ property: "", errors: [I18nContext.current().t("panel.menu.noCategoryUploadAllowed")] }]);
+            const translation = {};
+            for (const [lang, value] of Object.entries(nameTranslations)) {
+                if (!translation[lang]) translation[lang] = {};
+                if (value) translation[lang]["name"] = value;
             }
-            if (!uploadedIcon) {
-                throw new UnprocessableEntityException([{ property: "", errors: [I18nContext.current().t("panel.menu.noCategoryImage")] }]);
-            }
-            const uploadedFiles = await this.FileService.saveUploadedImages(
-                [uploadedIcon],
-                "",
-                1 * 1_048_576,
-                ["png", "jpeg", "jpg", "webp"],
-                100,
-                "public",
-                "/customCategoryIcons",
-            );
-            iconUrl = uploadedFiles[0];
-        } else {
-            iconUrl = body.selectedIcon || "";
+            items.push({ name: itemObj.name.values.default, price: itemObj.price || 0, translation: translation });
         }
 
         const translation = {};
         for (const lang in languages) {
             translation[lang] = {
                 name: body[`name.${lang}`] || "",
+                description: body[`description.${lang}`] || "",
             };
         }
 
-        await this.MenuCategoryModel.create({
+        await this.MenuSideGroupModel.create({
             brand: brandID,
-            branches: body.branches || [],
-            icon: iconUrl || "",
-            hidden: body.hide === "true" ? true : false,
-            showAsNew: body.showAsNew === "true" ? true : false,
-            order: 0,
-            name: body["name.default"],
+            name: body["name.default"] || "",
+            description: body["description.default"] || "",
+            maxNumberUserCanChoose: body.maximum || Infinity,
+            items: items,
             createdAt: new Date(Date.now()),
             translation: translation,
         }).catch((e) => {
+            console.log({ e });
             throw new InternalServerErrorException();
         });
 

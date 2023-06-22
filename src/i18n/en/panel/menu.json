@@ -1,5 +1,6 @@
 {
     "noCategoryUploadAllowed": "Custom category icons are available on the pro plan",
     "noMoreCategoryAllowed": "You can't create any more categories for now",
-    "noCategoryImage": "Please select an image for the category"
+    "noCategoryImage": "Please select an image for the category",
+    "noMoreSideGroupAllowed": "You can't create any more side groups for now"
 }
