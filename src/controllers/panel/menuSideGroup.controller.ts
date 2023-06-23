@@ -21,7 +21,7 @@ import { FileService } from "src/services/file.service";
 import { Branch } from "src/models/Branches.schema";
 import { MenuService } from "src/services/menu.service";
 import { MenuSideGroupDocument } from "src/models/MenuSideGroups.schema";
-import { CreateNewSideGroupDto } from "src/dto/panel/sideGroup.dto";
+import { CreateNewSideGroupDto, EditSideGroupDto } from "src/dto/panel/sideGroup.dto";
 
 @Controller("panel/menu-sides")
 export class MenuSideGroupController {
@@ -123,57 +123,40 @@ export class MenuSideGroupController {
     @Put("/:id")
     @SetPermissions("main-panel.menu.items")
     @UseGuards(AuthorizeUserInSelectedBrand)
-    @UseInterceptors(FileInterceptor("uploadedIcon"))
-    async editRecord(
-        @UploadedFile() uploadedIcon: Express.Multer.File,
-        @Param() params: IdDto,
-        @Body() body: EditCategoryDto,
-        @Req() req: Request,
-        @Res() res: Response,
-    ): Promise<void | Response> {
+    @UseInterceptors(FileInterceptor("uploadedFile"))
+    async editRecord(@Param() params: IdDto, @Body() body: EditSideGroupDto, @Req() req: Request, @Res() res: Response): Promise<void | Response> {
         const brandID = req.headers["brand"];
 
-        const brandsPlan = await this.BrandsPlanModel.findOne({ brand: brandID }).populate<{ currentPlan: Plan }>("currentPlan", "_id limitations").exec();
-        const menuCategory = await this.MenuCategoryModel.findOne({ _id: params.id }).select("_id icon").exec();
+        const groupCount = await this.MenuSideGroupModel.countDocuments({ brand: brandID }).exec();
 
-        let iconUrl: string = menuCategory.icon;
-        if (body.iconMode == "upload" && uploadedIcon) {
-            if (!this.PlanService.checkLimitations([["customizable-category-logo", true]], brandsPlan.currentPlan.limitations)) {
-                throw new UnprocessableEntityException([{ property: "", errors: [I18nContext.current().t("panel.menu.noCategoryUploadAllowed")] }]);
+        const items = [];
+        for (const item of body.items) {
+            const itemObj = JSON.parse(item);
+            const { default: name, ...nameTranslations } = itemObj.name.values;
+
+            const translation = {};
+            for (const [lang, value] of Object.entries(nameTranslations)) {
+                if (!translation[lang]) translation[lang] = {};
+                if (value) translation[lang]["name"] = value;
             }
-            const uploadedFiles = await this.FileService.saveUploadedImages(
-                [uploadedIcon],
-                "",
-                1 * 1_048_576,
-                ["png", "jpeg", "jpg", "webp"],
-                100,
-                "public",
-                "/customCategoryIcons",
-            );
-            if (uploadedFiles[0]) {
-                this.MenuService.removeCategoryCustomIcons(menuCategory.icon);
-                iconUrl = uploadedFiles[0];
-            }
-        } else if (body.iconMode == "list" && body.selectedIcon) {
-            this.MenuService.removeCategoryCustomIcons(menuCategory.icon);
-            iconUrl = body.selectedIcon || menuCategory.icon || "";
+            items.push({ name: itemObj.name.values.default, price: itemObj.price || 0, translation: translation });
         }
 
         const translation = {};
         for (const lang in languages) {
             translation[lang] = {
                 name: body[`name.${lang}`] || "",
+                description: body[`description.${lang}`] || "",
             };
         }
 
-        await this.MenuCategoryModel.updateOne(
+        await this.MenuSideGroupModel.updateOne(
             { _id: params.id },
             {
-                branches: body.branches || [],
-                icon: iconUrl || "",
-                hidden: body.hide === "true" ? true : false,
-                showAsNew: body.showAsNew === "true" ? true : false,
-                name: body["name.default"],
+                name: body["name.default"] || "",
+                description: body["description.default"] || "",
+                maxNumberUserCanChoose: body.maximum || Infinity,
+                items: items,
                 translation: translation,
             },
         ).catch((e) => {
@@ -187,49 +170,16 @@ export class MenuSideGroupController {
     @SetPermissions("main-panel.menu.items")
     @UseGuards(AuthorizeUserInSelectedBrand)
     async deleteSingleRecord(@Param() params: IdDto, @Req() req: Request, @Res() res: Response): Promise<void | Response> {
-        const category = await this.MenuCategoryModel.findOne({ _id: params.id }).select("_id icon").exec();
-        if (!category) {
+        const group = await this.MenuSideGroupModel.findOne({ _id: params.id }).select("_id icon").exec();
+        if (!group) {
             throw new UnprocessableEntityException([
                 { property: "", errors: [I18nContext.current().t("panel.brand.no record was found, or you are not authorized to do this action")] },
             ]);
         }
 
-        // TODO : delete all category items
+        // TODO : also delete group from all menu items that has it
 
-        // delete category custom image
-        await this.MenuService.removeCategoryCustomIcons(category.icon);
-
-        // delete branch
-        await this.MenuCategoryModel.deleteOne({ _id: params.id }).exec();
-
-        return res.end();
-    }
-
-    @Post("/hide/:id")
-    @SetPermissions("main-panel.menu.items")
-    @UseGuards(AuthorizeUserInSelectedBrand)
-    async toggleCategoryVisibility(@Param() param: IdDto, @Req() req: Request, @Res() res: Response): Promise<void | Response> {
-        const category = await this.MenuCategoryModel.findOne({ _id: param.id }).select("_id hidden").exec();
-        if (!category) {
-            throw new UnprocessableEntityException([
-                { property: "", errors: [I18nContext.current().t("panel.brand.no record was found, or you are not authorized to do this action")] },
-            ]);
-        }
-
-        await this.MenuCategoryModel.updateOne({ _id: param.id }, { hidden: !category.hidden }).exec();
-
-        return res.end();
-    }
-
-    @Post("/update-order")
-    @SetPermissions("main-panel.menu.items")
-    @UseGuards(AuthorizeUserInSelectedBrand)
-    async updateCategoryOrders(@Body() body: updateOrderDto, @Req() req: Request, @Res() res: Response): Promise<void | Response> {
-        const writes = [];
-        body.orderedCategories.forEach((item) => {
-            writes.push({ updateOne: { filter: { _id: item._id }, update: { order: item.order } } });
-        });
-        await this.MenuCategoryModel.bulkWrite(writes);
+        await this.MenuSideGroupModel.deleteOne({ _id: params.id }).exec();
 
         return res.end();
     }
