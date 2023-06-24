@@ -1,24 +1,17 @@
-import { Body, Param, Query, Controller, Delete, Get, UseGuards, Post, Put, Req, Res, UseInterceptors, UploadedFile } from "@nestjs/common";
-import { NotFoundException, UnprocessableEntityException, InternalServerErrorException, ForbiddenException } from "@nestjs/common";
+import { Body, Param, Query, Controller, Delete, Get, UseGuards, Post, Put, Req, Res, UseInterceptors } from "@nestjs/common";
+import { NotFoundException, UnprocessableEntityException, InternalServerErrorException } from "@nestjs/common";
 import { Response, query } from "express";
 import { Request } from "src/interfaces/Request.interface";
 import { InjectModel } from "@nestjs/mongoose";
 import { Model } from "mongoose";
-import { UserDocument } from "src/models/Users.schema";
 import { I18nContext } from "nestjs-i18n";
 import { languages } from "src/interfaces/Translation.interface";
 import { IdDto } from "src/dto/general.dto";
 import { SetPermissions } from "src/decorators/authorization.decorator";
 import { AuthorizeUserInSelectedBrand } from "src/guards/authorizeUser.guard";
-import { MenuCategoryDocument } from "src/models/MenuCategories.schema";
-import { FileInterceptor, FilesInterceptor } from "@nestjs/platform-express";
-import { CreateNewCategoryDto, EditCategoryDto, updateOrderDto } from "src/dto/panel/menuCategory.dto";
-import { BrandDocument } from "src/models/Brands.schema";
-import { BrandsPlanDocument } from "src/models/BrandsPlans.schema";
-import { Plan } from "src/models/Plans.schema";
+import { FileInterceptor } from "@nestjs/platform-express";
 import { PlanService } from "src/services/plan.service";
 import { FileService } from "src/services/file.service";
-import { Branch } from "src/models/Branches.schema";
 import { MenuService } from "src/services/menu.service";
 import { MenuSideGroupDocument } from "src/models/MenuSideGroups.schema";
 import { CreateNewSideGroupDto, EditSideGroupDto } from "src/dto/panel/sideGroup.dto";
@@ -30,10 +23,6 @@ export class MenuSideGroupController {
         readonly PlanService: PlanService,
         readonly FileService: FileService,
         readonly MenuService: MenuService,
-        @InjectModel("User") private readonly UserModel: Model<UserDocument>,
-        @InjectModel("Brand") private readonly BrandModel: Model<BrandDocument>,
-        @InjectModel("BrandsPlan") private readonly BrandsPlanModel: Model<BrandsPlanDocument>,
-        @InjectModel("MenuCategory") private readonly MenuCategoryModel: Model<MenuCategoryDocument>,
         @InjectModel("MenuSideGroup") private readonly MenuSideGroupModel: Model<MenuSideGroupDocument>,
     ) {}
 
@@ -126,8 +115,6 @@ export class MenuSideGroupController {
     @UseInterceptors(FileInterceptor("uploadedFile"))
     async editRecord(@Param() params: IdDto, @Body() body: EditSideGroupDto, @Req() req: Request, @Res() res: Response): Promise<void | Response> {
         const brandID = req.headers["brand"];
-
-        const groupCount = await this.MenuSideGroupModel.countDocuments({ brand: brandID }).exec();
 
         const items = [];
         for (const item of body.items) {

@@ -10,17 +10,20 @@ export const MenuItemSchema = new Schema({
     branches: [{ type: Schema.Types.ObjectId, ref: "BranchMenu", required: true }],
     category: { type: Schema.Types.ObjectId, ref: "MenuCategory", required: true },
 
+    order: { type: Number, default: 0 },
     images: [{ type: String }],
     name: { type: String, required: true },
     description: { type: String },
     price: { type: Number, default: 0, required: true }, // in toman
+
     discountPercentage: { type: Number, default: 0 }, // 0 - 100
+    discountActive: { type: Boolean, default: false },
 
     variants: [
         {
             name: { type: String, required: true },
             price: { type: Number, default: 0, required: true }, // in toman
-            discountPercentage: { type: Number, default: 0 },
+            translation: TranslationSchema,
         },
     ],
 
@@ -28,7 +31,9 @@ export const MenuItemSchema = new Schema({
     pinned: { type: Boolean, default: false },
     soldOut: { type: Boolean, default: false },
     showAsNew: { type: Boolean, default: false },
-    specialOfTheDay: { type: String, enum: ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"] },
+
+    specialDaysList: { type: String, enum: ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"] },
+    specialDaysActive: { type: Boolean, default: false },
 
     tags: [{ type: String }],
     sideItems: [{ type: Schema.Types.ObjectId, ref: "MenuSideGroup" }],
@@ -44,19 +49,24 @@ export interface MenuItem {
     branches: PopulatedDoc<Branch[]>;
     category: PopulatedDoc<MenuCategory>;
 
+    order: number;
     images: string[];
     name: string;
     description?: string;
     price: number;
-    discountPercentage: number;
 
-    variants: Array<{ name: string; price: number; discountPercentage: number }>;
+    discountPercentage: number;
+    discountActive: boolean;
+
+    variants: Array<{ name: string; price: number; translation: Translation }>;
 
     hidden: boolean;
     pinned: boolean;
     soldOut: boolean;
     showAsNew: boolean;
-    specialOfTheDay: "monday" | "tuesday" | "wednesday" | "thursday" | "friday" | "saturday" | "sunday";
+
+    specialDaysList: "monday" | "tuesday" | "wednesday" | "thursday" | "friday" | "saturday" | "sunday";
+    specialDaysActive: boolean;
 
     tags: Array<string>;
     sideItems: PopulatedDoc<MenuCategory[]>;

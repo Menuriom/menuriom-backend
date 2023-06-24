@@ -2,5 +2,7 @@
     "noCategoryUploadAllowed": "Custom category icons are available on the pro plan",
     "noMoreCategoryAllowed": "You can't create any more categories for now",
     "noCategoryImage": "Please select an image for the category",
-    "noMoreSideGroupAllowed": "You can't create any more side groups for now"
+    "noMoreSideGroupAllowed": "You can't create any more side groups for now",
+    "noMoreMenuItemsAllowed": "You can't create any more menu items for now",
+    "Selected category does not exist": "Selected category does not exist"
 }

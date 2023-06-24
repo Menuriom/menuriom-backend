@@ -1,9 +1,9 @@
-import { Body, Param, Query, Controller, Delete, Get, UseGuards, Post, Put, Req, Res, UseInterceptors, UploadedFile } from "@nestjs/common";
+import { Body, Param, Query, Controller, Delete, Get, UseGuards, Post, Put, Req, Res, UseInterceptors, UploadedFiles } from "@nestjs/common";
 import { NotFoundException, UnprocessableEntityException, InternalServerErrorException, ForbiddenException } from "@nestjs/common";
 import { Response, query } from "express";
 import { Request } from "src/interfaces/Request.interface";
 import { InjectModel } from "@nestjs/mongoose";
-import { Model } from "mongoose";
+import { Model, Types } from "mongoose";
 import { UserDocument } from "src/models/Users.schema";
 import { I18nContext } from "nestjs-i18n";
 import { languages } from "src/interfaces/Translation.interface";
@@ -21,6 +21,8 @@ import { FileService } from "src/services/file.service";
 import { unlink } from "fs/promises";
 import { Branch } from "src/models/Branches.schema";
 import { MenuService } from "src/services/menu.service";
+import { CreateNewItemDto } from "src/dto/panel/menuItems.dto";
+import { MenuItemDocument } from "src/models/MenuItems.schema";
 
 @Controller("panel/menu-items")
 export class MenuItemsController {
@@ -33,6 +35,7 @@ export class MenuItemsController {
         @InjectModel("Brand") private readonly BrandModel: Model<BrandDocument>,
         @InjectModel("BrandsPlan") private readonly BrandsPlanModel: Model<BrandsPlanDocument>,
         @InjectModel("MenuCategory") private readonly MenuCategoryModel: Model<MenuCategoryDocument>,
+        @InjectModel("MenuItem") private readonly MenuItemModel: Model<MenuItemDocument>,
     ) {}
 
     @Get("/")
@@ -77,63 +80,50 @@ export class MenuItemsController {
     @Post("/")
     @SetPermissions("main-panel.menu.items")
     @UseGuards(AuthorizeUserInSelectedBrand)
-    @UseInterceptors(FileInterceptor("uploadedIcon"))
+    @UseInterceptors(FilesInterceptor("gallery"))
     async addRecord(
-        @UploadedFile() uploadedIcon: Express.Multer.File,
-        @Body() body: CreateNewCategoryDto,
+        @UploadedFiles() gallery: Express.Multer.File[],
+        @Body() body: CreateNewItemDto,
         @Req() req: Request,
         @Res() res: Response,
     ): Promise<void | Response> {
         const brandID = req.headers["brand"];
 
-        // const items = [];
-        // for (const item of body.items) {
-        //     const itemObj = JSON.parse(item);
-        //     const { default: name, ...nameTranslations } = itemObj.name.values;
+        // TODO
+        // add check for every side item group id and only add existing ones
 
-        //     const translation = {};
-        //     for (const [lang, value] of Object.entries(nameTranslations)) {
-        //         if (!translation[lang]) translation[lang] = {};
-        //         if (value) translation[lang]["name"] = value;
-        //     }
-        //     items.push({ name: itemObj.name.values.default, price: itemObj.price, translation: translation });
-        // }
-
-        // const translation = {};
-        // for (const lang in languages) {
-        //     translation[lang] = {
-        //         name: body[`name.${lang}`] || "",
-        //         description: body[`description.${lang}`] || "",
-        //     };
-        // }
-
-        const categoryCount = await this.MenuCategoryModel.countDocuments({ brand: brandID }).exec();
-        if (categoryCount >= 100) {
-            throw new UnprocessableEntityException([{ property: "", errors: [I18nContext.current().t("panel.menu.noMoreCategoryAllowed")] }]);
+        // check if selected category exists
+        const doesCategoryExists = await this.MenuCategoryModel.exists({ _id: new Types.ObjectId(body.selectedCategory), brand: brandID }).exec();
+        if (!doesCategoryExists) {
+            throw new UnprocessableEntityException([
+                { property: "selectedCategory", errors: [I18nContext.current().t("panel.menu.Selected category does not exist")] },
+            ]);
         }
 
-        const brandsPlan = await this.BrandsPlanModel.findOne({ brand: brandID }).populate<{ currentPlan: Plan }>("currentPlan", "_id limitations").exec();
+        const menuItemCount = await this.MenuItemModel.countDocuments({ brand: brandID }).exec();
+        if (menuItemCount >= 500) {
+            throw new UnprocessableEntityException([{ property: "", errors: [I18nContext.current().t("panel.menu.noMoreMenuItemsAllowed")] }]);
+        }
 
-        let iconUrl: string = "";
-        if (body.iconMode == "upload") {
-            if (!this.PlanService.checkLimitations([["customizable-category-logo", true]], brandsPlan.currentPlan.limitations)) {
-                throw new UnprocessableEntityException([{ property: "", errors: [I18nContext.current().t("panel.menu.noCategoryUploadAllowed")] }]);
+        let Has_itemHighlighting = false;
+        let Has_menuTagOption = false;
+        const brandsPlan = await this.BrandsPlanModel.findOne({ brand: brandID }).populate<{ currentPlan: Plan }>("currentPlan", "_id limitations").exec();
+        if (this.PlanService.checkLimitations([["item-highlighting", true]], brandsPlan.currentPlan.limitations)) Has_itemHighlighting = true;
+        if (this.PlanService.checkLimitations([["menu-tag-option", true]], brandsPlan.currentPlan.limitations)) Has_menuTagOption = true;
+
+        const images = await this.FileService.saveUploadedImages(gallery, "", 2 * 1_048_576, ["png", "jpeg", "jpg", "webp"], 320, "public", "/menuItemsImages");
+
+        const variants = [];
+        for (const variant of body.variants) {
+            const variantObj = JSON.parse(variant);
+            const { default: name, ...nameTranslations } = variantObj.name.values;
+
+            const translation = {};
+            for (const [lang, value] of Object.entries(nameTranslations)) {
+                if (!translation[lang]) translation[lang] = {};
+                if (value) translation[lang]["name"] = value;
             }
-            if (!uploadedIcon) {
-                throw new UnprocessableEntityException([{ property: "", errors: [I18nContext.current().t("panel.menu.noCategoryImage")] }]);
-            }
-            const uploadedFiles = await this.FileService.saveUploadedImages(
-                [uploadedIcon],
-                "",
-                1 * 1_048_576,
-                ["png", "jpeg", "jpg", "webp"],
-                100,
-                "public",
-                "/customCategoryIcons",
-            );
-            iconUrl = uploadedFiles[0];
-        } else {
-            iconUrl = body.selectedIcon || "";
+            variants.push({ name: variantObj.name.values.default, price: variantObj.price || 0, translation: translation });
         }
 
         const translation = {};
@@ -143,14 +133,32 @@ export class MenuItemsController {
             };
         }
 
-        await this.MenuCategoryModel.create({
+        await this.MenuItemModel.create({
             brand: brandID,
             branches: body.branches || [],
-            icon: iconUrl || "",
-            hidden: body.hide === "true" ? true : false,
-            showAsNew: body.showAsNew === "true" ? true : false,
+            category: body.selectedCategory,
+
             order: 0,
+            images: images,
             name: body["name.default"],
+            description: body["description.default"],
+            price: body.price,
+            variants: variants,
+
+            discountActive: body.discountActive === "true" && Has_itemHighlighting ? true : false,
+            discountPercentage: body.discountPercentage,
+
+            hidden: body.hidden === "true" ? true : false,
+            pinned: body.pinned === "true" && Has_itemHighlighting ? true : false,
+            soldOut: body.soldOut === "true" ? true : false,
+            showAsNew: body.showAsNew === "true" && Has_menuTagOption ? true : false,
+
+            specialDaysActive: body.specialDaysActive === "true" && Has_itemHighlighting ? true : false,
+            specialDaysList: body.specialDaysList || [],
+
+            // TODO : check and add side items
+            // sideItems
+            tags: [],
             createdAt: new Date(Date.now()),
             translation: translation,
         }).catch((e) => {
@@ -165,7 +173,7 @@ export class MenuItemsController {
     @UseGuards(AuthorizeUserInSelectedBrand)
     @UseInterceptors(FileInterceptor("uploadedIcon"))
     async editRecord(
-        @UploadedFile() uploadedIcon: Express.Multer.File,
+        @UploadedFiles() uploadedIcon: Express.Multer.File,
         @Param() params: IdDto,
         @Body() body: EditCategoryDto,
         @Req() req: Request,

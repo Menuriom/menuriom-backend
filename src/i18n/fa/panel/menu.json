@@ -2,5 +2,7 @@
     "noCategoryUploadAllowed": "امکان اپلود ایکون دسته بندی فقط برای طرح حرفه ای موجود است",
     "noMoreCategoryAllowed": "درحال حاضر امکان ساخت دسته بندی بیشتری وجود ندارد",
     "noCategoryImage": "لطفا عکسی برای دسته بندی انتخاب کنید",
-    "noMoreSideGroupAllowed": "درحال حاضر امکان ساخت گروه جانبی وجود ندارد"
+    "noMoreSideGroupAllowed": "درحال حاضر امکان ساخت گروه جانبی وجود ندارد",
+    "noMoreMenuItemsAllowed": "درحال حاضر امکان ساخت ایتم جدید وجود ندارد",
+    "Selected category does not exist": "دسته بندی انتخابی وجود ندارد یا پاک شده است"
 }
