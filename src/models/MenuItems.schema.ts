@@ -32,7 +32,7 @@ export const MenuItemSchema = new Schema({
     soldOut: { type: Boolean, default: false },
     showAsNew: { type: Boolean, default: false },
 
-    specialDaysList: { type: String, enum: ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"] },
+    specialDaysList: [{ type: String, enum: ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"] }],
     specialDaysActive: { type: Boolean, default: false },
 
     tags: [{ type: String }],
@@ -65,7 +65,7 @@ export interface MenuItem {
     soldOut: boolean;
     showAsNew: boolean;
 
-    specialDaysList: "monday" | "tuesday" | "wednesday" | "thursday" | "friday" | "saturday" | "sunday";
+    specialDaysList: Array<"monday" | "tuesday" | "wednesday" | "thursday" | "friday" | "saturday" | "sunday">;
     specialDaysActive: boolean;
 
     tags: Array<string>;

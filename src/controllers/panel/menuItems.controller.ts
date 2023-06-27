@@ -21,8 +21,9 @@ import { FileService } from "src/services/file.service";
 import { unlink } from "fs/promises";
 import { Branch } from "src/models/Branches.schema";
 import { MenuService } from "src/services/menu.service";
-import { CreateNewItemDto } from "src/dto/panel/menuItems.dto";
+import { MenuItemDto } from "src/dto/panel/menuItems.dto";
 import { MenuItemDocument } from "src/models/MenuItems.schema";
+import { MenuSideGroupDocument } from "src/models/MenuSideGroups.schema";
 
 @Controller("panel/menu-items")
 export class MenuItemsController {
@@ -36,6 +37,7 @@ export class MenuItemsController {
         @InjectModel("BrandsPlan") private readonly BrandsPlanModel: Model<BrandsPlanDocument>,
         @InjectModel("MenuCategory") private readonly MenuCategoryModel: Model<MenuCategoryDocument>,
         @InjectModel("MenuItem") private readonly MenuItemModel: Model<MenuItemDocument>,
+        @InjectModel("MenuSideGroup") private readonly MenuSideGroupModel: Model<MenuSideGroupDocument>,
     ) {}
 
     @Get("/")
@@ -43,13 +45,10 @@ export class MenuItemsController {
     @UseGuards(AuthorizeUserInSelectedBrand)
     async getList(@Req() req: Request, @Res() res: Response): Promise<void | Response> {
         const brandID = req.headers["brand"];
-        const categories = await this.MenuCategoryModel.find({ brand: brandID })
-            .select("_id icon name description order branches hidden showAsNew translation")
-            .sort({ order: "ascending" })
-            .exec();
-        const categoryCount = await this.MenuCategoryModel.countDocuments({ brand: brandID }).exec();
+        const items = await this.MenuItemModel.find({ brand: brandID }).sort({ order: "ascending" }).exec();
+        const itemsCount = await this.MenuItemModel.countDocuments({ brand: brandID }).exec();
 
-        return res.json({ records: categories, canCreateNewCategory: categoryCount < 500 });
+        return res.json({ records: items, canCreateNewItem: itemsCount < 500 });
     }
 
     @Get("/:id")
@@ -83,14 +82,11 @@ export class MenuItemsController {
     @UseInterceptors(FilesInterceptor("gallery"))
     async addRecord(
         @UploadedFiles() gallery: Express.Multer.File[],
-        @Body() body: CreateNewItemDto,
+        @Body() body: MenuItemDto,
         @Req() req: Request,
         @Res() res: Response,
     ): Promise<void | Response> {
         const brandID = req.headers["brand"];
-
-        // TODO
-        // add check for every side item group id and only add existing ones
 
         // check if selected category exists
         const doesCategoryExists = await this.MenuCategoryModel.exists({ _id: new Types.ObjectId(body.selectedCategory), brand: brandID }).exec();
@@ -111,13 +107,19 @@ export class MenuItemsController {
         if (this.PlanService.checkLimitations([["item-highlighting", true]], brandsPlan.currentPlan.limitations)) Has_itemHighlighting = true;
         if (this.PlanService.checkLimitations([["menu-tag-option", true]], brandsPlan.currentPlan.limitations)) Has_menuTagOption = true;
 
+        // add check for every side item group id and only add existing ones
+        const sideItems = await this.MenuSideGroupModel.find({ _id: { $in: body.sideItemList }, brand: brandID })
+            .select("_id")
+            .exec();
+
         const images = await this.FileService.saveUploadedImages(gallery, "", 2 * 1_048_576, ["png", "jpeg", "jpg", "webp"], 320, "public", "/menuItemsImages");
 
         const variants = [];
         for (const variant of body.variants) {
             const variantObj = JSON.parse(variant);
-            const { default: name, ...nameTranslations } = variantObj.name.values;
+            if (!variantObj.name.values.default) continue;
 
+            const { default: name, ...nameTranslations } = variantObj.name.values;
             const translation = {};
             for (const [lang, value] of Object.entries(nameTranslations)) {
                 if (!translation[lang]) translation[lang] = {};
@@ -156,12 +158,12 @@ export class MenuItemsController {
             specialDaysActive: body.specialDaysActive === "true" && Has_itemHighlighting ? true : false,
             specialDaysList: body.specialDaysList || [],
 
-            // TODO : check and add side items
-            // sideItems
+            sideItems: sideItems.map((group) => group._id),
             tags: [],
             createdAt: new Date(Date.now()),
             translation: translation,
         }).catch((e) => {
+            console.log({ e });
             throw new InternalServerErrorException();
         });
 
