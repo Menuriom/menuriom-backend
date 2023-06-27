@@ -45,7 +45,7 @@ export class MenuItemsController {
     @UseGuards(AuthorizeUserInSelectedBrand)
     async getList(@Req() req: Request, @Res() res: Response): Promise<void | Response> {
         const brandID = req.headers["brand"];
-        const items = await this.MenuItemModel.find({ brand: brandID }).sort({ order: "ascending" }).exec();
+        const items = await this.MenuItemModel.find({ brand: brandID }).sort({ order: "ascending" }).populate("sideItems", "name").exec();
         const itemsCount = await this.MenuItemModel.countDocuments({ brand: brandID }).exec();
 
         return res.json({ records: items, canCreateNewItem: itemsCount < 500 });
