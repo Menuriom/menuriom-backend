@@ -10,7 +10,7 @@ import { languages } from "src/interfaces/Translation.interface";
 import { IdDto } from "src/dto/general.dto";
 import { SetPermissions } from "src/decorators/authorization.decorator";
 import { AuthorizeUserInSelectedBrand } from "src/guards/authorizeUser.guard";
-import { MenuCategoryDocument } from "src/models/MenuCategories.schema";
+import { MenuCategory, MenuCategoryDocument } from "src/models/MenuCategories.schema";
 import { FileInterceptor, FilesInterceptor } from "@nestjs/platform-express";
 import { CreateNewCategoryDto, EditCategoryDto, updateOrderDto } from "src/dto/panel/menuCategory.dto";
 import { BrandDocument } from "src/models/Brands.schema";
@@ -23,7 +23,7 @@ import { Branch } from "src/models/Branches.schema";
 import { MenuService } from "src/services/menu.service";
 import { MenuItemDto } from "src/dto/panel/menuItems.dto";
 import { MenuItemDocument } from "src/models/MenuItems.schema";
-import { MenuSideGroupDocument } from "src/models/MenuSideGroups.schema";
+import { MenuSideGroup, MenuSideGroupDocument } from "src/models/MenuSideGroups.schema";
 
 @Controller("panel/menu-items")
 export class MenuItemsController {
@@ -55,25 +55,37 @@ export class MenuItemsController {
     @SetPermissions("main-panel.menu.items")
     @UseGuards(AuthorizeUserInSelectedBrand)
     async getSingleRecord(@Param() params: IdDto, @Req() req: Request, @Res() res: Response): Promise<void | Response> {
-        const category = await this.MenuCategoryModel.findOne({ _id: params.id })
-            .select("_id icon name description hidden showAsNew translation")
-            .populate<{ branches: Branch }>("branches", "_id name")
+        const brandID = req.headers["brand"].toString();
+        const menuItem = await this.MenuItemModel.findOne({ _id: params.id, brand: brandID })
+            .sort({ order: "ascending" })
+            .populate<{ branches: Branch[] }>("branches", "_id name")
+            .populate<{ category: MenuCategory }>("category", "_id name icon")
+            .populate<{ sideItems: MenuSideGroup[] }>("sideItems", "_id name description")
             .exec();
 
-        if (!category) {
+        if (!menuItem) {
             throw new UnprocessableEntityException([
                 { property: "", errors: [I18nContext.current().t("panel.brand.no record was found, or you are not authorized to do this action")] },
             ]);
         }
 
-        const name = { default: category.name };
+        const name = { default: menuItem.name };
+        const description = { default: menuItem.description };
         for (const lang in languages) {
-            if (category.translation && category.translation[lang]) {
-                name[lang] = category.translation[lang].name;
-            }
+            name[lang] = menuItem.translation[lang]?.name || "";
+            description[lang] = menuItem.translation[lang]?.description || "";
         }
 
-        return res.json({ icon: category.icon, name, branches: category.branches, showAsNew: category.showAsNew, hide: category.hidden });
+        const variants = [];
+        for (const variant of menuItem.variants) {
+            const modifyVariant = { name: { values: { default: variant.name } }, price: variant.price.toString() };
+            for (const lang in languages) {
+                modifyVariant.name.values[lang] = variant.translation[lang]?.name || "";
+            }
+            variants.push(modifyVariant);
+        }
+
+        return res.json({ ...menuItem.toJSON(), name, description, variants });
     }
 
     @Post("/")
@@ -112,6 +124,10 @@ export class MenuItemsController {
             .select("_id")
             .exec();
 
+        // limit user to upload at max 3 images
+        if (gallery.length > 3) {
+            throw new UnprocessableEntityException([{ property: "", errors: [I18nContext.current().t("file.max file count is n", { args: { count: 3 } })] }]);
+        }
         const images = await this.FileService.saveUploadedImages(gallery, "", 2 * 1_048_576, ["png", "jpeg", "jpg", "webp"], 320, "public", "/menuItemsImages");
 
         const variants = [];
@@ -173,40 +189,72 @@ export class MenuItemsController {
     @Put("/:id")
     @SetPermissions("main-panel.menu.items")
     @UseGuards(AuthorizeUserInSelectedBrand)
-    @UseInterceptors(FileInterceptor("uploadedIcon"))
+    @UseInterceptors(FilesInterceptor("gallery"))
     async editRecord(
-        @UploadedFiles() uploadedIcon: Express.Multer.File,
+        @UploadedFiles() gallery: Express.Multer.File[],
         @Param() params: IdDto,
-        @Body() body: EditCategoryDto,
+        @Body() body: MenuItemDto,
         @Req() req: Request,
         @Res() res: Response,
     ): Promise<void | Response> {
         const brandID = req.headers["brand"];
 
-        const brandsPlan = await this.BrandsPlanModel.findOne({ brand: brandID }).populate<{ currentPlan: Plan }>("currentPlan", "_id limitations").exec();
-        const menuCategory = await this.MenuCategoryModel.findOne({ _id: params.id }).select("_id icon").exec();
+        const menuItem = await this.MenuItemModel.findOne({ _id: params.id }).exec();
+        if (!menuItem) {
+            throw new UnprocessableEntityException([
+                { property: "", errors: [I18nContext.current().t("panel.brand.no record was found, or you are not authorized to do this action")] },
+            ]);
+        }
 
-        let iconUrl: string = menuCategory.icon;
-        if (body.iconMode == "upload" && uploadedIcon) {
-            if (!this.PlanService.checkLimitations([["customizable-category-logo", true]], brandsPlan.currentPlan.limitations)) {
-                throw new UnprocessableEntityException([{ property: "", errors: [I18nContext.current().t("panel.menu.noCategoryUploadAllowed")] }]);
+        // check if selected category exists
+        const doesCategoryExists = await this.MenuCategoryModel.exists({ _id: new Types.ObjectId(body.selectedCategory), brand: brandID }).exec();
+        if (!doesCategoryExists) {
+            throw new UnprocessableEntityException([
+                { property: "selectedCategory", errors: [I18nContext.current().t("panel.menu.Selected category does not exist")] },
+            ]);
+        }
+
+        let Has_itemHighlighting = false;
+        let Has_menuTagOption = false;
+        const brandsPlan = await this.BrandsPlanModel.findOne({ brand: brandID }).populate<{ currentPlan: Plan }>("currentPlan", "_id limitations").exec();
+        if (this.PlanService.checkLimitations([["item-highlighting", true]], brandsPlan.currentPlan.limitations)) Has_itemHighlighting = true;
+        if (this.PlanService.checkLimitations([["menu-tag-option", true]], brandsPlan.currentPlan.limitations)) Has_menuTagOption = true;
+
+        // add check for every side item group id and only add existing ones
+        const sideItems = await this.MenuSideGroupModel.find({ _id: { $in: body.sideItemList }, brand: brandID })
+            .select("_id")
+            .exec();
+
+        let itemGallery = menuItem.images;
+        const newGalleryList = body.galleryList;
+        for (let i = 0; i < itemGallery.length; i++) {
+            if (newGalleryList.includes(itemGallery[i])) continue;
+            await unlink(itemGallery[i].replace("/file/", "storage/public/")).catch((e) => {});
+            itemGallery[i] = null;
+        }
+        itemGallery = itemGallery.filter((image) => image !== null);
+
+        // limit user to upload at max 3 images
+        if (itemGallery.length + gallery.length > 3) {
+            throw new UnprocessableEntityException([{ property: "", errors: [I18nContext.current().t("file.max file count is n", { args: { count: 3 } })] }]);
+        }
+
+        // upload new images
+        const images = await this.FileService.saveUploadedImages(gallery, "", 2 * 1_048_576, ["png", "jpeg", "jpg", "webp"], 320, "public", "/menuItemsImages");
+        itemGallery = [...itemGallery, ...images];
+
+        const variants = [];
+        for (const variant of body.variants) {
+            const variantObj = JSON.parse(variant);
+            if (!variantObj.name.values.default) continue;
+
+            const { default: name, ...nameTranslations } = variantObj.name.values;
+            const translation = {};
+            for (const [lang, value] of Object.entries(nameTranslations)) {
+                if (!translation[lang]) translation[lang] = {};
+                if (value) translation[lang]["name"] = value;
             }
-            const uploadedFiles = await this.FileService.saveUploadedImages(
-                [uploadedIcon],
-                "",
-                1 * 1_048_576,
-                ["png", "jpeg", "jpg", "webp"],
-                100,
-                "public",
-                "/customCategoryIcons",
-            );
-            if (uploadedFiles[0]) {
-                this.MenuService.removeCategoryCustomIcons(menuCategory.icon);
-                iconUrl = uploadedFiles[0];
-            }
-        } else if (body.iconMode == "list" && body.selectedIcon) {
-            this.MenuService.removeCategoryCustomIcons(menuCategory.icon);
-            iconUrl = body.selectedIcon || menuCategory.icon || "";
+            variants.push({ name: variantObj.name.values.default, price: variantObj.price || 0, translation: translation });
         }
 
         const translation = {};
@@ -216,41 +264,60 @@ export class MenuItemsController {
             };
         }
 
-        await this.MenuCategoryModel.updateOne(
-            { _id: params.id },
+        await this.MenuItemModel.updateOne(
+            {
+                _id: params.id,
+            },
             {
                 branches: body.branches || [],
-                icon: iconUrl || "",
-                hidden: body.hide === "true" ? true : false,
-                showAsNew: body.showAsNew === "true" ? true : false,
+                category: body.selectedCategory,
+
+                images: itemGallery,
                 name: body["name.default"],
+                description: body["description.default"],
+                price: body.price,
+                variants: variants,
+
+                discountActive: body.discountActive === "true" && Has_itemHighlighting ? true : false,
+                discountPercentage: body.discountPercentage,
+
+                hidden: body.hidden === "true" ? true : false,
+                pinned: body.pinned === "true" && Has_itemHighlighting ? true : false,
+                soldOut: body.soldOut === "true" ? true : false,
+                showAsNew: body.showAsNew === "true" && Has_menuTagOption ? true : false,
+
+                specialDaysActive: body.specialDaysActive === "true" && Has_itemHighlighting ? true : false,
+                specialDaysList: body.specialDaysList || [],
+
+                sideItems: sideItems.map((group) => group._id),
+                tags: [],
                 translation: translation,
             },
         ).catch((e) => {
+            console.log({ e });
             throw new InternalServerErrorException();
         });
 
-        return res.json({});
+        return res.end();
     }
 
     @Delete("/:id")
     @SetPermissions("main-panel.menu.items")
     @UseGuards(AuthorizeUserInSelectedBrand)
     async deleteSingleRecord(@Param() params: IdDto, @Req() req: Request, @Res() res: Response): Promise<void | Response> {
-        const category = await this.MenuCategoryModel.findOne({ _id: params.id }).select("_id icon").exec();
-        if (!category) {
+        const menuItem = await this.MenuItemModel.findOne({ _id: params.id }).select("_id images").exec();
+        if (!menuItem) {
             throw new UnprocessableEntityException([
                 { property: "", errors: [I18nContext.current().t("panel.brand.no record was found, or you are not authorized to do this action")] },
             ]);
         }
 
-        // TODO : delete all category items
 
-        // delete category custom image
-        await this.MenuService.removeCategoryCustomIcons(category.icon);
+        // delete menuItem images
 
-        // delete branch
-        await this.MenuCategoryModel.deleteOne({ _id: params.id }).exec();
+
+        // delete menu item
+        await this.MenuItemModel.deleteOne({ _id: params.id }).exec();
 
         return res.end();
     }

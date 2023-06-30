@@ -84,4 +84,7 @@ export class MenuItemDto {
     @IsMongoId({ message: i18nValidationMessage("validation.IsMongoId"), each: true })
     @IsNotEmpty({ message: i18nValidationMessage("validation.IsNotEmpty"), each: true })
     readonly sideItemList: string[];
+
+    @IsNotEmpty({ message: i18nValidationMessage("validation.IsNotEmpty") })
+    readonly galleryList?: string | string[] = [];
 }

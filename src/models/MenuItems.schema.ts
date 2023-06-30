@@ -3,11 +3,12 @@ import { Translation, TranslationSchema } from "src/interfaces/Translation.inter
 import { Brand } from "./Brands.schema";
 import { Branch } from "./Branches.schema";
 import { MenuCategory } from "./MenuCategories.schema";
+import { MenuSideGroup } from "./MenuSideGroups.schema";
 export type MenuItemDocument = MenuItem & Document;
 
 export const MenuItemSchema = new Schema({
     brand: { type: Schema.Types.ObjectId, ref: "Brand", required: true },
-    branches: [{ type: Schema.Types.ObjectId, ref: "BranchMenu", required: true }],
+    branches: [{ type: Schema.Types.ObjectId, ref: "Branch", required: true }],
     category: { type: Schema.Types.ObjectId, ref: "MenuCategory", required: true },
 
     order: { type: Number, default: 0 },
@@ -69,7 +70,7 @@ export interface MenuItem {
     specialDaysActive: boolean;
 
     tags: Array<string>;
-    sideItems: PopulatedDoc<MenuCategory[]>;
+    sideItems: PopulatedDoc<MenuSideGroup[]>;
 
     likes: number;
     createdAt: Date;
