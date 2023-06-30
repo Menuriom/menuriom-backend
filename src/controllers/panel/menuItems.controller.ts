@@ -312,9 +312,10 @@ export class MenuItemsController {
             ]);
         }
 
-
         // delete menuItem images
-
+        for (let i = 0; i < menuItem.images.length; i++) {
+            await unlink(menuItem.images[i].replace("/file/", "storage/public/")).catch((e) => {});
+        }
 
         // delete menu item
         await this.MenuItemModel.deleteOne({ _id: params.id }).exec();
@@ -325,15 +326,53 @@ export class MenuItemsController {
     @Post("/hide/:id")
     @SetPermissions("main-panel.menu.items")
     @UseGuards(AuthorizeUserInSelectedBrand)
-    async toggleCategoryVisibility(@Param() param: IdDto, @Req() req: Request, @Res() res: Response): Promise<void | Response> {
-        const category = await this.MenuCategoryModel.findOne({ _id: param.id }).select("_id hidden").exec();
-        if (!category) {
+    async toggleItemVisibility(@Param() param: IdDto, @Req() req: Request, @Res() res: Response): Promise<void | Response> {
+        const menuItem = await this.MenuItemModel.findOne({ _id: param.id }).select("_id hidden").exec();
+        if (!menuItem) {
             throw new UnprocessableEntityException([
                 { property: "", errors: [I18nContext.current().t("panel.brand.no record was found, or you are not authorized to do this action")] },
             ]);
         }
 
-        await this.MenuCategoryModel.updateOne({ _id: param.id }, { hidden: !category.hidden }).exec();
+        await this.MenuItemModel.updateOne({ _id: param.id }, { hidden: !menuItem.hidden }).exec();
+
+        return res.end();
+    }
+
+    @Post("/sold-out/:id")
+    @SetPermissions("main-panel.menu.items")
+    @UseGuards(AuthorizeUserInSelectedBrand)
+    async toggleItemSoldStatus(@Param() param: IdDto, @Req() req: Request, @Res() res: Response): Promise<void | Response> {
+        const menuItem = await this.MenuItemModel.findOne({ _id: param.id }).select("_id soldOut").exec();
+        if (!menuItem) {
+            throw new UnprocessableEntityException([
+                { property: "", errors: [I18nContext.current().t("panel.brand.no record was found, or you are not authorized to do this action")] },
+            ]);
+        }
+
+        await this.MenuItemModel.updateOne({ _id: param.id }, { soldOut: !menuItem.soldOut }).exec();
+
+        return res.end();
+    }
+
+    @Post("/pin/:id")
+    @SetPermissions("main-panel.menu.items")
+    @UseGuards(AuthorizeUserInSelectedBrand)
+    async toggleItemPinStatus(@Param() param: IdDto, @Req() req: Request, @Res() res: Response): Promise<void | Response> {
+        const brandID = req.headers["brand"];
+        const menuItem = await this.MenuItemModel.findOne({ _id: param.id }).select("_id pinned").exec();
+        if (!menuItem) {
+            throw new UnprocessableEntityException([
+                { property: "", errors: [I18nContext.current().t("panel.brand.no record was found, or you are not authorized to do this action")] },
+            ]);
+        }
+
+        let Has_itemHighlighting = false;
+        const brandsPlan = await this.BrandsPlanModel.findOne({ brand: brandID }).populate<{ currentPlan: Plan }>("currentPlan", "_id limitations").exec();
+        if (this.PlanService.checkLimitations([["item-highlighting", true]], brandsPlan.currentPlan.limitations)) Has_itemHighlighting = true;
+
+        const pinned = Has_itemHighlighting ? !menuItem.pinned : false;
+        await this.MenuItemModel.updateOne({ _id: param.id }, { pinned: pinned }).exec();
 
         return res.end();
     }
@@ -341,7 +380,7 @@ export class MenuItemsController {
     @Post("/update-order")
     @SetPermissions("main-panel.menu.items")
     @UseGuards(AuthorizeUserInSelectedBrand)
-    async updateCategoryOrders(@Body() body: updateOrderDto, @Req() req: Request, @Res() res: Response): Promise<void | Response> {
+    async updateItemOrders(@Body() body: updateOrderDto, @Req() req: Request, @Res() res: Response): Promise<void | Response> {
         const writes = [];
         body.orderedCategories.forEach((item) => {
             writes.push({ updateOne: { filter: { _id: item._id }, update: { order: item.order } } });
