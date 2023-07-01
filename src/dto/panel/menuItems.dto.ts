@@ -77,7 +77,7 @@ export class MenuItemDto {
     @IsArray({ message: i18nValidationMessage("validation.IsArray") })
     @IsJSON({ message: i18nValidationMessage("validation.IsJSON"), each: true })
     @IsNotEmpty({ message: i18nValidationMessage("validation.IsNotEmpty"), each: true })
-    readonly variants: string[];
+    readonly variants: string[] = [];
 
     @IsOptional()
     @IsArray({ message: i18nValidationMessage("validation.IsArray") })

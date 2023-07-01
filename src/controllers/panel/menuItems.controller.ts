@@ -45,10 +45,21 @@ export class MenuItemsController {
     @UseGuards(AuthorizeUserInSelectedBrand)
     async getList(@Req() req: Request, @Res() res: Response): Promise<void | Response> {
         const brandID = req.headers["brand"];
-        const items = await this.MenuItemModel.find({ brand: brandID }).sort({ order: "ascending" }).populate("sideItems", "name").exec();
+
+        const categories = await this.MenuCategoryModel.find({ brand: brandID }).select("_id icon name order translation").sort({ order: "ascending" }).exec();
+        const items = await this.MenuItemModel.find({ brand: brandID })
+            .sort({ order: "ascending" })
+            .populate<{ category: MenuCategory }>("category", "_id icon name translation")
+            .populate("sideItems", "name")
+            .exec();
+
+        const groupedItems = {};
+        for (const category of categories) groupedItems[category._id] = [{ category: category.toJSON() }];
+        for (const item of items) groupedItems[item.category._id.toString()].push(item.toJSON());
+
         const itemsCount = await this.MenuItemModel.countDocuments({ brand: brandID }).exec();
 
-        return res.json({ records: items, canCreateNewItem: itemsCount < 500 });
+        return res.json({ records: Object.values(groupedItems), categories: categories.map((x) => x.toJSON()), canCreateNewItem: itemsCount < 500 });
     }
 
     @Get("/:id")
@@ -323,7 +334,7 @@ export class MenuItemsController {
         return res.end();
     }
 
-    @Post("/hide/:id")
+    @Post("/toggle-hidden/:id")
     @SetPermissions("main-panel.menu.items")
     @UseGuards(AuthorizeUserInSelectedBrand)
     async toggleItemVisibility(@Param() param: IdDto, @Req() req: Request, @Res() res: Response): Promise<void | Response> {
@@ -339,7 +350,7 @@ export class MenuItemsController {
         return res.end();
     }
 
-    @Post("/sold-out/:id")
+    @Post("/toggle-soldOut/:id")
     @SetPermissions("main-panel.menu.items")
     @UseGuards(AuthorizeUserInSelectedBrand)
     async toggleItemSoldStatus(@Param() param: IdDto, @Req() req: Request, @Res() res: Response): Promise<void | Response> {
@@ -355,7 +366,7 @@ export class MenuItemsController {
         return res.end();
     }
 
-    @Post("/pin/:id")
+    @Post("/toggle-pinned/:id")
     @SetPermissions("main-panel.menu.items")
     @UseGuards(AuthorizeUserInSelectedBrand)
     async toggleItemPinStatus(@Param() param: IdDto, @Req() req: Request, @Res() res: Response): Promise<void | Response> {
