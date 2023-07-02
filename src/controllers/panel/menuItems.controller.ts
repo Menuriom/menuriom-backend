@@ -12,7 +12,6 @@ import { SetPermissions } from "src/decorators/authorization.decorator";
 import { AuthorizeUserInSelectedBrand } from "src/guards/authorizeUser.guard";
 import { MenuCategory, MenuCategoryDocument } from "src/models/MenuCategories.schema";
 import { FileInterceptor, FilesInterceptor } from "@nestjs/platform-express";
-import { CreateNewCategoryDto, EditCategoryDto, updateOrderDto } from "src/dto/panel/menuCategory.dto";
 import { BrandDocument } from "src/models/Brands.schema";
 import { BrandsPlanDocument } from "src/models/BrandsPlans.schema";
 import { Plan } from "src/models/Plans.schema";
@@ -21,7 +20,7 @@ import { FileService } from "src/services/file.service";
 import { unlink } from "fs/promises";
 import { Branch } from "src/models/Branches.schema";
 import { MenuService } from "src/services/menu.service";
-import { MenuItemDto } from "src/dto/panel/menuItems.dto";
+import { MenuItemDto, UpdateOrderDto } from "src/dto/panel/menuItems.dto";
 import { MenuItemDocument } from "src/models/MenuItems.schema";
 import { MenuSideGroup, MenuSideGroupDocument } from "src/models/MenuSideGroups.schema";
 
@@ -59,7 +58,7 @@ export class MenuItemsController {
 
         const itemsCount = await this.MenuItemModel.countDocuments({ brand: brandID }).exec();
 
-        return res.json({ records: Object.values(groupedItems), categories: categories.map((x) => x.toJSON()), canCreateNewItem: itemsCount < 500 });
+        return res.json({ records: Object.values(groupedItems), canCreateNewItem: itemsCount < 500 });
     }
 
     @Get("/:id")
@@ -391,12 +390,20 @@ export class MenuItemsController {
     @Post("/update-order")
     @SetPermissions("main-panel.menu.items")
     @UseGuards(AuthorizeUserInSelectedBrand)
-    async updateItemOrders(@Body() body: updateOrderDto, @Req() req: Request, @Res() res: Response): Promise<void | Response> {
-        const writes = [];
-        body.orderedCategories.forEach((item) => {
-            writes.push({ updateOne: { filter: { _id: item._id }, update: { order: item.order } } });
-        });
-        await this.MenuCategoryModel.bulkWrite(writes);
+    async updateItemOrders(@Body() body: UpdateOrderDto, @Req() req: Request, @Res() res: Response): Promise<void | Response> {
+        const categoriesWrites = [];
+        const itemsWrites = [];
+
+        for (let k = 0; k < body.orderedGroup.length; k++) {
+            const { category, items } = body.orderedGroup[k];
+            categoriesWrites.push({ updateOne: { filter: { _id: category._id }, update: { order: category.order } } });
+            for (let i = 0; i < items.length; i++) {
+                itemsWrites.push({ updateOne: { filter: { _id: items[i]._id }, update: { order: items[i].order, category: category._id } } });
+            }
+        }
+
+        await this.MenuCategoryModel.bulkWrite(categoriesWrites);
+        await this.MenuItemModel.bulkWrite(itemsWrites);
 
         return res.end();
     }

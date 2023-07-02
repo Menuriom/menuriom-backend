@@ -88,3 +88,9 @@ export class MenuItemDto {
     @IsNotEmpty({ message: i18nValidationMessage("validation.IsNotEmpty") })
     readonly galleryList?: string | string[] = [];
 }
+
+export class UpdateOrderDto {
+    @IsArray({ message: i18nValidationMessage("validation.IsArray") })
+    @IsNotEmpty({ message: i18nValidationMessage("validation.IsNotEmpty") })
+    readonly orderedGroup: Array<{ category: { _id: string; order: any }; items: Array<{ _id: string; order: any }> }>;
+}
