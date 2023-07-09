@@ -23,7 +23,6 @@ import { MenuService } from "src/services/menu.service";
 import { MenuItemDto, UpdateOrderDto } from "src/dto/panel/menuItems.dto";
 import { MenuItemDocument } from "src/models/MenuItems.schema";
 import { MenuSideGroup, MenuSideGroupDocument } from "src/models/MenuSideGroups.schema";
-import * as qrcode from "qrcode-svg";
 
 @Controller("panel/menu-items")
 export class MenuItemsController {
@@ -58,19 +57,6 @@ export class MenuItemsController {
         for (const item of items) groupedItems[item.category._id.toString()].push(item.toJSON());
 
         const itemsCount = await this.MenuItemModel.countDocuments({ brand: brandID }).exec();
-
-        // const qr = new qrcode({
-        //     content: "http://github.com/",
-        //     padding: 4,
-        //     width: 256,
-        //     height: 256,
-        //     color: "#000000",
-        //     background: "#ffffff",
-        //     ecl: "H",
-        // });
-        // qr.save("sample.svg");
-
-        // https://menuriom.com/r/64490245ee8237588e025c8b
 
         return res.json({ records: Object.values(groupedItems), canCreateNewItem: itemsCount < 500 });
     }
