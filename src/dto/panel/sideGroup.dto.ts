@@ -1,7 +1,7 @@
-import { IsNotEmpty, Length, IsString, IsPhoneNumber, IsMongoId, IsArray, IsOptional, Matches, ValidateNested } from "class-validator";
+import { IsNotEmpty, Length, IsString, IsJSON, IsArray, IsOptional, IsNumberString } from "class-validator";
 import { i18nValidationMessage } from "nestjs-i18n";
 
-export class CreateNewBranchDto {
+export class CreateNewSideGroupDto {
     @Length(1, 100, { message: i18nValidationMessage("validation.Length") })
     @IsString({ message: i18nValidationMessage("validation.IsString") })
     @IsNotEmpty({ message: i18nValidationMessage("validation.IsNotEmpty") })
@@ -10,25 +10,20 @@ export class CreateNewBranchDto {
     @Length(1, 300, { message: i18nValidationMessage("validation.Length") })
     @IsString({ message: i18nValidationMessage("validation.IsString") })
     @IsNotEmpty({ message: i18nValidationMessage("validation.IsNotEmpty") })
-    readonly ["address.default"]: string;
+    readonly ["description.default"]: string;
 
-    @IsOptional()
     @IsArray({ message: i18nValidationMessage("validation.IsArray") })
-    @IsPhoneNumber("IR", { message: i18nValidationMessage("validation.IsPhoneNumber"), each: true })
+    @IsJSON({ message: i18nValidationMessage("validation.IsJSON"), each: true })
     @IsNotEmpty({ message: i18nValidationMessage("validation.IsNotEmpty"), each: true })
-    readonly telephoneNumbers: string[];
+    readonly items: string[];
 
     @IsOptional()
-    @Length(10, 10, { message: i18nValidationMessage("validation.Length") })
-    @Matches(/\b(?!(\d)\1{3})[13-9]{4}[1346-9][013-9]{5}\b/gm, { message: i18nValidationMessage("validation.IsPostalCode") })
-    @IsString({ message: i18nValidationMessage("validation.IsString") })
-    readonly postalCode: string;
+    @IsNumberString({}, { message: i18nValidationMessage("validation.IsNumber") })
+    @IsNotEmpty({ message: i18nValidationMessage("validation.IsNotEmpty") })
+    readonly maximum: number;
 }
 
-export class EditBranchDto {
-    @IsNotEmpty({ message: i18nValidationMessage("validation.IsNotEmpty") })
-    readonly galleryList: string | string[] = [];
-
+export class EditSideGroupDto {
     @Length(1, 100, { message: i18nValidationMessage("validation.Length") })
     @IsString({ message: i18nValidationMessage("validation.IsString") })
     @IsNotEmpty({ message: i18nValidationMessage("validation.IsNotEmpty") })
@@ -37,26 +32,15 @@ export class EditBranchDto {
     @Length(1, 300, { message: i18nValidationMessage("validation.Length") })
     @IsString({ message: i18nValidationMessage("validation.IsString") })
     @IsNotEmpty({ message: i18nValidationMessage("validation.IsNotEmpty") })
-    readonly ["address.default"]: string;
+    readonly ["description.default"]: string;
 
-    @IsOptional()
     @IsArray({ message: i18nValidationMessage("validation.IsArray") })
-    @IsPhoneNumber("IR", { message: i18nValidationMessage("validation.IsPhoneNumber"), each: true })
+    @IsJSON({ message: i18nValidationMessage("validation.IsJSON"), each: true })
     @IsNotEmpty({ message: i18nValidationMessage("validation.IsNotEmpty"), each: true })
-    readonly telephoneNumbers: string[] = [];
+    readonly items: string[];
 
     @IsOptional()
-    @Length(10, 10, { message: i18nValidationMessage("validation.Length") })
-    @Matches(/\b(?!(\d)\1{3})[13-9]{4}[1346-9][013-9]{5}\b/gm, { message: i18nValidationMessage("validation.IsPostalCode") })
-    @IsString({ message: i18nValidationMessage("validation.IsString") })
-    readonly postalCode: string;
-}
-
-export class IDBrandDto {
-    @IsMongoId({ message: i18nValidationMessage("validation.IsMongoId") })
-    @IsString({ message: i18nValidationMessage("validation.IsString") })
+    @IsNumberString({}, { message: i18nValidationMessage("validation.IsNumber") })
     @IsNotEmpty({ message: i18nValidationMessage("validation.IsNotEmpty") })
-    readonly brandID: string;
+    readonly maximum: number;
 }
-
-// ========================================

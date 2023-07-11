@@ -31,7 +31,7 @@ export interface Plan {
     name: string;
     desc?: string;
     limitations: Array<{
-        limit: PlanLimitation | String;
+        limit: PlanLimitation | string;
         value: number | boolean;
         valueType: "Number" | "Boolean";
     }>;

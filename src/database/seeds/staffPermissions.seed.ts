@@ -46,6 +46,21 @@ export const records = [
     },
     // ----------------------------------
 
+    // menu ----------------------------------
+    {
+        record: { _id: "main-panel.menu.items", label: "ویرایش و مدیریت ایتم و دسته بندی های منو", desc: "", groupLabel: "منو", group: "menu" },
+        translation: { en: { label: "Edit and manage menu items and categories", desc: "", groupLabel: "Menu" } },
+    },
+    {
+        record: { _id: "main-panel.menu.style", label: "امکان تغییر استایل و ظاهر و کاور منو", desc: "", groupLabel: "منو", group: "menu" },
+        translation: { en: { label: "ability to change menu style and covers", desc: "", groupLabel: "Menu" } },
+    },
+    {
+        record: { _id: "main-panel.menu.qr-code", label: "دسترسی به بخش بارکد منو ها", desc: "", groupLabel: "منو", group: "menu" },
+        translation: { en: { label: "Access to qr-codes", desc: "", groupLabel: "Menu" } },
+    },
+    // ----------------------------------
+
     // staff ----------------------------------
     {
         record: { _id: "main-panel.staff.view", label: "مشاهده اعضای خدمه", desc: "", groupLabel: "خدمه", group: "staff" },

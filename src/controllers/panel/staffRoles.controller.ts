@@ -13,7 +13,7 @@ import { AuthorizeUserInSelectedBrand } from "src/guards/authorizeUser.guard";
 import { StaffRoleDocument } from "src/models/StaffRoles.schema";
 import { StaffPermissionDocument } from "src/models/StaffPermissions.schema";
 import { NewRoleDto } from "src/dto/panel/staffRole.dto";
-import { IdDto } from "src/dto/panel/staff.dto";
+import { IdDto } from "src/dto/general.dto";
 
 @Controller("panel/staff-roles")
 export class StaffRolesController {

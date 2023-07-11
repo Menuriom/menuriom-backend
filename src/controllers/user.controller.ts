@@ -13,12 +13,15 @@ import { CompleteInfoDto, EditUserInfoDto } from "src/dto/panel/user.dto";
 import { I18nContext } from "nestjs-i18n";
 import { Brand, BrandDocument } from "src/models/Brands.schema";
 import { StaffDocument } from "src/models/Staff.schema";
+import { BrandsPlanDocument } from "src/models/BrandsPlans.schema";
+import { Plan } from "src/models/Plans.schema";
 
 @Controller("user")
 export class UserController {
     constructor(
         @InjectModel("User") private readonly UserModel: Model<UserDocument>,
         @InjectModel("Brand") private readonly BrandModel: Model<BrandDocument>,
+        @InjectModel("BrandsPlan") private readonly BrandsPlanModel: Model<BrandsPlanDocument>,
         @InjectModel("Staff") private readonly StaffModel: Model<StaffDocument>,
     ) {}
 
@@ -56,6 +59,13 @@ export class UserController {
                 permissions: member.role.permissions,
             };
         }
+
+        // add brand limitations
+        const brandsPlans = await this.BrandsPlanModel.find({ brand: { $in: Object.keys(userBrands) } })
+            .select("_id brand")
+            .populate<{ currentPlan: Plan }>("currentPlan", "_id limitations")
+            .exec();
+        brandsPlans.forEach((brandsPlan) => (userBrands[brandsPlan.brand.toString()]["limitations"] = brandsPlan.currentPlan.limitations));
 
         return res.json({
             avatar: user.avatar,

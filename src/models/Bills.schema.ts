@@ -21,6 +21,7 @@ export const BillSchema = new Schema({
 
     secondsAddedToInvoice: { type: Number, default: 0, required: true },
 
+    dueDate: { type: Date },
     createdAt: { type: Date, default: new Date(Date.now()) },
     translation: TranslationSchema,
 });
@@ -42,6 +43,7 @@ export interface Bill {
 
     secondsAddedToInvoice: number;
 
+    dueDate?: Date;
     createdAt: Date;
     translation: Translation;
 }

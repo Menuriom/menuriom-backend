@@ -38,13 +38,6 @@ export class EditBrandDto {
     readonly socials_whatsapp?: string;
 }
 
-export class IDBrandDto {
-    @IsMongoId({ message: i18nValidationMessage("validation.IsMongoId") })
-    @IsString({ message: i18nValidationMessage("validation.IsString") })
-    @IsNotEmpty({ message: i18nValidationMessage("validation.IsNotEmpty") })
-    readonly id: string;
-}
-
 export class SaveBrandSettingsDto {
     @IsArray({ message: i18nValidationMessage("validation.IsArray") })
     @IsNotEmpty({ message: i18nValidationMessage("validation.IsNotEmpty") })

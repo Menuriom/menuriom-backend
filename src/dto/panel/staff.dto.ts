@@ -42,10 +42,3 @@ export class EditStaffAccessDto {
     @IsNotEmpty({ message: i18nValidationMessage("validation.IsNotEmpty") })
     readonly selectedBranches: string[];
 }
-
-export class IdDto {
-    @IsMongoId({ message: i18nValidationMessage("validation.IsMongoId") })
-    @IsString({ message: i18nValidationMessage("validation.IsString") })
-    @IsNotEmpty({ message: i18nValidationMessage("validation.IsNotEmpty") })
-    readonly id: string;
-}

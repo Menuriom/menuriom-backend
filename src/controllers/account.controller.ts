@@ -16,7 +16,7 @@ import { StaffRole, StaffRoleDocument } from "src/models/StaffRoles.schema";
 import { Invite, InviteDocument } from "src/models/Invites.schema";
 import { StaffDocument } from "src/models/Staff.schema";
 import { BrandsPlanDocument } from "src/models/BrandsPlans.schema";
-import { PlanDocument } from "src/models/Plans.schema";
+import { Plan, PlanDocument } from "src/models/Plans.schema";
 
 @Controller("account")
 export class AccountController {
@@ -100,6 +100,13 @@ export class AccountController {
         const inviteValidIds = invites.map((invite) => invite._id);
         await this.InviteModel.updateMany({ _id: { $in: inviteValidIds } }, { status: "accepted" }).exec();
 
+        // add brand limitations
+        const brandsPlans = await this.BrandsPlanModel.find({ brand: { $in: Object.keys(brands) } })
+            .select("_id brand")
+            .populate<{ currentPlan: Plan }>("currentPlan", "_id limitations")
+            .exec();
+        brandsPlans.forEach((brandsPlan) => (brands[brandsPlan.brand.toString()]["limitations"] = brandsPlan.currentPlan.limitations));
+
         return res.json({ brands });
     }
 
@@ -136,7 +143,7 @@ export class AccountController {
             createdAt: new Date(Date.now()),
         });
 
-        const firstFreePlan = await this.PlanModel.findOne({ monthlyPrice: 0, halfYearPrice: 0, yearlyPrice: 0 }).select("_id").exec();
+        const firstFreePlan = await this.PlanModel.findOne({ monthlyPrice: 0, halfYearPrice: 0, yearlyPrice: 0 }).select("_id limitations").exec();
         await this.BrandsPlanModel.create({
             brand: newBrand.id,
             currentPlan: firstFreePlan._id,
@@ -162,7 +169,7 @@ export class AccountController {
 
         return res.json({
             newId: newBrand.id,
-            brand: { [newBrand.id]: { logo: newBrand.logo, name: newBrand.name, role: "owner", permissions: [] } },
+            brand: { [newBrand.id]: { logo: newBrand.logo, name: newBrand.name, role: "owner", permissions: [], limitations: firstFreePlan.limitations } },
         });
     }
 }
