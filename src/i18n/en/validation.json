@@ -65,5 +65,7 @@
     "IsArray": "Must be an array",
     "IsPostalCode": "Must be a valid postal code",
     "IsIn": "Selected value is not valid",
-    "IsJSON": "This set is not in valid format"
+    "IsJSON": "This set is not in valid format",
+    "IsBoolean": "Selected value must be true or false"
+    
 }
