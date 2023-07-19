@@ -49,7 +49,7 @@ export class MenuItemsController {
         const items = await this.MenuItemModel.find({ brand: brandID })
             .sort({ order: "ascending" })
             .populate<{ category: MenuCategory }>("category", "_id icon name translation")
-            .populate("sideItems", "name")
+            .populate("sideItems", "name translation")
             .exec();
 
         const groupedItems = {};
@@ -70,7 +70,7 @@ export class MenuItemsController {
             .sort({ order: "ascending" })
             .populate<{ branches: Branch[] }>("branches", "_id name")
             .populate<{ category: MenuCategory }>("category", "_id name icon")
-            .populate<{ sideItems: MenuSideGroup[] }>("sideItems", "_id name description")
+            .populate<{ sideItems: MenuSideGroup[] }>("sideItems", "_id name items maxNumberUserCanChoose description translation")
             .exec();
 
         if (!menuItem) {
