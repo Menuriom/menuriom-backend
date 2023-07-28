@@ -35,6 +35,9 @@ export class MenuCategoriesController {
         @InjectModel("MenuCategory") private readonly MenuCategoryModel: Model<MenuCategoryDocument>,
     ) {}
 
+    // TODO : add popular and best seller categories and allow use to activate them or not : for standard and above
+    // TODO : add offers section for pro members that can be a banner with image - text - timer - video background : offers can open a popup with text and image + links
+
     @Get("/")
     @SetPermissions("main-panel.menu.items")
     @UseGuards(AuthorizeUserInSelectedBrand)

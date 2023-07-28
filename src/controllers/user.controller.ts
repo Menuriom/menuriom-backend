@@ -36,11 +36,11 @@ export class UserController {
 
         // get brands that user owns
         const brands = await this.BrandModel.find({ creator: user.id, $or: [{ deletedAt: { $exists: false } }, { deletedAt: null }] })
-            .select("logo name")
+            .select("logo name slogan")
             .exec();
         for (let i = 0; i < brands.length; i++) {
             const brand = brands[i];
-            userBrands[brand.id] = { logo: brand.logo, name: brand.name, role: "owner", permissions: [] };
+            userBrands[brand.id] = { logo: brand.logo, name: brand.name, slogan: brand.slogan, role: "owner", permissions: [] };
         }
 
         // from staff document get brands that user has with permissions
@@ -55,6 +55,7 @@ export class UserController {
             userBrands[member.brand._id.toString()] = {
                 logo: member.brand.logo,
                 name: member.brand.name,
+                slogan: member.brand.slogan,
                 role: member.role.name,
                 permissions: member.role.permissions,
             };
