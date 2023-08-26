@@ -33,6 +33,8 @@ import { MenuSideGroupController } from "src/controllers/panel/menuSideGroup.con
 import { MenuItemSchema } from "src/models/MenuItems.schema";
 import { QrCodeSchema } from "src/models/QrCodes.schema";
 import { MenuQRController } from "src/controllers/panel/menuQR.controller";
+import { MenuSytleSchema } from "src/models/MenuStyles.schema";
+import { MenuStylesController } from "src/controllers/panel/menuStyles.controller";
 
 @Module({
     imports: [
@@ -56,6 +58,7 @@ import { MenuQRController } from "src/controllers/panel/menuQR.controller";
             { name: "MenuSideGroup", schema: MenuSideGroupSchema },
             { name: "MenuItem", schema: MenuItemSchema },
             { name: "QrCode", schema: QrCodeSchema },
+            { name: "MenuStyle", schema: MenuSytleSchema },
         ]),
     ],
     controllers: [
@@ -70,6 +73,7 @@ import { MenuQRController } from "src/controllers/panel/menuQR.controller";
         MenuItemsController,
         MenuSideGroupController,
         MenuQRController,
+        MenuStylesController,
     ],
     providers: [FileService, BillingService, PlanService, MenuService],
     exports: [],
