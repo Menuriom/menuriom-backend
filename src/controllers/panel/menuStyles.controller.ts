@@ -27,18 +27,18 @@ export class MenuStylesController {
     // TODO : we could have a secret menu section in menus that users can access somehow
 
     @Get("/")
-    @SetPermissions("main-panel.menu.qr-code")
+    @SetPermissions("main-panel.menu.style")
     @UseGuards(AuthorizeUserInSelectedBrand)
     async loadMenuStyles(@Req() req: Request, @Res() res: Response): Promise<void | Response> {
         const brandID = req.headers["brand"];
 
-        const styles = await this.MenuSytleModel.findOne({ brand: brandID }).lean();
+        const menuStyles = await this.MenuSytleModel.findOne({ brand: brandID }).lean();
 
-        return res.json({ styles });
+        return res.json({ menuStyles });
     }
 
     @Post("/")
-    @SetPermissions("main-panel.menu.qr-code")
+    @SetPermissions("main-panel.menu.style")
     @UseGuards(AuthorizeUserInSelectedBrand)
     @UseInterceptors(
         FileFieldsInterceptor([
@@ -67,8 +67,7 @@ export class MenuStylesController {
         let splashScreenBgImageUrl = "";
 
         const brandsPlan = await this.BrandsPlanModel.findOne({ brand: brandID }).populate<{ currentPlan: Plan }>("currentPlan", "_id limitations").exec();
-        // if (brandsPlan.currentPlan.name == "پلن حرفه ای") {
-        if (1) {
+        if (brandsPlan.currentPlan.name == "پلن حرفه ای") {
             if (files.headerBgImageFile) {
                 const uploadedHeaderBgImage = await this.FileService.saveUploadedImages(
                     [files.headerBgImageFile[0]],
@@ -121,6 +120,7 @@ export class MenuStylesController {
             }
         }
 
+        const baseColors = JSON.parse(req.body.baseColors);
         const mainMenuStyleOptions = JSON.parse(req.body.mainMenuStyleOptions);
         const itemsDialogStyleOptions = JSON.parse(req.body.itemsDialogStyleOptions);
         const restaurantDetailsPageOptions = JSON.parse(req.body.restaurantDetailsPageOptions);
@@ -131,14 +131,16 @@ export class MenuStylesController {
         delete restaurantDetailsPageOptions.bgImageFile;
         delete splashScreenOptions.bgImageFile;
 
+        if (mainMenuStyleOptions.headerOptions.bgImageMode === "upload") mainMenuStyleOptions.headerOptions.bgImage = headerBgImageUrl;
+        if (mainMenuStyleOptions.itemListOptions.bgImageMode === "upload") mainMenuStyleOptions.itemListOptions.bgImage = itemListBgImageUrl;
+        if (restaurantDetailsPageOptions.bgImageMode === "upload") restaurantDetailsPageOptions.bgImage = restaurantDetailsBgImageUrl;
+        if (splashScreenOptions.bgImageMode === "upload") splashScreenOptions.bgImage = splashScreenBgImageUrl;
+
         await this.MenuSytleModel.updateOne(
             { brand: brandID },
             {
                 $set: {
-                    headerBgImage: headerBgImageUrl || mainMenuStyleOptions.headerOptions?.bgImage || "",
-                    itemListBgImage: itemListBgImageUrl || mainMenuStyleOptions.itemListOptions?.bgImage || "",
-                    restaurantDetailsBgImage: restaurantDetailsBgImageUrl || restaurantDetailsPageOptions.bgImage || "",
-                    splashScreenBgImage: splashScreenBgImageUrl || splashScreenOptions.bgImage || "",
+                    baseColors: baseColors,
                     mainMenuStyleOptions: mainMenuStyleOptions,
                     itemsDialogStyleOptions: itemsDialogStyleOptions,
                     restaurantDetailsPageOptions: restaurantDetailsPageOptions,
