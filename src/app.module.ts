@@ -30,6 +30,7 @@ import { StaffPermissionSchema } from "./models/StaffPermissions.schema";
 import { UserSchema } from "./models/Users.schema";
 import { InviteSchema } from "./models/Invites.schema";
 import { SessionSchema } from "./models/Sessions.schema";
+import { MenuSytleSchema } from "./models/MenuStyles.schema";
 import { AcceptLanguageResolver, CookieResolver, I18nModule } from "nestjs-i18n";
 import * as path from "path";
 import { Seeder } from "./database/seeder";
@@ -37,6 +38,7 @@ import { FilesController } from "./controllers/files.controller";
 import { AccountController } from "./controllers/account.controller";
 import { UserController } from "./controllers/user.controller";
 import { PricingController } from "./controllers/pricing.controller";
+import { MenuInfoController } from "./controllers/menuInfo.controller";
 
 @Module({
     imports: [
@@ -57,6 +59,7 @@ import { PricingController } from "./controllers/pricing.controller";
             { name: "BrandType", schema: BrandTypeSchema },
             { name: "StaffRoleDefault", schema: StaffRoleDefaultSchema },
             { name: "MenuesItem", schema: MenuItemSchema },
+            { name: "MenuStyle", schema: MenuSytleSchema },
             { name: "Order", schema: OrderSchema },
             { name: "PlanLimitation", schema: PlanLimitationSchema },
             { name: "Plan", schema: PlanSchema },
@@ -70,7 +73,7 @@ import { PricingController } from "./controllers/pricing.controller";
             { name: "Session", schema: SessionSchema },
         ]),
     ],
-    controllers: [Seeder, AppController, AccountController, UserController, PricingController, FilesController],
+    controllers: [Seeder, AppController, AccountController, UserController, PricingController, FilesController, MenuInfoController],
     providers: [AppService, FileService],
 })
 export class AppModule implements NestModule {
