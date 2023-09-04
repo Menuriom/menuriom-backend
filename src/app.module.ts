@@ -31,6 +31,7 @@ import { UserSchema } from "./models/Users.schema";
 import { InviteSchema } from "./models/Invites.schema";
 import { SessionSchema } from "./models/Sessions.schema";
 import { MenuSytleSchema } from "./models/MenuStyles.schema";
+import { MenuCategorySchema } from "./models/MenuCategories.schema";
 import { AcceptLanguageResolver, CookieResolver, I18nModule } from "nestjs-i18n";
 import * as path from "path";
 import { Seeder } from "./database/seeder";
@@ -58,7 +59,8 @@ import { MenuInfoController } from "./controllers/menuInfo.controller";
             { name: "Brand", schema: BrandSchema },
             { name: "BrandType", schema: BrandTypeSchema },
             { name: "StaffRoleDefault", schema: StaffRoleDefaultSchema },
-            { name: "MenuesItem", schema: MenuItemSchema },
+            { name: "MenuCategory", schema: MenuCategorySchema },
+            { name: "MenuItem", schema: MenuItemSchema },
             { name: "MenuStyle", schema: MenuSytleSchema },
             { name: "Order", schema: OrderSchema },
             { name: "PlanLimitation", schema: PlanLimitationSchema },

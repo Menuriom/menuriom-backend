@@ -16,13 +16,21 @@ export class AppController {
     @Get("/currency-list")
     async getCurrencyList(@Req() req: Request, @Res() res: Response): Promise<void | Response> {
         return res.json({
-            Toman: "Toman - IRT",
-            Rial: "Rial - IRR",
-            Dollar: "Dollar - USD",
-            Pound: "Pound - GBP",
-            Euro: "Euro - EUR",
-            Lira: "Lira - YTL",
-            Dirham: "Dirham - AED",
+            // Toman: "Toman - IRT", // تومان
+            // Rial: "Rial - IRR", // ﷼
+            // Dollar: "Dollar - USD", // $
+            // Pound: "Pound - GBP", // £
+            // Euro: "Euro - EUR", // €
+            // Lira: "Lira - YTL", // ₺
+            // Dirham: "Dirham - AED", // د.إ
+            
+            تومان: "Toman - IRT", // تومان
+            "﷼": "Rial - IRR", // ﷼
+            $: "Dollar - USD", // $
+            "£": "Pound - GBP", // £
+            "€": "Euro - EUR", // €
+            "₺": "Lira - YTL", // ₺
+            "د.إ": "Dirham - AED", //
         });
     }
 }
