@@ -158,6 +158,7 @@ export class MenuItemsController {
         for (const lang in languages) {
             translation[lang] = {
                 name: body[`name.${lang}`] || "",
+                description: body[`description.${lang}`] || "",
             };
         }
 
@@ -271,6 +272,7 @@ export class MenuItemsController {
         for (const lang in languages) {
             translation[lang] = {
                 name: body[`name.${lang}`] || "",
+                description: body[`description.${lang}`] || "",
             };
         }
 

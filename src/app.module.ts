@@ -1,6 +1,6 @@
 import { Module, NestModule, MiddlewareConsumer, RequestMethod } from "@nestjs/common";
 import { AppController } from "./app.controller";
-import { ConfigModule } from "@nestjs/config";
+import { ConfigModule, ConfigService } from "@nestjs/config";
 import { MongooseModule } from "@nestjs/mongoose";
 // middlewares
 import { serverOnly } from "./middlewares/server.middleware";
@@ -43,14 +43,12 @@ import { MenuInfoController } from "./controllers/menuInfo.controller";
 
 @Module({
     imports: [
-        AuthModule,
-        BrandPanelModule,
+        ConfigModule.forRoot({ isGlobal: true }),
         I18nModule.forRoot({
             fallbackLanguage: "fa",
             loaderOptions: { path: path.join(__dirname, "/i18n/"), watch: true, includeSubfolders: true },
             resolvers: [new CookieResolver(["lang"]), AcceptLanguageResolver],
         }),
-        ConfigModule.forRoot(),
         MongooseModule.forRoot(process.env.MONGO_URL, { dbName: process.env.MONGO_DB }),
         MongooseModule.forFeature([
             { name: "Analytic", schema: AnalyticSchema },
@@ -74,6 +72,8 @@ import { MenuInfoController } from "./controllers/menuInfo.controller";
             { name: "User", schema: UserSchema },
             { name: "Session", schema: SessionSchema },
         ]),
+        AuthModule,
+        BrandPanelModule,
     ],
     controllers: [Seeder, AppController, AccountController, UserController, PricingController, FilesController, MenuInfoController],
     providers: [AppService, FileService],

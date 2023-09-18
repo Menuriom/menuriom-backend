@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post, Req, Res } from "@nestjs/common";
+import { Body, Controller, Get, Post, Req, Res, NotFoundException } from "@nestjs/common";
 import { Request, Response } from "express";
 import { InjectModel } from "@nestjs/mongoose";
 import { Model, Types } from "mongoose";
@@ -80,5 +80,26 @@ export class MenuInfoController {
         for (const item of menuItems) results[item.category.toString()].items.push(item);
 
         return res.json(Object.values(results));
+    }
+
+    @Get("/menu-item/:id")
+    async getSingleMenuItem(@Req() req: Request, @Res() res: Response): Promise<void | Response> {
+        const brandID = req.headers["brand"];
+
+        let itemId: Types.ObjectId | string = "";
+        try {
+            itemId = new Types.ObjectId(req.params.id.toString());
+        } catch (e) {
+            throw new NotFoundException();
+        }
+
+        const menuItem = await this.MenuItemModel.findOne({ _id: itemId, brand: brandID, hidden: false })
+            .select(
+                "category images name description price discountPercentage discountActive variants soldOut showAsNew specialDaysList specialDaysActive tags sideItems likes translation",
+            )
+            .populate<{ sideItems: MenuSideGroup }>("sideItems", "name description items maxNumberUserCanChoose translation")
+            .lean();
+
+        return res.json(menuItem);
     }
 }
