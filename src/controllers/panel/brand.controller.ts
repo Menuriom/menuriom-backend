@@ -69,7 +69,7 @@ export class BrandController {
 
         // get brands that user owns
         const brands = await this.BrandModel.find({ creator: req.session.userID, $or: [{ deletedAt: { $exists: false } }, { deletedAt: null }] })
-            .select("logo name slogan")
+            .select("username logo name slogan")
             .exec();
         for (let i = 0; i < brands.length; i++) {
             const brand = brands[i];
@@ -78,7 +78,7 @@ export class BrandController {
 
         // from staff document get brands that user is part of
         const staff = await this.StaffModel.find({ user: req.session.userID })
-            .populate<{ brand: Brand }>("brand", "_id logo name slogan deletedAt")
+            .populate<{ brand: Brand }>("brand", "_id logo username name slogan deletedAt")
             .populate<{ role: StaffRole }>("role", "name permissions")
             .exec();
         for (let i = 0; i < staff.length; i++) {
@@ -88,6 +88,7 @@ export class BrandController {
             userBrands[member.brand._id.toString()] = {
                 _id: member.brand._id.toString(),
                 logo: member.brand.logo,
+                username: member.brand.username,
                 name: member.brand.name,
                 role: member.role.name,
                 permissions: member.role.permissions || [],
@@ -103,7 +104,7 @@ export class BrandController {
 
     @Get("/:id")
     async getSingleRecord(@Param() params: IdDto, @Req() req: Request, @Res() res: Response): Promise<void | Response> {
-        const brand = await this.BrandModel.findOne({ creator: req.session.userID, _id: params.id }).select("logo name slogan socials translation").exec();
+        const brand = await this.BrandModel.findOne({ creator: req.session.userID, _id: params.id }).select("logo username name slogan socials translation").exec();
         // check if user authorize to edit this record - user must be owner of brand
         if (!brand) {
             throw new UnprocessableEntityException([
@@ -120,7 +121,7 @@ export class BrandController {
             }
         }
 
-        return res.json({ logo: brand.logo, name, slogan, socials: brand.socials });
+        return res.json({ logo: brand.logo, username: brand.username, name, slogan, socials: brand.socials });
     }
 
     @Put("/:id")
@@ -141,6 +142,11 @@ export class BrandController {
             throw new UnprocessableEntityException([
                 { property: "", errors: [I18nContext.current().t("panel.brand.no record was found, or you are not authorized to do this action")] },
             ]);
+        }
+
+        const isUsernameTaken = await this.BrandModel.exists({ _id: { $ne: params.id }, username: body.username }).exec();
+        if (isUsernameTaken) {
+            throw new UnprocessableEntityException([{ property: "username", errors: [I18nContext.current().t("panel.brand.this username is already taken")] }]);
         }
 
         let logoLink = brand.logo;
@@ -166,6 +172,7 @@ export class BrandController {
             { _id: brand._id },
             {
                 logo: logoLink,
+                username: body.username,
                 name: body["name.default"],
                 slogan: body["slogan.default"],
                 socials: { instagram: body.socials_instagram, twitter: body.socials_twitter, telegram: body.socials_telegram, whatsapp: body.socials_whatsapp },
