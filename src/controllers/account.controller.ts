@@ -129,6 +129,11 @@ export class AccountController {
             throw new UnprocessableEntityException([{ property: "", errors: [I18nContext.current().t("panel.brand.You can only create 1 brand!")] }]);
         }
 
+        const isUsernameTaken = await this.BrandModel.exists({ username: input.username }).exec();
+        if (isUsernameTaken) {
+            throw new UnprocessableEntityException([{ property: "username", errors: [I18nContext.current().t("panel.brand.this username is already taken")] }]);
+        }
+
         if (!logo) {
             throw new UnprocessableEntityException([{ property: "logo", errors: [I18nContext.current().t("panel.brand.Please select your brand logo")] }]);
         }
@@ -136,6 +141,7 @@ export class AccountController {
 
         const newBrand = await this.BrandModel.create({
             logo: logoLink[0],
+            username: input.username,
             name: input.name,
             slogan: input.slogan,
             branchSize: input.branchSize,

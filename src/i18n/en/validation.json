@@ -66,6 +66,7 @@
     "IsPostalCode": "Must be a valid postal code",
     "IsIn": "Selected value is not valid",
     "IsJSON": "This set is not in valid format",
-    "IsBoolean": "Selected value must be true or false"
+    "IsBoolean": "Selected value must be true or false",
+    "IsAlphanumeric": "This field can be only numbers and letters"
     
 }

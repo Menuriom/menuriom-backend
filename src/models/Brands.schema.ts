@@ -6,6 +6,7 @@ export type BrandDocument = Brand & Document;
 
 export const BrandSchema = new Schema({
     logo: { type: String },
+    username: { type: String, required: true, unique: true },
     name: { type: String, required: true },
     type: { type: Schema.Types.ObjectId, ref: "BrandType" },
     slogan: { type: String },
@@ -27,6 +28,7 @@ export const BrandSchema = new Schema({
 export interface Brand {
     _id: Types.ObjectId;
     logo?: string;
+    username: string;
     name: string;
     brandType: PopulatedDoc<BrandType>;
     slogan?: string;

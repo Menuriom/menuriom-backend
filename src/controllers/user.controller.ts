@@ -36,16 +36,16 @@ export class UserController {
 
         // get brands that user owns
         const brands = await this.BrandModel.find({ creator: user.id, $or: [{ deletedAt: { $exists: false } }, { deletedAt: null }] })
-            .select("logo name slogan")
+            .select("logo username name slogan")
             .exec();
         for (let i = 0; i < brands.length; i++) {
             const brand = brands[i];
-            userBrands[brand.id] = { logo: brand.logo, name: brand.name, slogan: brand.slogan, role: "owner", permissions: [] };
+            userBrands[brand.id] = { logo: brand.logo, username: brand.username, name: brand.name, slogan: brand.slogan, role: "owner", permissions: [] };
         }
 
         // from staff document get brands that user has with permissions
         const staff = await this.StaffModel.find({ user: user.id })
-            .populate<{ brand: Brand }>("brand", "_id logo name slogan deletedAt")
+            .populate<{ brand: Brand }>("brand", "_id logo username name slogan deletedAt")
             .populate<{ role: StaffRole }>("role", "name permissions")
             .exec();
         for (let i = 0; i < staff.length; i++) {
@@ -54,6 +54,7 @@ export class UserController {
             // TODO : get list of roles from branches in staffModel
             userBrands[member.brand._id.toString()] = {
                 logo: member.brand.logo,
+                username: member.brand.username,
                 name: member.brand.name,
                 slogan: member.brand.slogan,
                 role: member.role.name,
