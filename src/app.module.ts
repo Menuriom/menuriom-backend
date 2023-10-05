@@ -40,6 +40,7 @@ import { AccountController } from "./controllers/account.controller";
 import { UserController } from "./controllers/user.controller";
 import { PricingController } from "./controllers/pricing.controller";
 import { MenuInfoController } from "./controllers/menuInfo.controller";
+import { TransactionSchema } from "./models/Transactions.schema";
 
 @Module({
     imports: [
@@ -69,6 +70,7 @@ import { MenuInfoController } from "./controllers/menuInfo.controller";
             { name: "StaffRole", schema: StaffRoleSchema },
             { name: "StaffPermission", schema: StaffPermissionSchema },
             { name: "Invite", schema: InviteSchema },
+            { name: "Transaction", schema: TransactionSchema },
             { name: "User", schema: UserSchema },
             { name: "Session", schema: SessionSchema },
         ]),
