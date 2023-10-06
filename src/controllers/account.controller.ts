@@ -19,6 +19,9 @@ import { BrandsPlanDocument } from "src/models/BrandsPlans.schema";
 import { Plan, PlanDocument } from "src/models/Plans.schema";
 import { TransactionDocument } from "src/models/Transactions.schema";
 import { ListingDto } from "src/dto/panel/billing.dto";
+import { SessionDocument } from "src/models/sessions.schema";
+import * as UAParser from "ua-parser-js";
+import * as humanizeDuration from "humanize-duration";
 
 @Controller("account")
 export class AccountController {
@@ -26,6 +29,7 @@ export class AccountController {
         // ...
         private readonly fileService: FileService,
         @InjectModel("User") private readonly UserModel: Model<UserDocument>,
+        @InjectModel("Session") private readonly SessionModel: Model<SessionDocument>,
         @InjectModel("Invite") private readonly InviteModel: Model<InviteDocument>,
         @InjectModel("Brand") private readonly BrandModel: Model<BrandDocument>,
         @InjectModel("BrandsPlan") private readonly BrandsPlanModel: Model<BrandsPlanDocument>,
@@ -232,5 +236,41 @@ export class AccountController {
         });
 
         return res.json({ transactions });
+    }
+
+    @Get("/active-sessions")
+    async getActiveSessions(@Req() req: Request, @Res() res: Response): Promise<void | Response> {
+        const currentSession = await this.SessionModel.findOne({ _id: req.session.sessionID }).select("userAgent ip status expireAt updatedAt").lean();
+        const otherActiveSessions = await this.SessionModel.find({ user: req.session.userID, status: "active" })
+            .select("userAgent ip status expireAt updatedAt")
+            .limit(8)
+            .lean();
+
+        currentSession.userAgent = new UAParser(currentSession.userAgent).getResult();
+
+        const now = Date.now();
+
+        for (const otherActiveSession of otherActiveSessions) {
+            otherActiveSession.userAgent = new UAParser(otherActiveSession.userAgent).getResult();
+
+            const timePassedFromLastUpdate = (now - otherActiveSession.updatedAt.getTime()) / 1000;
+            if (timePassedFromLastUpdate > 900) {
+                otherActiveSession["lastOnline"] = humanizeDuration(timePassedFromLastUpdate * 1000, { language: I18nContext.current().lang, largest: 1 });
+            } else {
+                otherActiveSession["lastOnline"] = "online";
+            }
+        }
+
+        return res.json({ currentSession, otherActiveSessions });
+    }
+
+    @Post("/terminate-session")
+    async terminateSession(@Req() req: Request, @Res() res: Response): Promise<void | Response> {
+        const doesSessionExists = await this.SessionModel.exists({ _id: req.body.session, user: req.session.userID, status: "active" }).exec();
+        if (!doesSessionExists) throw new NotFoundException();
+
+        await this.SessionModel.updateOne({ _id: req.body.session, user: req.session.userID, status: "active" }, { status: "revoked" }).exec();
+        
+        return res.end();
     }
 }
