@@ -241,7 +241,7 @@ export class AccountController {
     @Get("/active-sessions")
     async getActiveSessions(@Req() req: Request, @Res() res: Response): Promise<void | Response> {
         const currentSession = await this.SessionModel.findOne({ _id: req.session.sessionID }).select("userAgent ip status expireAt updatedAt").lean();
-        const otherActiveSessions = await this.SessionModel.find({ user: req.session.userID, status: "active" })
+        const otherActiveSessions = await this.SessionModel.find({ _id: { $ne: req.session.sessionID }, user: req.session.userID, status: "active" })
             .select("userAgent ip status expireAt updatedAt")
             .limit(8)
             .lean();
@@ -270,7 +270,7 @@ export class AccountController {
         if (!doesSessionExists) throw new NotFoundException();
 
         await this.SessionModel.updateOne({ _id: req.body.session, user: req.session.userID, status: "active" }, { status: "revoked" }).exec();
-        
+
         return res.end();
     }
 }
