@@ -216,6 +216,14 @@ export class AuthController {
             a session is deletable when the expire time is passed or status of it is not active
         */
 
+        /*
+            NOTE :
+            for better security it's good to lower the refresh time limit - if the time is removed then hijacked token no longer is valid as soon as this api is called
+
+            but invalidatiing an used token need a online user to call refresh api
+            for better security its best to revoke the token after set amount of time with a job (if refresh interval is 10 minutes this job should run every 11 minutes)
+        */
+
         // let token = "";
         // if (!token && req.cookies["AuthToken"]) token = req.cookies["AuthToken"].toString();
         // if (!token && req.headers["authtoken"]) token = req.headers["authtoken"].toString();
@@ -229,7 +237,7 @@ export class AuthController {
         const session = await this.SessionModel.findOne({ _id: new Types.ObjectId(sessionID), user: new Types.ObjectId(userID), status: "active" }).exec();
 
         // check the updatedAt field and if it is passed the refresh rate mark
-        const refreshInterval = 60 * 15; // 15 minutes
+        const refreshInterval = 60 * 5; // 5 minutes
         if (session.updatedAt >= new Date(Date.now() - refreshInterval * 1000)) throw new ForbiddenException(-1);
 
         // check the family length and make new session if it passed the limit
