@@ -1,24 +1,29 @@
-import { Body, Controller, Delete, Get, Post, Req, Res, UploadedFiles, UseInterceptors } from "@nestjs/common";
+import { Body, Controller, Delete, ForbiddenException, Get, Post, Put, Req, Res, UploadedFile, UseInterceptors } from "@nestjs/common";
 import { NotFoundException, UnprocessableEntityException } from "@nestjs/common";
 import { Response } from "express";
 import { Request } from "src/interfaces/Request.interface";
 import { InjectModel } from "@nestjs/mongoose";
 import { Model, Types } from "mongoose";
-import { StaffPermissionDocument } from "src/models/StaffPermissions.schema";
-import { StaffRole, StaffRoleDocument } from "src/models/StaffRoles.schema";
+import { StaffRole } from "src/models/StaffRoles.schema";
 import { UserDocument } from "src/models/Users.schema";
-import { unlink } from "fs/promises";
-import { FilesInterceptor } from "@nestjs/platform-express";
-import { CompleteInfoDto, EditUserInfoDto } from "src/dto/panel/user.dto";
+import { readFile, unlink } from "fs/promises";
+import { FileInterceptor } from "@nestjs/platform-express";
+import { CompleteInfoDto, EditUserInfoDto, SendEmailVerificationDto, SendMobilelVerificationDto, VerifyCodeDto } from "src/dto/panel/user.dto";
 import { I18nContext } from "nestjs-i18n";
 import { Brand, BrandDocument } from "src/models/Brands.schema";
 import { StaffDocument } from "src/models/Staff.schema";
 import { BrandsPlanDocument } from "src/models/BrandsPlans.schema";
 import { Plan } from "src/models/Plans.schema";
+import { FileService } from "src/services/file.service";
+import Email from "src/notifications/channels/Email";
+import Sms from "src/notifications/channels/Sms";
 
 @Controller("user")
 export class UserController {
+    private verficationCodeExpireTime = 120; // 2 minutes
+
     constructor(
+        private readonly fileService: FileService,
         @InjectModel("User") private readonly UserModel: Model<UserDocument>,
         @InjectModel("Brand") private readonly BrandModel: Model<BrandDocument>,
         @InjectModel("BrandsPlan") private readonly BrandsPlanModel: Model<BrandsPlanDocument>,
@@ -90,6 +95,135 @@ export class UserController {
         });
     }
 
+    @Post("change-email")
+    async changeUserEmail(@Body() inputs: SendEmailVerificationDto, @Req() req: Request, @Res() res: Response): Promise<void | Response> {
+        const user = await this.UserModel.findOne({ _id: req.session.userID }).exec();
+        if (!user) throw NotFoundException;
+
+        if (user.email === inputs.email) throw new ForbiddenException();
+
+        // check email duplication
+        const emailAlreadyExists = await this.UserModel.exists({
+            _id: { $ne: req.session.userID },
+            email: inputs.email,
+            status: "active",
+            $and: [{ emailVerifiedAt: { $exists: true } }, { emailVerifiedAt: { $ne: null } }],
+        }).exec();
+        if (emailAlreadyExists) {
+            throw new UnprocessableEntityException([{ property: "email", errors: [I18nContext.current().t("panel.user.this email address already exists!")] }]);
+        }
+
+        // check the time of last email or sms sent
+        if (!!user.emailVerficationCodeSentAt) {
+            const duration = (new Date(Date.now()).getTime() - user.emailVerficationCodeSentAt.getTime()) / 1000;
+            if (duration < this.verficationCodeExpireTime) return res.json({ expireIn: this.verficationCodeExpireTime - duration });
+        }
+
+        // generate a 6 digit code
+        const code = Math.floor(100000 + Math.random() * 900000);
+
+        await this.UserModel.updateOne(
+            { _id: req.session.userID },
+            { emailInVerfication: inputs.email, emailVerificationCode: code, emailVerficationCodeSentAt: new Date(Date.now()) },
+        ).exec();
+
+        // TODO : remove this when email and sms tempaltes are ok
+        return res.json({ code, expireIn: this.verficationCodeExpireTime });
+
+        // TODO : do the templates and subject and stuff
+        let html = await readFile("./src/notifications/templates/verficationEmail.html").then((buffer) => buffer.toString());
+        html = html.replace(/{{url}}/g, req.headers.origin);
+        html = html.replace("{{code}}", code.toString());
+        await Email(`کد تایید ${code} | منوریوم`, inputs.email, html)
+            .then(async () => await this.UserModel.updateOne({ email: inputs.email }, { verficationCodeSentAt: new Date(Date.now()) }).exec())
+            .catch((e) => console.log(e));
+    }
+
+    @Post("verify-email")
+    async verifyUserEmail(@Body() inputs: VerifyCodeDto, @Req() req: Request, @Res() res: Response): Promise<void | Response> {
+        const user = await this.UserModel.findOne({ _id: req.session.userID }).exec();
+        if (!user) throw NotFoundException;
+
+        if (user.emailVerificationCode !== inputs.code) {
+            throw new UnprocessableEntityException([{ property: "code", errors: [I18nContext.current().t("auth.entered verification code is not correct")] }]);
+        }
+
+        const duration = (new Date(Date.now()).getTime() - user.emailVerficationCodeSentAt.getTime()) / 1000;
+        if (duration > this.verficationCodeExpireTime) {
+            throw new UnprocessableEntityException([{ property: "code", errors: [I18nContext.current().t("auth.entered verification code has expired")] }]);
+        }
+
+        await this.UserModel.updateOne(
+            { _id: req.session.userID },
+            { email: user.emailInVerfication, emailInVerfication: null, emailVerifiedAt: new Date(Date.now()) },
+        ).exec();
+
+        return res.json({ email: user.emailInVerfication });
+    }
+
+    @Post("change-mobile")
+    async changeUserMobile(@Body() inputs: SendMobilelVerificationDto, @Req() req: Request, @Res() res: Response): Promise<void | Response> {
+        const user = await this.UserModel.findOne({ _id: req.session.userID }).exec();
+        if (!user) throw NotFoundException;
+
+        if (user.mobile === inputs.mobile) throw new ForbiddenException();
+
+        // check mobile duplication
+        const mobileAlreadyExists = await this.UserModel.exists({
+            _id: { $ne: req.session.userID },
+            mobile: inputs.mobile,
+            status: "active",
+            $and: [{ mobileVerifiedAt: { $exists: true } }, { mobileVerifiedAt: { $ne: null } }],
+        }).exec();
+        if (mobileAlreadyExists) {
+            throw new UnprocessableEntityException([{ property: "mobile", errors: [I18nContext.current().t("panel.user.this mobile already exists!")] }]);
+        }
+
+        // check the time of last mobile or sms sent
+        if (!!user.mobileVerficationCodeSentAt) {
+            const duration = (new Date(Date.now()).getTime() - user.mobileVerficationCodeSentAt.getTime()) / 1000;
+            if (duration < this.verficationCodeExpireTime) return res.json({ expireIn: this.verficationCodeExpireTime - duration });
+        }
+
+        // generate a 6 digit code
+        const code = Math.floor(100000 + Math.random() * 900000);
+
+        await this.UserModel.updateOne(
+            { _id: req.session.userID },
+            { mobileInVerfication: inputs.mobile, mobileVerificationCode: code, mobileVerficationCodeSentAt: new Date(Date.now()) },
+        ).exec();
+
+        // TODO : remove this when email and sms tempaltes are ok
+        return res.json({ code, expireIn: this.verficationCodeExpireTime });
+
+        // TODO : do the templates and subject and stuff
+        await Sms("verify", inputs.mobile, null, [code.toString()], "menuriom")
+            .then(async () => await this.UserModel.updateOne({ mobile: inputs.mobile }, { verficationCodeSentAt: new Date(Date.now()) }).exec())
+            .catch((e) => console.log(e));
+    }
+
+    @Post("verify-mobile")
+    async verifyUserMobile(@Body() inputs: VerifyCodeDto, @Req() req: Request, @Res() res: Response): Promise<void | Response> {
+        const user = await this.UserModel.findOne({ _id: req.session.userID }).exec();
+        if (!user) throw NotFoundException;
+
+        if (user.mobileVerificationCode !== inputs.code) {
+            throw new UnprocessableEntityException([{ property: "code", errors: [I18nContext.current().t("auth.entered verification code is not correct")] }]);
+        }
+
+        const duration = (new Date(Date.now()).getTime() - user.mobileVerficationCodeSentAt.getTime()) / 1000;
+        if (duration > this.verficationCodeExpireTime) {
+            throw new UnprocessableEntityException([{ property: "code", errors: [I18nContext.current().t("auth.entered verification code has expired")] }]);
+        }
+
+        await this.UserModel.updateOne(
+            { _id: req.session.userID },
+            { mobile: user.mobileInVerfication, mobileInVerfication: null, mobileVerifiedAt: new Date(Date.now()) },
+        ).exec();
+
+        return res.json({ mobile: user.mobileInVerfication });
+    }
+
     @Post("complete-info")
     async completeInfo(@Body() input: CompleteInfoDto, @Req() req: Request, @Res() res: Response): Promise<void | Response> {
         const user = await this.UserModel.findOne({ _id: req.session.userID }).select("-_v -password -createdAt").exec();
@@ -110,55 +244,29 @@ export class UserController {
         return res.json({ ...input });
     }
 
-    @Post("edit-info")
-    async editUserInfo(@Body() input: EditUserInfoDto, @Req() req: Request, @Res() res: Response): Promise<void | Response> {
+    @Put("edit-info")
+    @UseInterceptors(FileInterceptor("avatar"))
+    async editUserInfo(
+        @UploadedFile() avatar: Express.Multer.File,
+        @Body() input: EditUserInfoDto,
+        @Req() req: Request,
+        @Res() res: Response,
+    ): Promise<void | Response> {
         const user = await this.UserModel.findOne({ _id: req.session.userID }).exec();
         if (!user) throw new NotFoundException([{ property: "user", errors: [I18nContext.current().t("panel.user.user not found")] }]);
 
-        await this.UserModel.updateOne({ _id: req.session.userID }, { name: input.name, family: input.family });
-
-        return res.json();
-    }
-
-    @Post("edit-avatar-image")
-    @UseInterceptors(FilesInterceptor("files"))
-    async editUserImage(@UploadedFiles() files: Array<Express.Multer.File>, @Req() req: Request, @Res() res: Response): Promise<void | Response> {
-        const user = await this.UserModel.findOne({ _id: req.session.userID }).exec();
-        if (!user) throw new NotFoundException([{ property: "user", errors: [I18nContext.current().t("panel.user.user not found")] }]);
-
-        if (!!files.length) {
-            const ogName = files[0].originalname;
-            const extension = ogName.slice(((ogName.lastIndexOf(".") - 1) >>> 0) + 2);
-
-            // check file size
-            if (files[0].size > 1_048_576) {
-                throw new UnprocessableEntityException([
-                    { property: "image", errors: [I18nContext.current().t("panel.user.size of avatar pic must be less than 1M")] },
-                ]);
+        let avatarLink = user.avatar || "";
+        if (avatar) {
+            const uploadedFile = await this.fileService.saveUploadedImages([avatar], "avatar", 1_048_576, ["png", "jpeg", "jpg", "webp"], 128, "public", "/avatars");
+            if (uploadedFile[0]) {
+                unlink(avatarLink.replace("/file/", "storage/public/")).catch((e) => {});
+                avatarLink = uploadedFile[0];
             }
-
-            // check file format
-            const isMimeOk = extension == "png" || extension == "jpeg" || extension == "jpg";
-            if (!isMimeOk)
-                throw new UnprocessableEntityException([{ property: "image", errors: [I18nContext.current().t("panel.user.image format is not valid")] }]);
-
-            // delete the old image from system
-            if (!!user.avatar) await unlink(user.avatar.replace("/file/", "storage/")).catch((e) => {});
-
-            // TODO
-            // const randName = randStr(10);
-            // const img = sharp(Buffer.from(files[0].buffer));
-            // img.resize(256);
-            // const url = `storage/public/user_avatars/${randName}.${extension}`;
-            // await img.toFile(url).catch((e) => console.log(e));
-
-            // const imageLink = url.replace("storage/", "/file/");
-            // await this.UserModel.updateOne({ _id: req.session.userID }, { image: imageLink });
-
-            // return res.json({ imageLink });
         }
 
-        return res.json({ imageLink: user.avatar });
+        await this.UserModel.updateOne({ _id: req.session.userID }, { avatar: avatarLink, name: input.name, family: input.family }).exec();
+
+        return res.json({ avatar: avatarLink, name: input.name, family: input.family });
     }
 
     @Delete("delete-avatar-image")
@@ -167,7 +275,7 @@ export class UserController {
         if (!user) throw new NotFoundException([{ property: "user", errors: [I18nContext.current().t("panel.user.user not found")] }]);
 
         // delete the old image from system
-        if (!!user.avatar) await unlink(user.avatar.replace("/file/", "storage/")).catch((e) => {});
+        if (!!user.avatar) await unlink(user.avatar.replace("/file/", "storage/public/")).catch((e) => {});
         // delete image form db
         await this.UserModel.updateOne({ _id: req.session.userID }, { avatar: "" });
 

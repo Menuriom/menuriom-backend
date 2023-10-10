@@ -1,5 +1,7 @@
 {
     "user not found": "کاربری پیدا نشد",
     "size of avatar pic must be less than 1M": "حجم عکس پروفایل باید کمتر از 1 مگابایت باشد",
-    "image format is not valid": "فرمت عکس معتبر نیست"
+    "image format is not valid": "فرمت عکس معتبر نیست",
+    "this email address already exists!": "این ایمیل در سیستم وجود دارد!",
+    "this mobile already exists!": "این شماره موبایل در سیستم وجود دارد!"
 }

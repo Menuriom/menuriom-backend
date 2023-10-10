@@ -7,12 +7,16 @@ export const UserSchema = new Schema({
     family: { type: String },
 
     email: { type: String, lowercase: true },
+    emailInVerfication: { type: String, lowercase: true },
     emailVerifiedAt: { type: Date },
     emailVerificationCode: { type: String },
+    emailVerficationCodeSentAt: { type: Date },
 
     mobile: { type: String },
+    mobileInVerfication: { type: String, lowercase: true },
     mobileVerifiedAt: { type: Date },
     mobileVerificationCode: { type: String },
+    mobileVerficationCodeSentAt: { type: Date },
 
     googleId: { type: String },
     verficationCodeSentAt: { type: Date },
@@ -41,12 +45,16 @@ export interface User {
     family?: string;
 
     email: string;
+    emailInVerfication?: string;
     emailVerifiedAt?: Date;
     emailVerificationCode?: string;
+    emailVerficationCodeSentAt?: Date;
 
     mobile?: string;
+    mobileInVerfication?: string;
     mobileVerifiedAt?: Date;
     mobileVerificationCode?: string;
+    mobileVerficationCodeSentAt?: Date;
 
     googleId?: string;
     verficationCodeSentAt?: Date;

@@ -1,5 +1,7 @@
 {
     "user not found": "user not found",
     "size of avatar pic must be less than 1M": "size of avatar pic must be less than 1M",
-    "image format is not valid": "image format is not valid"
+    "image format is not valid": "image format is not valid",
+    "this email address already exists!": "this email address already exists!",
+    "this mobile already exists!": "this mobile already exists!"
 }
