@@ -40,8 +40,9 @@ export class MenuInfoController {
         const brandUsername = req.headers["brand"];
 
         const brand = await this.BrandModel.findOne({ username: brandUsername }).select("logo name slogan socials languages currency translation").lean();
-        const branches = await this.BranchModel.find({ brand: brand._id }).select("name address telephoneNumbers gallery translation").lean();
         if (!brand) throw new NotFoundException();
+
+        const branches = await this.BranchModel.find({ brand: brand._id }).select("name address telephoneNumbers gallery translation").lean();
 
         return res.json({ brand, branches });
     }

@@ -237,7 +237,7 @@ export class AuthController {
         const session = await this.SessionModel.findOne({ _id: new Types.ObjectId(sessionID), user: new Types.ObjectId(userID), status: "active" }).exec();
 
         // check the updatedAt field and if it is passed the refresh rate mark
-        const refreshInterval = 60 * 5; // 5 minutes
+        const refreshInterval = 60; // 1 minutes
         if (session.updatedAt >= new Date(Date.now() - refreshInterval * 1000)) throw new ForbiddenException(-1);
 
         // check the family length and make new session if it passed the limit
