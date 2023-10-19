@@ -4,10 +4,9 @@ export default async (subject: string, receivers: string, html) => {
     // create reusable transporter object using the default SMTP transport
     let transporter = createTransport({
         host: process.env.MAIL_HOST,
-        port: process.env.MAIL_PORT,
+        port: parseInt(process.env.MAIL_PORT),
         secure: process.env.MAIL_SECURE == "true" ? true : false, // true for 465, false for other ports (587)
-        // socketTimeout: 5000,
-        logger: true,
+        logger: process.env.MAIL_LOGGER == "true" ? true : false,
         auth: {
             user: process.env.MAIL_USERNAME,
             pass: process.env.MAIL_PASSWORD,
