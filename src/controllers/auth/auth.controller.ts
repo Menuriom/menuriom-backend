@@ -66,8 +66,6 @@ export class AuthController {
         // TODO : remove this when email and sms tempaltes are ok
         // return res.json({ code, expireIn: this.verficationCodeExpireTime });
 
-        // TODO : translate with i18n
-        // TODO : do the templates and subject and stuff
         if (field == "email") {
             let html = await readFile(`./src/notifications/templates/${I18nContext.current().lang}/verficationEmail.html`).then((buffer) => buffer.toString());
             html = html.replace(/{{url}}/g, req.headers.origin);

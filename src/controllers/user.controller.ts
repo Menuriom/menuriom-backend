@@ -128,15 +128,16 @@ export class UserController {
         ).exec();
 
         // TODO : remove this when email and sms tempaltes are ok
-        return res.json({ code, expireIn: this.verficationCodeExpireTime });
+        // return res.json({ code, expireIn: this.verficationCodeExpireTime });
 
-        // TODO : do the templates and subject and stuff
-        let html = await readFile("./src/notifications/templates/verficationEmail.html").then((buffer) => buffer.toString());
+        let html = await readFile(`./src/notifications/templates/${I18nContext.current().lang}/verficationEmail.html`).then((buffer) => buffer.toString());
         html = html.replace(/{{url}}/g, req.headers.origin);
         html = html.replace("{{code}}", code.toString());
-        await Email(`کد تایید ${code} | منوریوم`, inputs.email, html)
+        await Email(`Verification Code ${code} | Menuriom`, inputs.email, html)
             .then(async () => await this.UserModel.updateOne({ email: inputs.email }, { verficationCodeSentAt: new Date(Date.now()) }).exec())
             .catch((e) => console.log(e));
+
+        return res.json({ expireIn: this.verficationCodeExpireTime });
     }
 
     @Post("verify-email")
