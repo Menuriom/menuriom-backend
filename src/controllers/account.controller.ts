@@ -17,6 +17,11 @@ import { Invite, InviteDocument } from "src/models/Invites.schema";
 import { StaffDocument } from "src/models/Staff.schema";
 import { BrandsPlanDocument } from "src/models/BrandsPlans.schema";
 import { Plan, PlanDocument } from "src/models/Plans.schema";
+import { TransactionDocument } from "src/models/Transactions.schema";
+import { ListingDto } from "src/dto/panel/billing.dto";
+import { SessionDocument } from "src/models/sessions.schema";
+import * as UAParser from "ua-parser-js";
+import * as humanizeDuration from "humanize-duration";
 
 @Controller("account")
 export class AccountController {
@@ -24,6 +29,7 @@ export class AccountController {
         // ...
         private readonly fileService: FileService,
         @InjectModel("User") private readonly UserModel: Model<UserDocument>,
+        @InjectModel("Session") private readonly SessionModel: Model<SessionDocument>,
         @InjectModel("Invite") private readonly InviteModel: Model<InviteDocument>,
         @InjectModel("Brand") private readonly BrandModel: Model<BrandDocument>,
         @InjectModel("BrandsPlan") private readonly BrandsPlanModel: Model<BrandsPlanDocument>,
@@ -32,6 +38,7 @@ export class AccountController {
         @InjectModel("Staff") private readonly StaffModel: Model<StaffDocument>,
         @InjectModel("StaffRoleDefault") private readonly StaffRoleDefaultModel: Model<StaffRoleDefaultDocument>,
         @InjectModel("StaffRole") private readonly StaffRoleModel: Model<StaffRoleDocument>,
+        @InjectModel("Transaction") private readonly TransactionModel: Model<TransactionDocument>,
     ) {}
 
     @Get("/invitation-list")
@@ -177,5 +184,93 @@ export class AccountController {
             newId: newBrand.id,
             brand: { [newBrand.id]: { logo: newBrand.logo, name: newBrand.name, role: "owner", permissions: [], limitations: firstFreePlan.limitations } },
         });
+    }
+
+    @Get("/user-transactions")
+    async getUserTransactionList(@Query() query: ListingDto, @Req() req: Request, @Res() res: Response): Promise<void | Response> {
+        // sort
+        let sort: any = { _id: -1 };
+
+        // the base query object
+        let matchQuery: FilterQuery<any> = { user: new Types.ObjectId(req.session.userID) };
+        if (query.lastRecordID) matchQuery = { _id: { $lt: new Types.ObjectId(query.lastRecordID) }, ...matchQuery };
+        if (req.query.billID) matchQuery["bill"] = new Types.ObjectId(req.query.billID.toString());
+
+        // making the model with query
+        let data = this.TransactionModel.aggregate();
+        data.sort(sort);
+        data.match(matchQuery);
+        data.lookup({ from: "bills", localField: "bill", foreignField: "_id", as: "bill" });
+        data.lookup({ from: "brands", localField: "brand", foreignField: "_id", as: "brand" });
+        data.project({
+            _id: 1,
+            code: 1,
+            method: 1,
+            paidPrice: 1,
+            status: 1,
+            createdAt: 1,
+            "bill.billNumber": 1,
+            "bill.description": 1,
+            "bill.translation": 1,
+            "brand.logo": 1,
+            "brand.name": 1,
+            "brand.translation": 1,
+        });
+        data.limit(Number(query.pp));
+
+        // executing query and getting the results
+        let error;
+        const exec: any[] = await data.exec().catch((e) => (error = e));
+        if (error) throw new InternalServerErrorException();
+        const transactions: any[] = exec.map((record) => {
+            return {
+                _id: record._id,
+                code: record.code,
+                method: record.method,
+                paidPrice: record.paidPrice,
+                status: record.status,
+                createdAt: record.createdAt,
+                bill: record.bill[0],
+                brand: record.brand[0],
+            };
+        });
+
+        return res.json({ transactions });
+    }
+
+    @Get("/active-sessions")
+    async getActiveSessions(@Req() req: Request, @Res() res: Response): Promise<void | Response> {
+        const currentSession = await this.SessionModel.findOne({ _id: req.session.sessionID }).select("userAgent ip status expireAt updatedAt").lean();
+        const otherActiveSessions = await this.SessionModel.find({ _id: { $ne: req.session.sessionID }, user: req.session.userID, status: "active" })
+            .select("userAgent ip status expireAt updatedAt")
+            .limit(8)
+            .lean();
+
+        currentSession.userAgent = new UAParser(currentSession.userAgent).getResult();
+
+        const now = Date.now();
+
+        for (const otherActiveSession of otherActiveSessions) {
+            otherActiveSession.userAgent = new UAParser(otherActiveSession.userAgent).getResult();
+
+            const timePassedFromLastUpdate = (now - otherActiveSession.updatedAt.getTime()) / 1000;
+            if (timePassedFromLastUpdate > 900) {
+                otherActiveSession["lastOnline"] = humanizeDuration(timePassedFromLastUpdate * 1000, { language: I18nContext.current().lang, largest: 1 });
+            } else {
+                otherActiveSession["lastOnline"] = "online";
+            }
+        }
+
+        return res.json({ currentSession, otherActiveSessions });
+    }
+
+    @Post("/terminate-session")
+    async terminateSession(@Req() req: Request, @Res() res: Response): Promise<void | Response> {
+        const doesSessionExists = await this.SessionModel.exists({ _id: req.body.session, user: req.session.userID, status: "active" }).exec();
+        if (!doesSessionExists) throw new NotFoundException();
+
+        await this.SessionModel.updateOne({ _id: req.body.session, user: req.session.userID, status: "active" }, { status: "revoked" }).exec();
+
+        return res.end();
     }
 }

@@ -22,6 +22,7 @@ export default async () => {
         "storage",
         "storage/public",
         "storage/private",
+        "storage/public/avatars",
         "storage/public/logos",
         "storage/public/gallery",
         "storage/public/categoryIcons",

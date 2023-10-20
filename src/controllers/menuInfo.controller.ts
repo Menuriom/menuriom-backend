@@ -22,9 +22,13 @@ export class MenuInfoController {
 
     @Get("/menu-styles")
     async loadMenuStyles(@Req() req: Request, @Res() res: Response): Promise<void | Response> {
-        const brandID = req.headers["brand"];
+        const brandUsername = req.headers["brand"];
+        const brand = await this.BrandModel.findOne({ username: brandUsername, $or: [{ deletedAt: { $exists: false } }, { deletedAt: null }] })
+            .select("_id")
+            .exec();
+        if (!brand) throw new NotFoundException();
 
-        const menuStyles = await this.MenuSytleModel.findOne({ brand: brandID })
+        const menuStyles = await this.MenuSytleModel.findOne({ brand: brand._id })
             .select("baseColors mainMenuStyleOptions itemsDialogStyleOptions restaurantDetailsPageOptions splashScreenOptions")
             .lean();
 
@@ -33,22 +37,25 @@ export class MenuInfoController {
 
     @Get("/restaurant-info")
     async loadRestaurantInfo(@Req() req: Request, @Res() res: Response): Promise<void | Response> {
-        const brandID = req.headers["brand"];
+        const brandUsername = req.headers["brand"];
 
-        const brand = await this.BrandModel.findOne({ _id: brandID }).select("logo name slogan socials languages currency translation").lean();
-        const branches = await this.BranchModel.find({ brand: brandID }).select("name address telephoneNumbers gallery translation").lean();
+        const brand = await this.BrandModel.findOne({ username: brandUsername }).select("logo name slogan socials languages currency translation").lean();
+        if (!brand) throw new NotFoundException();
+
+        const branches = await this.BranchModel.find({ brand: brand._id }).select("name address telephoneNumbers gallery translation").lean();
 
         return res.json({ brand, branches });
     }
 
     @Get("/menu-categories")
     async getMenuCategories(@Req() req: Request, @Res() res: Response): Promise<void | Response> {
-        const brandID = req.headers["brand"];
+        const brandUsername = req.headers["brand"];
+        const brand = await this.BrandModel.findOne({ username: brandUsername, $or: [{ deletedAt: { $exists: false } }, { deletedAt: null }] })
+            .select("_id")
+            .exec();
+        if (!brand) throw new NotFoundException();
 
-        // TODO
-        // get menu base on brand and selected branch
-
-        const categories = await this.MenuCategoryModel.find({ brand: brandID, hidden: false })
+        const categories = await this.MenuCategoryModel.find({ brand: brand._id, hidden: false })
             .select("icon name description order showAsNew translation")
             .sort({ order: "asc" })
             .lean();
@@ -58,16 +65,17 @@ export class MenuInfoController {
 
     @Get("/menu-items")
     async getMenuItems(@Req() req: Request, @Res() res: Response): Promise<void | Response> {
-        const brandID = req.headers["brand"];
+        const brandUsername = req.headers["brand"];
+        const brand = await this.BrandModel.findOne({ username: brandUsername, $or: [{ deletedAt: { $exists: false } }, { deletedAt: null }] })
+            .select("_id")
+            .exec();
+        if (!brand) throw new NotFoundException();
 
-        // TODO
-        // get menu base on brand and selected branch
-
-        const menuCategories = await this.MenuCategoryModel.find({ brand: brandID, hidden: false })
+        const menuCategories = await this.MenuCategoryModel.find({ brand: brand._id, hidden: false })
             .select("branches icon name description order showAsNew translation")
             .sort({ order: "asc" })
             .lean();
-        const menuItems = await this.MenuItemModel.find({ brand: brandID, hidden: false })
+        const menuItems = await this.MenuItemModel.find({ brand: brand._id, hidden: false })
             .select(
                 "branches category order images name description price discountPercentage discountActive variants pinned soldOut showAsNew specialDaysList specialDaysActive tags sideItems likes translation",
             )
@@ -84,7 +92,11 @@ export class MenuInfoController {
 
     @Get("/menu-item/:id")
     async getSingleMenuItem(@Req() req: Request, @Res() res: Response): Promise<void | Response> {
-        const brandID = req.headers["brand"];
+        const brandUsername = req.headers["brand"];
+        const brand = await this.BrandModel.findOne({ username: brandUsername, $or: [{ deletedAt: { $exists: false } }, { deletedAt: null }] })
+            .select("_id")
+            .exec();
+        if (!brand) throw new NotFoundException();
 
         let itemId: Types.ObjectId | string = "";
         try {
@@ -93,7 +105,7 @@ export class MenuInfoController {
             throw new NotFoundException();
         }
 
-        const menuItem = await this.MenuItemModel.findOne({ _id: itemId, brand: brandID, hidden: false })
+        const menuItem = await this.MenuItemModel.findOne({ _id: itemId, brand: brand._id, hidden: false })
             .select(
                 "category images name description price discountPercentage discountActive variants soldOut showAsNew specialDaysList specialDaysActive tags sideItems likes translation",
             )
