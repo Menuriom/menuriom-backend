@@ -21,6 +21,7 @@ COPY package*.json ./
 ENV NODE_ENV production
 
 # RUN npm ci --production
+RUN npm i -g typescript
 RUN npm ci --only=production && npm cache clean --force
 
 COPY --from=build /app/dist ./dist
