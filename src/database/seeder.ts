@@ -3,7 +3,7 @@ import { Request } from "src/interfaces/Request.interface";
 import { Response } from "express";
 import { InjectModel } from "@nestjs/mongoose";
 import { Model } from "mongoose";
-import { UserDocument } from "src/models/users.schema";
+import { UserDocument } from "src/models/Users.schema";
 import { StaffPermissionDocument } from "src/models/StaffPermissions.schema";
 import { StaffRoleDefaultDocument } from "src/models/StaffRoleDefaults.schema";
 import { PlanDocument } from "src/models/Plans.schema";

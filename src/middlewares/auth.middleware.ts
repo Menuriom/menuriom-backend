@@ -4,7 +4,7 @@ import { Response, NextFunction } from "express";
 import { Request } from "src/interfaces/Request.interface";
 import { verify } from "jsonwebtoken";
 import { Model } from "mongoose";
-import { SessionDocument } from "src/models/sessions.schema";
+import { SessionDocument } from "src/models/Sessions.schema";
 import { UserDocument } from "src/models/Users.schema";
 
 /*

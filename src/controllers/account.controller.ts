@@ -19,7 +19,7 @@ import { BrandsPlanDocument } from "src/models/BrandsPlans.schema";
 import { Plan, PlanDocument } from "src/models/Plans.schema";
 import { TransactionDocument } from "src/models/Transactions.schema";
 import { ListingDto } from "src/dto/panel/billing.dto";
-import { SessionDocument } from "src/models/sessions.schema";
+import { SessionDocument } from "src/models/Sessions.schema";
 import * as UAParser from "ua-parser-js";
 import * as humanizeDuration from "humanize-duration";
 
