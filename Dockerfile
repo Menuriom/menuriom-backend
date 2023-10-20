@@ -13,6 +13,9 @@ RUN npm ci --production
 # Copy the rest of the application code to the working directory
 COPY . .
 
+# creates "dist" folder for the production
+RUN npm run build
+
 # Expose the port on which your NestJS application will run
 EXPOSE 3000
 
