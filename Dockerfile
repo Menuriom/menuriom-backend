@@ -5,6 +5,8 @@ WORKDIR /app
 
 COPY package*.json ./
 
+RUN npm config set registry https://registry.npmjs.org/
+RUN npm cache clean --force
 RUN npm ci
 
 COPY . .
@@ -20,7 +22,6 @@ COPY package*.json ./
 
 ENV NODE_ENV production
 
-# RUN npm ci --production
 RUN npm i -g typescript
 RUN npm ci --only=production && npm cache clean --force
 
