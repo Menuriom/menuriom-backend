@@ -113,6 +113,7 @@ export class BillingService {
 
         let bill = await query({ brand: brandID, type: "renewal", status: { $in: ["notPaid", "pendingPayment"] } });
         if (!bill) bill = await query({ brand: brandID });
+        if (!bill) return {};
 
         return {
             _id: bill._id,

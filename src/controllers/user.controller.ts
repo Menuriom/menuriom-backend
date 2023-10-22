@@ -32,9 +32,7 @@ export class UserController {
 
     @Get("info")
     async getUser(@Req() req: Request, @Res() res: Response): Promise<void | Response> {
-        console.log({ userid: req.session.userID });
         const user = await this.UserModel.findOne({ _id: req.session.userID }).select("-_v -password -createdAt").exec();
-        console.log({ user: user.name });
         if (!user) throw NotFoundException;
 
         const userBrands = {};
