@@ -26,6 +26,7 @@ RUN npm i -g typescript
 RUN npm ci --only=production && npm cache clean --force
 
 COPY --from=build /app/dist ./dist
+COPY --from=build /app/src ./src
 
 EXPOSE 3000
 
