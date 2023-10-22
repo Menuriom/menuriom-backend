@@ -6,7 +6,6 @@ WORKDIR /app
 COPY package*.json ./
 
 RUN npm install -g npm
-RUN npm cache clean --force
 RUN npm ci
 
 COPY . .
@@ -21,10 +20,6 @@ WORKDIR /app
 COPY package*.json ./
 
 ENV NODE_ENV production
-
-RUN npm install -g npm
-RUN npm i -g typescript
-RUN npm ci --only=production && npm cache clean --force
 
 COPY --from=build /app/package*.json .
 COPY --from=build /app/node_modules ./node_modules
