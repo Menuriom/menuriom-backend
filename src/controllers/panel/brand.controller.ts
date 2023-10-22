@@ -180,7 +180,7 @@ export class BrandController {
             },
         ).exec();
 
-        return res.json({ logo: logoLink, name: body["name.default"], slogan: body["slogan.default"] });
+        return res.json({ logo: logoLink, username: body.username, name: body["name.default"], slogan: body["slogan.default"] });
     }
 
     @Delete("/:id")
