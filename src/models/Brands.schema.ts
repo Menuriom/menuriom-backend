@@ -19,7 +19,7 @@ export const BrandSchema = new Schema({
         whatsapp: { type: String },
     },
     languages: [{ type: String }],
-    currency: { type: String, default: "Toman" },
+    currency: { type: String, default: "تومان" },
     createdAt: { type: Date, default: new Date(Date.now()) },
     deletedAt: { type: Date },
     translation: TranslationSchema,

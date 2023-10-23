@@ -41,6 +41,7 @@ import { UserController } from "./controllers/user.controller";
 import { PricingController } from "./controllers/pricing.controller";
 import { MenuInfoController } from "./controllers/menuInfo.controller";
 import { TransactionSchema } from "./models/Transactions.schema";
+import { AccountService } from "./services/account.service";
 
 @Module({
     imports: [
@@ -78,7 +79,7 @@ import { TransactionSchema } from "./models/Transactions.schema";
         BrandPanelModule,
     ],
     controllers: [Seeder, AppController, AccountController, UserController, PricingController, FilesController, MenuInfoController],
-    providers: [AppService, FileService],
+    providers: [AppService, FileService, AccountService],
 })
 export class AppModule implements NestModule {
     configure(consumer: MiddlewareConsumer) {
