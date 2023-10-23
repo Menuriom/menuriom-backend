@@ -41,6 +41,7 @@ import { UserController } from "./controllers/user.controller";
 import { PricingController } from "./controllers/pricing.controller";
 import { MenuInfoController } from "./controllers/menuInfo.controller";
 import { TransactionSchema } from "./models/Transactions.schema";
+import { AccountService } from "./services/account.service";
 
 @Module({
     imports: [
@@ -50,7 +51,7 @@ import { TransactionSchema } from "./models/Transactions.schema";
             loaderOptions: { path: path.join(__dirname, "/i18n/"), watch: true, includeSubfolders: true },
             resolvers: [new CookieResolver(["lang"]), AcceptLanguageResolver],
         }),
-        MongooseModule.forRoot(process.env.MONGO_URL, { dbName: process.env.MONGO_DB }),
+        MongooseModule.forRoot(process.env.MONGO_URL, { dbName: process.env.MONGO_DB, authSource: "admin" }),
         MongooseModule.forFeature([
             { name: "Analytic", schema: AnalyticSchema },
             { name: "Branch", schema: BranchSchema },
@@ -78,7 +79,7 @@ import { TransactionSchema } from "./models/Transactions.schema";
         BrandPanelModule,
     ],
     controllers: [Seeder, AppController, AccountController, UserController, PricingController, FilesController, MenuInfoController],
-    providers: [AppService, FileService],
+    providers: [AppService, FileService, AccountService],
 })
 export class AppModule implements NestModule {
     configure(consumer: MiddlewareConsumer) {

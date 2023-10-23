@@ -22,12 +22,14 @@ import { ListingDto } from "src/dto/panel/billing.dto";
 import { SessionDocument } from "src/models/Sessions.schema";
 import * as UAParser from "ua-parser-js";
 import * as humanizeDuration from "humanize-duration";
+import { AccountService } from "src/services/account.service";
 
 @Controller("account")
 export class AccountController {
     constructor(
         // ...
         private readonly fileService: FileService,
+        private readonly AccountService: AccountService,
         @InjectModel("User") private readonly UserModel: Model<UserDocument>,
         @InjectModel("Session") private readonly SessionModel: Model<SessionDocument>,
         @InjectModel("Invite") private readonly InviteModel: Model<InviteDocument>,
@@ -153,6 +155,7 @@ export class AccountController {
             slogan: input.slogan,
             branchSize: input.branchSize,
             creator: req.session.userID,
+            languages: ["en", "fa"],
             createdAt: new Date(Date.now()),
         });
 
@@ -172,6 +175,8 @@ export class AccountController {
             telephoneNumbers: input.tel,
             createdAt: new Date(Date.now()),
         });
+
+        await this.AccountService.setupBaseMenuStyle(newBrand.id);
 
         // adding default roles to brand staff roles
         const defaultRoles = await this.StaffRoleDefaultModel.find().exec();

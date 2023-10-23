@@ -21,7 +21,7 @@ export class MenuStylesController {
         readonly PlanService: PlanService,
         readonly FileService: FileService,
         @InjectModel("BrandsPlan") private readonly BrandsPlanModel: Model<BrandsPlanDocument>,
-        @InjectModel("MenuStyle") private readonly MenuSytleModel: Model<MenuSytleDocument>,
+        @InjectModel("MenuStyle") private readonly MenuStyleModel: Model<MenuSytleDocument>,
     ) {}
 
     // TODO : we could have a secret menu section in menus that users can access somehow
@@ -32,7 +32,7 @@ export class MenuStylesController {
     async loadMenuStyles(@Req() req: Request, @Res() res: Response): Promise<void | Response> {
         const brandID = req.headers["brand"];
 
-        const menuStyles = await this.MenuSytleModel.findOne({ brand: brandID }).lean();
+        const menuStyles = await this.MenuStyleModel.findOne({ brand: brandID }).lean();
 
         return res.json({ menuStyles });
     }
@@ -136,7 +136,7 @@ export class MenuStylesController {
         if (restaurantDetailsPageOptions.bgImageMode === "upload") restaurantDetailsPageOptions.bgImage = restaurantDetailsBgImageUrl;
         if (splashScreenOptions.bgImageMode === "upload") splashScreenOptions.bgImage = splashScreenBgImageUrl;
 
-        await this.MenuSytleModel.updateOne(
+        await this.MenuStyleModel.updateOne(
             { brand: brandID },
             {
                 $set: {
