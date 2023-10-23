@@ -50,7 +50,7 @@ import { TransactionSchema } from "./models/Transactions.schema";
             loaderOptions: { path: path.join(__dirname, "/i18n/"), watch: true, includeSubfolders: true },
             resolvers: [new CookieResolver(["lang"]), AcceptLanguageResolver],
         }),
-        MongooseModule.forRoot(process.env.MONGO_URL, { dbName: process.env.MONGO_DB }),
+        MongooseModule.forRoot(process.env.MONGO_URL, { dbName: process.env.MONGO_DB, authSource: "admin" }),
         MongooseModule.forFeature([
             { name: "Analytic", schema: AnalyticSchema },
             { name: "Branch", schema: BranchSchema },
