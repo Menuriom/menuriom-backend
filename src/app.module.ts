@@ -42,6 +42,8 @@ import { PricingController } from "./controllers/pricing.controller";
 import { MenuInfoController } from "./controllers/menuInfo.controller";
 import { TransactionSchema } from "./models/Transactions.schema";
 import { AccountService } from "./services/account.service";
+import { ContactUsController } from "./controllers/contactUs.controller";
+import { ContactUsSchema } from "./models/ContactUs.schema";
 
 @Module({
     imports: [
@@ -74,11 +76,12 @@ import { AccountService } from "./services/account.service";
             { name: "Transaction", schema: TransactionSchema },
             { name: "User", schema: UserSchema },
             { name: "Session", schema: SessionSchema },
+            { name: "ContactUs", schema: ContactUsSchema },
         ]),
         AuthModule,
         BrandPanelModule,
     ],
-    controllers: [Seeder, AppController, AccountController, UserController, PricingController, FilesController, MenuInfoController],
+    controllers: [Seeder, AppController, AccountController, UserController, PricingController, FilesController, MenuInfoController, ContactUsController],
     providers: [AppService, FileService, AccountService],
 })
 export class AppModule implements NestModule {
