@@ -7,6 +7,7 @@ export class MenuItemDto {
     @IsNotEmpty({ message: i18nValidationMessage("validation.IsNotEmpty") })
     readonly ["name.default"]: string;
 
+    @IsOptional()
     @Length(1, 300, { message: i18nValidationMessage("validation.Length") })
     @IsString({ message: i18nValidationMessage("validation.IsString") })
     @IsNotEmpty({ message: i18nValidationMessage("validation.IsNotEmpty") })

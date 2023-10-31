@@ -170,7 +170,7 @@ export class MenuItemsController {
             order: 0,
             images: images,
             name: body["name.default"],
-            description: body["description.default"],
+            description: body["description.default"] || "",
             price: body.price,
             variants: variants,
 
@@ -286,7 +286,7 @@ export class MenuItemsController {
 
                 images: itemGallery,
                 name: body["name.default"],
-                description: body["description.default"],
+                description: body["description.default"] || "",
                 price: body.price,
                 variants: variants,
 
