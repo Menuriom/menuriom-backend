@@ -52,6 +52,7 @@ export class MenuStylesController {
         @UploadedFiles()
         files: {
             headerBgImageFile: Express.Multer.File;
+            suggestionsBgImageFile: Express.Multer.File;
             itemListBgImageFile: Express.Multer.File;
             restaurantDetailsBgImageFile: Express.Multer.File;
             splashScreenBgImageFile: Express.Multer.File;
@@ -62,6 +63,7 @@ export class MenuStylesController {
         const brandID = req.headers["brand"];
 
         let headerBgImageUrl = "";
+        let suggestionsBgImageUrl = "";
         let itemListBgImageUrl = "";
         let restaurantDetailsBgImageUrl = "";
         let splashScreenBgImageUrl = "";
@@ -79,6 +81,18 @@ export class MenuStylesController {
                     "/customPatterns",
                 );
                 headerBgImageUrl = uploadedHeaderBgImage[0];
+            }
+            if (files.suggestionsBgImageFile) {
+                const uploadedSuggestionsBgImage = await this.FileService.saveUploadedImages(
+                    [files.suggestionsBgImageFile[0]],
+                    "",
+                    1 * 1_048_576,
+                    ["png", "jpeg", "jpg", "webp"],
+                    480,
+                    "public",
+                    "/customPatterns",
+                );
+                suggestionsBgImageUrl = uploadedSuggestionsBgImage[0];
             }
             if (files.itemListBgImageFile) {
                 const uploadedItemListBgImage = await this.FileService.saveUploadedImages(
@@ -127,11 +141,13 @@ export class MenuStylesController {
         const splashScreenOptions = JSON.parse(req.body.splashScreenOptions);
 
         delete mainMenuStyleOptions.headerOptions.bgImageFile;
+        delete mainMenuStyleOptions.suggestionsOptions.bgImageFile;
         delete mainMenuStyleOptions.itemListOptions.bgImageFile;
         delete restaurantDetailsPageOptions.bgImageFile;
         delete splashScreenOptions.bgImageFile;
 
         if (mainMenuStyleOptions.headerOptions.bgImageMode === "upload") mainMenuStyleOptions.headerOptions.bgImage = headerBgImageUrl;
+        if (mainMenuStyleOptions.suggestionsOptions.bgImageMode === "upload") mainMenuStyleOptions.suggestionsOptions.bgImage = suggestionsBgImageUrl;
         if (mainMenuStyleOptions.itemListOptions.bgImageMode === "upload") mainMenuStyleOptions.itemListOptions.bgImage = itemListBgImageUrl;
         if (restaurantDetailsPageOptions.bgImageMode === "upload") restaurantDetailsPageOptions.bgImage = restaurantDetailsBgImageUrl;
         if (splashScreenOptions.bgImageMode === "upload") splashScreenOptions.bgImage = splashScreenBgImageUrl;
