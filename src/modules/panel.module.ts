@@ -35,6 +35,8 @@ import { QrCodeSchema } from "src/models/QrCodes.schema";
 import { MenuQRController } from "src/controllers/panel/menuQR.controller";
 import { MenuSytleSchema } from "src/models/MenuStyles.schema";
 import { MenuStylesController } from "src/controllers/panel/menuStyles.controller";
+import { WorkingHourSchema } from "src/models/WorkingHours.schema";
+import { WorkingHoursController } from "src/controllers/panel/workingHours.controller";
 
 @Module({
     imports: [
@@ -59,6 +61,7 @@ import { MenuStylesController } from "src/controllers/panel/menuStyles.controlle
             { name: "MenuItem", schema: MenuItemSchema },
             { name: "QrCode", schema: QrCodeSchema },
             { name: "MenuStyle", schema: MenuSytleSchema },
+            { name: "WorkingHour", schema: WorkingHourSchema },
         ]),
     ],
     controllers: [
@@ -74,6 +77,7 @@ import { MenuStylesController } from "src/controllers/panel/menuStyles.controlle
         MenuSideGroupController,
         MenuQRController,
         MenuStylesController,
+        WorkingHoursController,
     ],
     providers: [FileService, BillingService, PlanService, MenuService],
     exports: [],
