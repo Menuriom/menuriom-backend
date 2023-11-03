@@ -25,22 +25,27 @@ export class WorkingHoursController {
     @Get("/")
     @SetPermissions("main-panel.branches.edit")
     @UseGuards(AuthorizeUserInSelectedBrand)
-    async getWorkingHours(@Param() params: IdDto, @Req() req: Request, @Res() res: Response): Promise<void | Response> {
-        const workingHours = await this.WorkingHourModel.findOne({ brand: params.id }).exec();
+    async getWorkingHours(@Req() req: Request, @Res() res: Response): Promise<void | Response> {
+        const brandID = req.headers["brand"];
+
+        const workingHours = await this.WorkingHourModel.findOne({ brand: brandID }).select("workingHours").exec();
         if (!workingHours) {
-            throw new UnprocessableEntityException([
-                { property: "", errors: [I18nContext.current().t("panel.brand.no record was found, or you are not authorized to do this action")] },
-            ]);
+            return res.end();
+            // throw new UnprocessableEntityException([
+            //     { property: "", errors: [I18nContext.current().t("panel.brand.no record was found, or you are not authorized to do this action")] },
+            // ]);
         }
 
-        return res.json({ workingHours });
+        return res.json({ workingHours: workingHours.workingHours });
     }
 
     @Post("/")
     @SetPermissions("main-panel.branches.edit")
     @UseGuards(AuthorizeUserInSelectedBrand)
-    async saveWorkingHours(@Param() params: IdDto, @Body() body: WorkingHoursDto, @Req() req: Request, @Res() res: Response): Promise<void | Response> {
-        const workingHours = await this.WorkingHourModel.create({ brand: params.id, workingHours: body.workingHours, createdAt: new Date(Date.now()) });
+    async saveWorkingHours(@Body() body: WorkingHoursDto, @Req() req: Request, @Res() res: Response): Promise<void | Response> {
+        const brandID = req.headers["brand"];
+
+        await this.WorkingHourModel.updateOne({ brand: brandID }, { workingHours: body.workingHours, createdAt: new Date(Date.now()) }, { upsert: true });
         return res.end();
     }
 }

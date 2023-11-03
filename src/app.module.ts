@@ -44,6 +44,7 @@ import { TransactionSchema } from "./models/Transactions.schema";
 import { AccountService } from "./services/account.service";
 import { ContactUsController } from "./controllers/contactUs.controller";
 import { ContactUsSchema } from "./models/ContactUs.schema";
+import { WorkingHourSchema } from "./models/WorkingHours.schema";
 
 @Module({
     imports: [
@@ -77,6 +78,7 @@ import { ContactUsSchema } from "./models/ContactUs.schema";
             { name: "User", schema: UserSchema },
             { name: "Session", schema: SessionSchema },
             { name: "ContactUs", schema: ContactUsSchema },
+            { name: "WorkingHour", schema: WorkingHourSchema },
         ]),
         AuthModule,
         BrandPanelModule,

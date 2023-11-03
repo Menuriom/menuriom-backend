@@ -8,6 +8,7 @@ import { MenuSytleDocument } from "src/models/MenuStyles.schema";
 import { MenuCategoryDocument } from "src/models/MenuCategories.schema";
 import { MenuItemDocument } from "src/models/MenuItems.schema";
 import { MenuSideGroup } from "src/models/MenuSideGroups.schema";
+import { WorkingHourDocument } from "src/models/WorkingHours.schema";
 
 @Controller("menu-info")
 export class MenuInfoController {
@@ -18,6 +19,7 @@ export class MenuInfoController {
         @InjectModel("MenuStyle") private readonly MenuSytleModel: Model<MenuSytleDocument>,
         @InjectModel("MenuCategory") private readonly MenuCategoryModel: Model<MenuCategoryDocument>,
         @InjectModel("MenuItem") private readonly MenuItemModel: Model<MenuItemDocument>,
+        @InjectModel("WorkingHour") private readonly WorkingHourModel: Model<WorkingHourDocument>,
     ) {}
 
     @Get("/menu-styles")
@@ -43,8 +45,31 @@ export class MenuInfoController {
         if (!brand) throw new NotFoundException();
 
         const branches = await this.BranchModel.find({ brand: brand._id }).select("name address telephoneNumbers gallery translation").lean();
+        const workingHours = await this.WorkingHourModel.findOne({ brand: brand._id }).select("workingHours").lean();
 
-        return res.json({ brand, branches });
+        const orderedHours = {};
+        for (const branch in workingHours.workingHours) {
+            const days = workingHours.workingHours[branch];
+            if (!orderedHours[branch]) orderedHours[branch] = {};
+
+            let branchHoursSet = false;
+
+            for (const dayName in days) {
+                const day = days[dayName];
+                const clock = day.from && day.to ? `${day.from} -> ${day.to}` : "";
+                if (day.open) branchHoursSet = true;
+
+                if (!orderedHours[branch][`${clock} - ${day.open}`]) {
+                    orderedHours[branch][`${clock} - ${day.open}`] = { days: [dayName], clock: clock, open: day.open };
+                } else {
+                    orderedHours[branch][`${clock} - ${day.open}`].days.push(dayName);
+                }
+            }
+
+            if (!branchHoursSet && branch !== "all") delete orderedHours[branch];
+        }
+
+        return res.json({ brand, branches, workingHours: orderedHours });
     }
 
     @Get("/menu-categories")
