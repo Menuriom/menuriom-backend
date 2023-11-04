@@ -2,12 +2,16 @@ import { Module, NestModule, MiddlewareConsumer, RequestMethod } from "@nestjs/c
 import { AppController } from "./app.controller";
 import { ConfigModule, ConfigService } from "@nestjs/config";
 import { MongooseModule } from "@nestjs/mongoose";
+import { AcceptLanguageResolver, CookieResolver, I18nModule } from "nestjs-i18n";
+import * as path from "path";
+import { Seeder } from "./database/seeder";
 // middlewares
 import { serverOnly } from "./middlewares/server.middleware";
 import { AuthCheckMiddleware, GuestMiddleware } from "./middlewares/auth.middleware";
 // services
 import { AppService } from "./app.service";
 import { FileService } from "./services/file.service";
+import { AccountService } from "./services/account.service";
 // modules
 import { AuthModule } from "./modules/auth.module";
 import { BrandPanelModule } from "./modules/panel.module";
@@ -32,19 +36,18 @@ import { InviteSchema } from "./models/Invites.schema";
 import { SessionSchema } from "./models/Sessions.schema";
 import { MenuSytleSchema } from "./models/MenuStyles.schema";
 import { MenuCategorySchema } from "./models/MenuCategories.schema";
-import { AcceptLanguageResolver, CookieResolver, I18nModule } from "nestjs-i18n";
-import * as path from "path";
-import { Seeder } from "./database/seeder";
+import { ContactUsSchema } from "./models/ContactUs.schema";
+import { WorkingHourSchema } from "./models/WorkingHours.schema";
+import { TransactionSchema } from "./models/Transactions.schema";
+import { UtknSchema } from "./models/Utkns.schema";
+// controllers
 import { FilesController } from "./controllers/files.controller";
 import { AccountController } from "./controllers/account.controller";
 import { UserController } from "./controllers/user.controller";
 import { PricingController } from "./controllers/pricing.controller";
 import { MenuInfoController } from "./controllers/menuInfo.controller";
-import { TransactionSchema } from "./models/Transactions.schema";
-import { AccountService } from "./services/account.service";
 import { ContactUsController } from "./controllers/contactUs.controller";
-import { ContactUsSchema } from "./models/ContactUs.schema";
-import { WorkingHourSchema } from "./models/WorkingHours.schema";
+import { UtknController } from "./controllers/utkn.controller";
 
 @Module({
     imports: [
@@ -79,11 +82,22 @@ import { WorkingHourSchema } from "./models/WorkingHours.schema";
             { name: "Session", schema: SessionSchema },
             { name: "ContactUs", schema: ContactUsSchema },
             { name: "WorkingHour", schema: WorkingHourSchema },
+            { name: "Utkn", schema: UtknSchema },
         ]),
         AuthModule,
         BrandPanelModule,
     ],
-    controllers: [Seeder, AppController, AccountController, UserController, PricingController, FilesController, MenuInfoController, ContactUsController],
+    controllers: [
+        Seeder,
+        AppController,
+        AccountController,
+        UserController,
+        PricingController,
+        FilesController,
+        MenuInfoController,
+        ContactUsController,
+        UtknController,
+    ],
     providers: [AppService, FileService, AccountService],
 })
 export class AppModule implements NestModule {
