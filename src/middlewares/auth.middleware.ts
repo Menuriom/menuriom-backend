@@ -1,11 +1,12 @@
-import { ForbiddenException, Injectable, NestMiddleware, Req, UnauthorizedException } from "@nestjs/common";
+import { ForbiddenException, Injectable, NestMiddleware, UnauthorizedException } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
-import { Response, NextFunction } from "express";
+import { Request as Req, Response, NextFunction } from "express";
 import { Request } from "src/interfaces/Request.interface";
 import { verify } from "jsonwebtoken";
 import { Model } from "mongoose";
 import { SessionDocument } from "src/models/Sessions.schema";
 import { UserDocument } from "src/models/Users.schema";
+import { UtknDocument } from "src/models/Utkns.schema";
 
 /*
     Making sure the user is logged in
@@ -85,5 +86,36 @@ export class GuestMiddleware implements NestMiddleware {
         }
 
         throw new ForbiddenException();
+    }
+}
+
+/*
+    Making sure the user is logged in
+*/
+@Injectable()
+export class MenuAuthMiddleware implements NestMiddleware {
+    constructor(
+        // ...
+        @InjectModel("Utkn") private readonly UtknModel: Model<UtknDocument>,
+    ) {}
+
+    async use(req: Req, res: Response, next: NextFunction) {
+        let utkn = "";
+        if (!utkn && req.cookies["utkn"]) utkn = req.cookies["utkn"].toString();
+        if (!utkn && req.headers["utkn"]) utkn = req.headers["utkn"].toString();
+
+        if (utkn === null || utkn === "") throw new UnauthorizedException(-1);
+
+        const payload: any = verify(utkn, process.env.JWT_SECRET, { ignoreExpiration: false });
+
+        if (typeof payload["ip"] === "undefined" || typeof payload["userAgent"] === "undefined") throw new UnauthorizedException(-2);
+
+        // get the session
+        const session = await this.UtknModel.findOne({ token: utkn, status: "active", expireAt: { $gt: new Date(Date.now()) } }).exec();
+        if (!session) throw new UnauthorizedException(-3);
+
+        req["utknSession"] = session;
+
+        return next();
     }
 }

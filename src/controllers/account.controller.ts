@@ -178,6 +178,8 @@ export class AccountController {
 
         await this.AccountService.setupBaseMenuStyle(newBrand.id);
 
+        await this.AccountService.setupBaseWorkingHours(newBrand.id);
+
         // adding default roles to brand staff roles
         const defaultRoles = await this.StaffRoleDefaultModel.find().exec();
         const roles = defaultRoles.map((role) => {

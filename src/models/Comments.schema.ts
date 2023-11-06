@@ -29,9 +29,6 @@ export interface Comment {
     mobile: string;
     comment: string;
 
-    discountPercentage: number;
-    discountActive: boolean;
-
     status: "pending" | "accepted" | "rejected";
     createdAt: Date;
 }
