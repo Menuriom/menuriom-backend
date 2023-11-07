@@ -20,6 +20,10 @@ export class LikeController {
         @InjectModel("MenuItem") private readonly MenuItemModel: Model<MenuItemDocument>,
     ) {}
 
+    // TODO
+    // its better to force users to login for giving likes, just like comment and ordering
+    // only free tier menus users dont need any authentication
+
     @Get("/like/:itemID")
     async checkLike(@Param() params: ItemIdDto, @Req() req: Request, @Res() res: Response): Promise<void | Response> {
         const session = req["utknSession"] || {};

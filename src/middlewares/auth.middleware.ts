@@ -106,7 +106,10 @@ export class MenuAuthMiddleware implements NestMiddleware {
 
         if (utkn === null || utkn === "") throw new UnauthorizedException(-1);
 
-        const payload: any = verify(utkn, process.env.JWT_SECRET, { ignoreExpiration: false });
+        let payload: any = {};
+        try {
+            payload = verify(utkn, process.env.JWT_SECRET, { ignoreExpiration: false });
+        } catch (err) {}
 
         if (typeof payload["ip"] === "undefined" || typeof payload["userAgent"] === "undefined") throw new UnauthorizedException(-2);
 
