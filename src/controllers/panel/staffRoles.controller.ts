@@ -35,7 +35,6 @@ export class StaffRolesController {
         let currentGroup = "";
         let list = [];
         for (let i = 0; i < permissions.length; i++) {
-            permissions[i].group;
             if (currentGroup !== permissions[i].group) {
                 if (list.length > 0) groupedPermissions.push(list);
                 currentGroup = permissions[i].group;
@@ -43,6 +42,7 @@ export class StaffRolesController {
             }
             list.push({ ...permissions[i].toObject() });
         }
+        groupedPermissions.push(list);
 
         return res.json({ permissions: groupedPermissions });
     }

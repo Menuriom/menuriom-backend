@@ -39,7 +39,7 @@ export const MenuItemSchema = new Schema({
     tags: [{ type: String }],
     sideItems: [{ type: Schema.Types.ObjectId, ref: "MenuSideGroup" }],
 
-    likes: { type: Number, default: 0, required: true },
+    likes: { type: Number, default: 0, min: 0, required: true },
     createdAt: { type: Date, default: new Date(Date.now()) },
     translation: TranslationSchema,
 });

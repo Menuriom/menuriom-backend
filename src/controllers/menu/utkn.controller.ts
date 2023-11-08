@@ -42,12 +42,21 @@ export class UtknController {
             return res.json({ token });
         }
 
-        const payload: any = verify(utkn, process.env.JWT_SECRET, { ignoreExpiration: false });
+        let payload: any = {};
+        try {
+            payload = verify(utkn, process.env.JWT_SECRET, { ignoreExpiration: false });
+        } catch (err) {
+            console.log({ utkn });
+        }
+
         if (typeof payload["ip"] === "undefined" || typeof payload["userAgent"] === "undefined") {
             const token = await this.generateAndSaveToken(ip, userAgent);
             return res.json({ token });
         }
 
-        return res.end();
+        // TODO
+        // update the token if more than a day passed from its creation
+
+        return res.json({ token: utkn });
     }
 }

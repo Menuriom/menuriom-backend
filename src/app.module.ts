@@ -7,7 +7,7 @@ import * as path from "path";
 import { Seeder } from "./database/seeder";
 // middlewares
 import { serverOnly } from "./middlewares/server.middleware";
-import { AuthCheckMiddleware, GuestMiddleware } from "./middlewares/auth.middleware";
+import { AuthCheckMiddleware, GuestMiddleware, MenuAuthMiddleware } from "./middlewares/auth.middleware";
 // services
 import { AppService } from "./app.service";
 import { FileService } from "./services/file.service";
@@ -15,6 +15,7 @@ import { AccountService } from "./services/account.service";
 // modules
 import { AuthModule } from "./modules/auth.module";
 import { BrandPanelModule } from "./modules/panel.module";
+import { MenuModule } from "./modules/menu.module";
 // schemas
 import { AnalyticSchema } from "./models/Analytics.schema";
 import { BranchSchema } from "./models/Branches.schema";
@@ -45,9 +46,9 @@ import { FilesController } from "./controllers/files.controller";
 import { AccountController } from "./controllers/account.controller";
 import { UserController } from "./controllers/user.controller";
 import { PricingController } from "./controllers/pricing.controller";
-import { MenuInfoController } from "./controllers/menuInfo.controller";
+import { MenuInfoController } from "./controllers/menu/menuInfo.controller";
 import { ContactUsController } from "./controllers/contactUs.controller";
-import { UtknController } from "./controllers/utkn.controller";
+import { UtknController } from "./controllers/menu/utkn.controller";
 
 @Module({
     imports: [
@@ -86,6 +87,7 @@ import { UtknController } from "./controllers/utkn.controller";
         ]),
         AuthModule,
         BrandPanelModule,
+        MenuModule,
     ],
     controllers: [
         Seeder,
@@ -105,6 +107,7 @@ export class AppModule implements NestModule {
         consumer.apply(serverOnly).forRoutes({ path: "*", method: RequestMethod.ALL });
 
         consumer.apply(AuthCheckMiddleware).forRoutes(
+            // ...
             { path: "auth/refresh", method: RequestMethod.POST },
             { path: "auth/logout", method: RequestMethod.POST },
             { path: "auth/check-if-role/*", method: RequestMethod.POST },
@@ -115,13 +118,17 @@ export class AppModule implements NestModule {
             { path: "panel/*", method: RequestMethod.ALL },
         );
 
-        consumer
-            .apply(GuestMiddleware)
-            .forRoutes(
-                { path: "auth/send-code", method: RequestMethod.ALL },
-                { path: "auth/verify", method: RequestMethod.ALL },
-                { path: "auth/register", method: RequestMethod.ALL },
-                { path: "auth/continue-with-google", method: RequestMethod.ALL },
-            );
+        consumer.apply(GuestMiddleware).forRoutes(
+            // ...
+            { path: "auth/send-code", method: RequestMethod.ALL },
+            { path: "auth/verify", method: RequestMethod.ALL },
+            { path: "auth/register", method: RequestMethod.ALL },
+            { path: "auth/continue-with-google", method: RequestMethod.ALL },
+        );
+
+        consumer.apply(MenuAuthMiddleware).forRoutes(
+            // ...
+            { path: "menu/*", method: RequestMethod.ALL },
+        );
     }
 }

@@ -132,7 +132,7 @@ export class MenuInfoController {
 
         const menuItem = await this.MenuItemModel.findOne({ _id: itemId, brand: brand._id, hidden: false })
             .select(
-                "category images name description price discountPercentage discountActive variants soldOut showAsNew specialDaysList specialDaysActive tags sideItems likes translation",
+                "branches category order images name description price discountPercentage discountActive variants pinned soldOut showAsNew specialDaysList specialDaysActive tags sideItems likes translation",
             )
             .populate<{ sideItems: MenuSideGroup }>("sideItems", "name description items maxNumberUserCanChoose translation")
             .lean();

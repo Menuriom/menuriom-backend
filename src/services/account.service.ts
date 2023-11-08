@@ -3,12 +3,14 @@ import { FilterQuery, Model, Types } from "mongoose";
 import { I18nContext } from "nestjs-i18n";
 import { InjectModel } from "@nestjs/mongoose";
 import { MenuSytleDocument } from "src/models/MenuStyles.schema";
+import { WorkingHourDocument } from "src/models/WorkingHours.schema";
 
 @Injectable()
 export class AccountService {
     constructor(
         // ...
         @InjectModel("MenuStyle") private readonly MenuStyleModel: Model<MenuSytleDocument>,
+        @InjectModel("WorkingHour") private readonly WorkingHourModel: Model<WorkingHourDocument>,
     ) {}
 
     async setupBaseMenuStyle(brandID: string) {
@@ -176,6 +178,60 @@ export class AccountService {
                         transitionList: ["opacity-swing", "slide-up", "slide-left", "fall", "zoom-fade"],
                     },
                     updatedAt: new Date(Date.now()),
+                },
+                $setOnInsert: { createdAt: new Date(Date.now()) },
+            },
+            { upsert: true },
+        ).catch((e) => {
+            console.log({ e });
+            throw new InternalServerErrorException();
+        });
+    }
+
+    async setupBaseWorkingHours(brandID: string) {
+        await this.MenuStyleModel.updateOne(
+            { brand: brandID },
+            {
+                $set: {
+                    workingHours: {
+                        all: {
+                            saturday: {
+                                open: true,
+                                from: "12:00",
+                                to: "21:00",
+                            },
+                            sunday: {
+                                open: true,
+                                from: "12:00",
+                                to: "21:00",
+                            },
+                            monday: {
+                                open: true,
+                                from: "12:00",
+                                to: "21:00",
+                            },
+                            tuesday: {
+                                open: true,
+                                from: "12:00",
+                                to: "21:00",
+                            },
+                            wednesday: {
+                                open: true,
+                                from: "12:00",
+                                to: "21:00",
+                            },
+                            thursday: {
+                                open: true,
+                                from: "12:00",
+                                to: "21:00",
+                            },
+                            friday: {
+                                open: true,
+                                from: "12:00",
+                                to: "21:00",
+                            },
+                        },
+                    },
                 },
                 $setOnInsert: { createdAt: new Date(Date.now()) },
             },
