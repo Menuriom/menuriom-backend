@@ -19,6 +19,7 @@ export interface MenuSytle {
     _id: Types.ObjectId;
     brand: PopulatedDoc<Brand>;
 
+    baseColors: any;
     mainMenuStyleOptions: any;
     itemsDialogStyleOptions: any;
     restaurantDetailsPageOptions: any;

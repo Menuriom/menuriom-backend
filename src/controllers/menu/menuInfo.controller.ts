@@ -34,6 +34,22 @@ export class MenuInfoController {
             .select("baseColors mainMenuStyleOptions itemsDialogStyleOptions restaurantDetailsPageOptions splashScreenOptions")
             .lean();
 
+        // calculate shadowLVL for base bgMainColor
+        // if the bgMainColor is different for any of other colors then calc shadowLVL for that color
+        // else set the shadowLVL the same as base shadow level
+        
+        // menuStyles.baseColors.bgMainColor;
+        // menuStyles.mainMenuStyleOptions.headerOptions.bgMainColor;
+        // menuStyles.mainMenuStyleOptions.suggestionsOptions.bgMainColor;
+        // menuStyles.mainMenuStyleOptions.searchOptions.bgMainColor;
+        // menuStyles.mainMenuStyleOptions.categoriesOptions.bgMainColor;
+        // menuStyles.mainMenuStyleOptions.itemHeaderOptions.bgMainColor;
+        // menuStyles.mainMenuStyleOptions.itemListOptions.bgMainColor;
+        // menuStyles.mainMenuStyleOptions.navbarOptions.bgMainColor;
+        // menuStyles.itemsDialogStyleOptions.bgMainColor;
+        // menuStyles.restaurantDetailsPageOptions.bgMainColor;
+        // menuStyles.splashScreenOptions.bgMainColor;
+
         return res.json({ menuStyles });
     }
 
@@ -48,7 +64,7 @@ export class MenuInfoController {
         const workingHours = await this.WorkingHourModel.findOne({ brand: brand._id }).select("workingHours").lean();
 
         const orderedHours = {};
-        for (const branch in workingHours.workingHours) {
+        for (const branch in workingHours.workingHours || {}) {
             const days = workingHours.workingHours[branch];
             if (!orderedHours[branch]) orderedHours[branch] = {};
 
