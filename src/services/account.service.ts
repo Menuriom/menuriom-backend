@@ -189,7 +189,7 @@ export class AccountService {
     }
 
     async setupBaseWorkingHours(brandID: string) {
-        await this.MenuStyleModel.updateOne(
+        await this.WorkingHourModel.updateOne(
             { brand: brandID },
             {
                 $set: {
