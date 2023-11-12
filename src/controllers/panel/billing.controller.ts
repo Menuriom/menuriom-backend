@@ -11,8 +11,6 @@ import { UserDocument } from "src/models/Users.schema";
 import { BrandsPlanDocument } from "src/models/BrandsPlans.schema";
 import { PlanDocument } from "src/models/Plans.schema";
 import { PlanChangeRecordDocument } from "src/models/PlanChangeRecords.schema";
-import { BranchDocument } from "src/models/Branches.schema";
-import { StaffDocument } from "src/models/Staff.schema";
 import { ListingDto, gatewayDto, planChangeDto } from "src/dto/panel/billing.dto";
 import { I18nContext } from "nestjs-i18n";
 import { BillingService } from "src/services/billing.service";
@@ -26,8 +24,6 @@ export class BillingController {
         private readonly billingService: BillingService,
         @InjectModel("User") private readonly UserModel: Model<UserDocument>,
         @InjectModel("BrandsPlan") private readonly BrandsPlanModel: Model<BrandsPlanDocument>,
-        @InjectModel("Branch") private readonly BranchModel: Model<BranchDocument>,
-        @InjectModel("Staff") private readonly StaffModel: Model<StaffDocument>,
         @InjectModel("Plan") private readonly PlanModel: Model<PlanDocument>,
         @InjectModel("PlanChangeRecord") private readonly PlanChangeRecordModel: Model<PlanChangeRecordDocument>,
         @InjectModel("Bill") private readonly BillModel: Model<BillDocument>,
@@ -289,6 +285,6 @@ export class BillingController {
     }
 
     // TODO
-    // factor will be generated 4 days before remaining days ending
-    // if any brandPlan invoice time passes the current time, then that brand should be blocked to do anything until they pay up or convert to basic plan
+    // factor will be generated 1 week before remaining days ending
+    // if any brandPlan invoice time passes the current time, then that brand should be locked to do anything until they pay up or convert to basic plan
 }
