@@ -34,22 +34,6 @@ export class MenuInfoController {
             .select("baseColors mainMenuStyleOptions itemsDialogStyleOptions restaurantDetailsPageOptions splashScreenOptions")
             .lean();
 
-        // calculate shadowLVL for base bgMainColor
-        // if the bgMainColor is different for any of other colors then calc shadowLVL for that color
-        // else set the shadowLVL the same as base shadow level
-        
-        // menuStyles.baseColors.bgMainColor;
-        // menuStyles.mainMenuStyleOptions.headerOptions.bgMainColor;
-        // menuStyles.mainMenuStyleOptions.suggestionsOptions.bgMainColor;
-        // menuStyles.mainMenuStyleOptions.searchOptions.bgMainColor;
-        // menuStyles.mainMenuStyleOptions.categoriesOptions.bgMainColor;
-        // menuStyles.mainMenuStyleOptions.itemHeaderOptions.bgMainColor;
-        // menuStyles.mainMenuStyleOptions.itemListOptions.bgMainColor;
-        // menuStyles.mainMenuStyleOptions.navbarOptions.bgMainColor;
-        // menuStyles.itemsDialogStyleOptions.bgMainColor;
-        // menuStyles.restaurantDetailsPageOptions.bgMainColor;
-        // menuStyles.splashScreenOptions.bgMainColor;
-
         return res.json({ menuStyles });
     }
 
