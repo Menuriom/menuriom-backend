@@ -122,6 +122,11 @@ export class BillingController {
 
         // TODO
         // check if user is downgrading and dont allow until the limit is reached
+        // any limitation with numbers must be lower or equal to destination plan
+
+        // TODO
+        // if user has a renewal bill and wants to change their plan, make sure to cancel any unpaid bills
+        // and also clear the brand lock if set
 
         const plan = await this.PlanModel.findOne({ _id: selectedPlan }).exec();
         if (!plan) {
@@ -283,8 +288,4 @@ export class BillingController {
 
         return res.json({ statusCode: "200", message: "SuccessfulPayment", transactionID: transaction._id });
     }
-
-    // TODO
-    // factor will be generated 1 week before remaining days ending
-    // if any brandPlan invoice time passes the current time, then that brand should be locked to do anything until they pay up or convert to basic plan
 }
