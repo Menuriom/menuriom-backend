@@ -34,6 +34,18 @@ export class planChangeDto {
     readonly selectedPlan: string;
 }
 
+export class planRenewalDto {
+    @IsString({ message: i18nValidationMessage("validation.IsString") })
+    @IsIn(["zarinpal"], { message: i18nValidationMessage("validation.IsIn") })
+    @IsNotEmpty({ message: i18nValidationMessage("validation.IsNotEmpty") })
+    readonly selectedGateway: string = "zarinpal";
+
+    @IsMongoId({ message: i18nValidationMessage("validation.IsMongoId") })
+    @IsString({ message: i18nValidationMessage("validation.IsString") })
+    @IsNotEmpty({ message: i18nValidationMessage("validation.IsNotEmpty") })
+    readonly lastBill: string;
+}
+
 export class gatewayDto {
     @IsString({ message: i18nValidationMessage("validation.IsString") })
     @IsIn(["zarinpal"], { message: i18nValidationMessage("validation.IsIn") })

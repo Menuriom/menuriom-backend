@@ -48,7 +48,7 @@ export class MenuInfoController {
         const workingHours = await this.WorkingHourModel.findOne({ brand: brand._id }).select("workingHours").lean();
 
         const orderedHours = {};
-        for (const branch in workingHours.workingHours) {
+        for (const branch in workingHours.workingHours || {}) {
             const days = workingHours.workingHours[branch];
             if (!orderedHours[branch]) orderedHours[branch] = {};
 

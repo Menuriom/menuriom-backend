@@ -1,4 +1,5 @@
 {
     "the plan you selected is not available right now": "the plan you selected is not available right now",
-    "failed to retrieve the payment identifier": "failed to retrieve the payment identifier"
+    "failed to retrieve the payment identifier": "failed to retrieve the payment identifier",
+    "we cannot find the bill you tring to pay!": "we cannot find the bill you tring to pay!"
 }
