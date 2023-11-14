@@ -11,7 +11,7 @@ import { UserDocument } from "src/models/Users.schema";
 import { BrandsPlanDocument } from "src/models/BrandsPlans.schema";
 import { PlanDocument } from "src/models/Plans.schema";
 import { PlanChangeRecordDocument } from "src/models/PlanChangeRecords.schema";
-import { ListingDto, gatewayDto, planChangeDto } from "src/dto/panel/billing.dto";
+import { ListingDto, gatewayDto, planChangeDto, planRenewalDto } from "src/dto/panel/billing.dto";
 import { I18nContext } from "nestjs-i18n";
 import { BillingService } from "src/services/billing.service";
 import { BillDocument } from "src/models/Bills.schema";
@@ -124,10 +124,6 @@ export class BillingController {
         // check if user is downgrading and dont allow until the limit is reached
         // any limitation with numbers must be lower or equal to destination plan
 
-        // TODO
-        // if user has a renewal bill and wants to change their plan, make sure to cancel any unpaid bills
-        // and also clear the brand lock if set
-
         const plan = await this.PlanModel.findOne({ _id: selectedPlan }).exec();
         if (!plan) {
             throw new UnprocessableEntityException([
@@ -207,8 +203,45 @@ export class BillingController {
         return res.json({ type, url });
     }
 
-    @Get("plan-change-payment-callback/:method")
-    async planChangeCallback(@Param() param: gatewayDto, @Req() req: Request, @Res() res: Response): Promise<void | Response> {
+    async planRenewal(@Body() body: planRenewalDto, @Req() req: Request, @Res() res: Response): Promise<void | Response> {
+        const lastBill = await this.BillModel.findOne({ _id: body.lastBill }).exec();
+        if (!lastBill) {
+            throw new UnprocessableEntityException([{ property: "", errors: [I18nContext.current().t("panel.billing.we cannot find the bill you tring to pay!")] }]);
+        }
+
+        const selectedGateway = body.selectedGateway || "zarinpal";
+
+        const paymentGateway = this.billingService.getGateway(selectedGateway);
+        const identifier = await paymentGateway
+            .getIdentifier(lastBill.payablePrice, `${process.env.PAYMENT_CALLBACK_BASE_URL}/${selectedGateway}`, lastBill.description)
+            .catch(() => {
+                throw new UnprocessableEntityException([
+                    { property: "", errors: [I18nContext.current().t("panel.billing.failed to retrieve the payment identifier")] },
+                ]);
+            });
+
+        await this.TransactionModel.create({
+            brand: lastBill.brand,
+            bill: lastBill._id,
+            user: req.session.userID,
+            method: selectedGateway,
+            authority: identifier,
+            status: "pending",
+            createdAt: new Date(Date.now()),
+        });
+
+        const url = paymentGateway.getGatewayUrl(identifier);
+        return res.json({ url });
+    }
+
+    @Get("bill-payment-callback/:method")
+    async billCallback(@Param() param: gatewayDto, @Req() req: Request, @Res() res: Response): Promise<void | Response> {
+        // TODO
+        // add condition that handle both type of bills (renewal and plan change)
+
+        // make a seprate funcions in bill-service to handle the seprate payments
+        // keep the same parts of thos functions here
+
         const ip: string = req.headers["x-forwarded-for"].toString() || "";
         const paymentGateway = this.billingService.getGateway(param.method);
         const transactionResponse = paymentGateway.getTransactionResponse(req);
@@ -257,6 +290,16 @@ export class BillingController {
         const brandCurrentPlan = await this.BrandsPlanModel.findOne({ brand: bill.brand }).exec();
         const nextInvoiceInSeconds = brandCurrentPlan.nextInvoice ? brandCurrentPlan.nextInvoice.getTime() / 1000 : Date.now() / 1000;
 
+        // TODO ----------------------------------------
+        // we proccessed the bill and transaction til here
+        // now base on the type of the bill we must do different actions
+        // -------->
+
+        // TODO
+        // if user has a renewal bill and wants to change their plan, make sure to cancel any unpaid bills
+        // and also clear the brand lock if set
+        // this should be done when plan change bill payed successfuly
+
         // update the invoice dates and brand's plan
         await this.BrandsPlanModel.updateOne(
             { brand: bill.brand },
@@ -281,10 +324,6 @@ export class BillingController {
 
         // after successful payable downgrade/upgrade (that extends the invoice time) any renewal bill will be canceled
         if (bill.secondsAddedToInvoice > 0) await this.BillModel.updateOne({ brand: bill.brand, type: "renewal" }, { status: "canceled" }).exec();
-
-        // TODO
-        // add condition that handle both type of bills (renewal and plan change)
-        // also finish the design of last bill pay button and gateway selection
 
         return res.json({ statusCode: "200", message: "SuccessfulPayment", transactionID: transaction._id });
     }
