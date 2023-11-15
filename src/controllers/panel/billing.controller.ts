@@ -3,7 +3,7 @@ import { NotFoundException, UnprocessableEntityException, InternalServerErrorExc
 import { Response, query } from "express";
 import { Request } from "src/interfaces/Request.interface";
 import { InjectModel } from "@nestjs/mongoose";
-import { FilterQuery, Model, Types } from "mongoose";
+import { FilterQuery, Model, Promise, Types } from "mongoose";
 import { SetPermissions } from "src/decorators/authorization.decorator";
 import { AuthorizeUserInSelectedBrand } from "src/guards/authorizeUser.guard";
 import * as humanizeDuration from "humanize-duration";
@@ -236,12 +236,6 @@ export class BillingController {
 
     @Get("bill-payment-callback/:method")
     async billCallback(@Param() param: gatewayDto, @Req() req: Request, @Res() res: Response): Promise<void | Response> {
-        // TODO
-        // add condition that handle both type of bills (renewal and plan change)
-
-        // make a seprate funcions in bill-service to handle the seprate payments
-        // keep the same parts of thos functions here
-
         const ip: string = req.headers["x-forwarded-for"].toString() || "";
         const paymentGateway = this.billingService.getGateway(param.method);
         const transactionResponse = paymentGateway.getTransactionResponse(req);
@@ -284,46 +278,19 @@ export class BillingController {
         }
 
         // mark the bill as paid and transaction record
-        await this.BillModel.updateOne({ _id: bill.id }, { status: "paid" }).exec();
-        await this.billingService.updateBillTransactionRecord(bill.id, transaction._id, "ok", ip, "", verficationResponse.transactionCode, bill.payablePrice);
+        await Promise.all([
+            this.BillModel.updateOne({ _id: bill.id }, { status: "paid" }).exec(),
+            this.billingService.updateBillTransactionRecord(bill.id, transaction._id, "ok", ip, "", verficationResponse.transactionCode, bill.payablePrice),
+        ]);
 
         const brandCurrentPlan = await this.BrandsPlanModel.findOne({ brand: bill.brand }).exec();
         const nextInvoiceInSeconds = brandCurrentPlan.nextInvoice ? brandCurrentPlan.nextInvoice.getTime() / 1000 : Date.now() / 1000;
 
-        // TODO ----------------------------------------
-        // we proccessed the bill and transaction til here
-        // now base on the type of the bill we must do different actions
-        // -------->
-
-        // TODO
-        // if user has a renewal bill and wants to change their plan, make sure to cancel any unpaid bills
-        // and also clear the brand lock if set
-        // this should be done when plan change bill payed successfuly
-
-        // update the invoice dates and brand's plan
-        await this.BrandsPlanModel.updateOne(
-            { brand: bill.brand },
-            {
-                currentPlan: bill.plan,
-                period: bill.planPeriod,
-                startTime: new Date(Date.now()),
-                nextInvoice: new Date((nextInvoiceInSeconds + bill.secondsAddedToInvoice) * 1000),
-            },
-        ).exec();
-
-        // keep record of plan changes
-        await this.PlanChangeRecordModel.create({
-            brand: bill.brand,
-            user: req.session.userID,
-            previusPlan: brandCurrentPlan.currentPlan,
-            newPlan: bill.plan,
-            previusPeriod: brandCurrentPlan.period,
-            newPeriod: bill.planPeriod,
-            createdAt: new Date(Date.now()),
-        });
-
-        // after successful payable downgrade/upgrade (that extends the invoice time) any renewal bill will be canceled
-        if (bill.secondsAddedToInvoice > 0) await this.BillModel.updateOne({ brand: bill.brand, type: "renewal" }, { status: "canceled" }).exec();
+        if (bill.type == "renewal") {
+            await this.billingService.proccessTransactionForPlanRenewal();
+        } else if (bill.type == "planChange") {
+            await this.billingService.proccessTransactionForPlanChange(bill, nextInvoiceInSeconds, req.session.userID, brandCurrentPlan);
+        }
 
         return res.json({ statusCode: "200", message: "SuccessfulPayment", transactionID: transaction._id });
     }
