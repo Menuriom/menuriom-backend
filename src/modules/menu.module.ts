@@ -11,6 +11,7 @@ import { MenuItemSchema } from "src/models/MenuItems.schema";
 import { MenuSytleSchema } from "src/models/MenuStyles.schema";
 import { UtknSchema } from "src/models/Utkns.schema";
 import { WorkingHourSchema } from "src/models/WorkingHours.schema";
+import { MenuService } from "src/services/menu.service";
 
 @Module({
     imports: [
@@ -26,7 +27,7 @@ import { WorkingHourSchema } from "src/models/WorkingHours.schema";
         ]),
     ],
     controllers: [MenuInfoController, UtknController, LikeController],
-    providers: [],
+    providers: [MenuService],
     exports: [],
 })
 export class MenuModule {}

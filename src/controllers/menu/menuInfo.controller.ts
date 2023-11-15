@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post, Req, Res, NotFoundException } from "@nestjs/common";
+import { Body, Controller, Get, Post, Req, Res, NotFoundException, InternalServerErrorException } from "@nestjs/common";
 import { Request, Response } from "express";
 import { InjectModel } from "@nestjs/mongoose";
 import { Model, Types } from "mongoose";
@@ -9,11 +9,13 @@ import { MenuCategoryDocument } from "src/models/MenuCategories.schema";
 import { MenuItemDocument } from "src/models/MenuItems.schema";
 import { MenuSideGroup } from "src/models/MenuSideGroups.schema";
 import { WorkingHourDocument } from "src/models/WorkingHours.schema";
+import { MenuService } from "src/services/menu.service";
 
 @Controller("menu-info")
 export class MenuInfoController {
     constructor(
         // ...
+        private readonly MenuService: MenuService,
         @InjectModel("Branch") private readonly BranchModel: Model<BranchDocument>,
         @InjectModel("Brand") private readonly BrandModel: Model<BrandDocument>,
         @InjectModel("MenuStyle") private readonly MenuSytleModel: Model<MenuSytleDocument>,
@@ -21,6 +23,33 @@ export class MenuInfoController {
         @InjectModel("MenuItem") private readonly MenuItemModel: Model<MenuItemDocument>,
         @InjectModel("WorkingHour") private readonly WorkingHourModel: Model<WorkingHourDocument>,
     ) {}
+
+    @Get("/")
+    async getMenuInfo(@Req() req: Request, @Res() res: Response): Promise<void | Response> {
+        const brandUsername = req.headers["brand"].toString();
+
+        const brand = await this.BrandModel.findOne({ username: brandUsername, $or: [{ deletedAt: { $exists: false } }, { deletedAt: null }] })
+            .select("logo name slogan socials languages currency translation")
+            .lean();
+        if (!brand) throw new NotFoundException();
+
+        const results = await Promise.all([
+            this.MenuService.loadMenuItems(brand._id),
+            this.MenuService.loadMenuStyles(brand._id),
+            this.MenuService.loadRestaurantInfo(brand._id),
+        ]).catch((e) => {
+            console.log({ e });
+            throw new InternalServerErrorException();
+        });
+
+        return res.json({
+            menuStyles: results[1].menuStyles,
+            brand,
+            branches: results[2].branches,
+            workingHours: results[2].workingHours,
+            menuCategories: results[0],
+        });
+    }
 
     @Get("/menu-styles")
     async loadMenuStyles(@Req() req: Request, @Res() res: Response): Promise<void | Response> {
