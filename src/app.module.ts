@@ -12,6 +12,7 @@ import { AuthCheckMiddleware, GuestMiddleware, MenuAuthMiddleware } from "./midd
 import { AppService } from "./app.service";
 import { FileService } from "./services/file.service";
 import { AccountService } from "./services/account.service";
+import { MenuService } from "./services/menu.service";
 // modules
 import { AuthModule } from "./modules/auth.module";
 import { BrandPanelModule } from "./modules/panel.module";
@@ -100,7 +101,7 @@ import { UtknController } from "./controllers/menu/utkn.controller";
         ContactUsController,
         UtknController,
     ],
-    providers: [AppService, FileService, AccountService],
+    providers: [AppService, FileService, AccountService, MenuService],
 })
 export class AppModule implements NestModule {
     configure(consumer: MiddlewareConsumer) {

@@ -29,7 +29,7 @@ export const BillSchema = new Schema({
 export interface Bill {
     _id: Types.ObjectId;
     billNumber: number;
-    type: string;
+    type: "renewal" | "planChange";
     description: string;
 
     creator?: PopulatedDoc<User>;

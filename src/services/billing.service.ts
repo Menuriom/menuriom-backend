@@ -3,15 +3,16 @@ import { InjectModel } from "@nestjs/mongoose";
 import { Model, Types } from "mongoose";
 import { StaffDocument } from "src/models/Staff.schema";
 import { BranchDocument } from "src/models/Branches.schema";
-import { BrandsPlanDocument } from "src/models/BrandsPlans.schema";
+import { BrandsPlan, BrandsPlanDocument } from "src/models/BrandsPlans.schema";
 import { Plan, PlanDocument } from "src/models/Plans.schema";
 import * as humanizeDuration from "humanize-duration";
 import { I18nContext } from "nestjs-i18n";
 import { GatewayInterface } from "src/interfaces/Gateway";
 import { ZarinpalGateway } from "src/paymentGateways/zarinpal.payment";
 import { WalletGateway } from "src/paymentGateways/wallet.payment";
-import { BillDocument } from "src/models/Bills.schema";
+import { Bill, BillDocument } from "src/models/Bills.schema";
 import { TransactionDocument } from "src/models/Transactions.schema";
+import { PlanChangeRecordDocument } from "src/models/PlanChangeRecords.schema";
 
 @Injectable()
 export class BillingService {
@@ -22,6 +23,7 @@ export class BillingService {
         @InjectModel("Branch") private readonly BranchModel: Model<BranchDocument>,
         @InjectModel("Plan") private readonly PlanModel: Model<PlanDocument>,
         @InjectModel("Bill") private readonly BillModel: Model<BillDocument>,
+        @InjectModel("PlanChangeRecord") private readonly PlanChangeRecordModel: Model<PlanChangeRecordDocument>,
         @InjectModel("Transaction") private readonly TransactionModel: Model<TransactionDocument>,
     ) {}
 
@@ -173,6 +175,41 @@ export class BillingService {
         if (paidPrice) set["paidPrice"] = paidPrice;
 
         await this.TransactionModel.updateOne({ _id: transactionID }, { ...set }).exec();
+    }
+
+    async proccessTransactionForPlanChange(bill: Bill, nextInvoiceInSeconds: number, userID: string, brandCurrentPlan: BrandsPlan) {
+        // update the invoice dates and brand's plan
+        await this.BrandsPlanModel.updateOne(
+            { brand: bill.brand },
+            {
+                currentPlan: bill.plan,
+                period: bill.planPeriod,
+                startTime: new Date(Date.now()),
+                nextInvoice: new Date((nextInvoiceInSeconds + bill.secondsAddedToInvoice) * 1000),
+            },
+        ).exec();
+
+        // keep record of plan changes
+        await this.PlanChangeRecordModel.create({
+            brand: bill.brand,
+            user: userID,
+            previusPlan: brandCurrentPlan.currentPlan,
+            newPlan: bill.plan,
+            previusPeriod: brandCurrentPlan.period,
+            newPeriod: bill.planPeriod,
+            createdAt: new Date(Date.now()),
+        });
+
+        // after successful payable downgrade/upgrade (that extends the invoice time) any renewal bill will be canceled
+        if (bill.secondsAddedToInvoice > 0)
+            await this.BillModel.updateOne({ brand: bill.brand, type: "renewal", status: { $in: ["notPaid", "pendingPayment"] } }, { status: "canceled" }).exec();
+
+        // TODO
+        // and also clear the brand lock if set
+    }
+
+    async proccessTransactionForPlanRenewal() {
+        // TODO
     }
 }
 
