@@ -5,6 +5,7 @@ import { Model } from "mongoose";
 import { BillDocument } from "src/models/Bills.schema";
 import { BrandDocument } from "src/models/Brands.schema";
 import { BrandsPlanDocument } from "src/models/BrandsPlans.schema";
+import { I18nContext } from "nestjs-i18n";
 
 @Injectable()
 export class CheckUnpaidInvoiceInSelectedBrand implements CanActivate {
@@ -26,7 +27,7 @@ export class CheckUnpaidInvoiceInSelectedBrand implements CanActivate {
             if (brandCurrentPlan.nextInvoice && brandCurrentPlan.nextInvoice < new Date(Date.now())) {
                 const unpaidBill = await this.BillModel.exists({ brand: brandID, type: "renewal", status: { $in: ["notPaid", "pendingPayment"] } }).exec();
                 if (unpaidBill) {
-                    throw new HttpException("PAYMENT_REQUIRED", HttpStatus.PAYMENT_REQUIRED);
+                    throw new HttpException([{ property: "", errors: [I18nContext.current().t("panel.billing.payUpMessage")] }], HttpStatus.PAYMENT_REQUIRED);
                 }
             }
 
