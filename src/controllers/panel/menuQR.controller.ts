@@ -11,6 +11,7 @@ import { BrandsPlanDocument } from "src/models/BrandsPlans.schema";
 import { PlanService } from "src/services/plan.service";
 import { QRSaveDto } from "src/dto/panel/QRCode.dto";
 import { QrCodeDocument } from "src/models/QrCodes.schema";
+import { CheckUnpaidInvoiceInSelectedBrand } from "src/guards/billExpiration.guard";
 
 @Controller("panel/menu-qrcode")
 export class MenuQRController {
@@ -29,12 +30,12 @@ export class MenuQRController {
 
         const qrSettings = await this.QrCodeModel.findOne({ brand: brandID }).lean();
 
-        return res.json({qrSettings});
+        return res.json({ qrSettings });
     }
 
     @Post("/")
     @SetPermissions("main-panel.menu.qr-code")
-    @UseGuards(AuthorizeUserInSelectedBrand)
+    @UseGuards(AuthorizeUserInSelectedBrand, CheckUnpaidInvoiceInSelectedBrand)
     async saveQRCode(@Body() body: QRSaveDto, @Req() req: Request, @Res() res: Response): Promise<void | Response> {
         const brandID = req.headers["brand"];
 

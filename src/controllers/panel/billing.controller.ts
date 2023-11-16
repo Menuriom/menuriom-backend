@@ -203,6 +203,9 @@ export class BillingController {
         return res.json({ type, url });
     }
 
+    @Post("/plan-renewal")
+    @SetPermissions("main-panel.billing.pay")
+    @UseGuards(AuthorizeUserInSelectedBrand)
     async planRenewal(@Body() body: planRenewalDto, @Req() req: Request, @Res() res: Response): Promise<void | Response> {
         const lastBill = await this.BillModel.findOne({ _id: body.lastBill }).exec();
         if (!lastBill) {
@@ -287,7 +290,7 @@ export class BillingController {
         const nextInvoiceInSeconds = brandCurrentPlan.nextInvoice ? brandCurrentPlan.nextInvoice.getTime() / 1000 : Date.now() / 1000;
 
         if (bill.type == "renewal") {
-            await this.billingService.proccessTransactionForPlanRenewal();
+            await this.billingService.proccessTransactionForPlanRenewal(bill, nextInvoiceInSeconds);
         } else if (bill.type == "planChange") {
             await this.billingService.proccessTransactionForPlanChange(bill, nextInvoiceInSeconds, req.session.userID, brandCurrentPlan);
         }

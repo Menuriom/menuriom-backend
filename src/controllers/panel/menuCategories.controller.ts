@@ -21,6 +21,7 @@ import { FileService } from "src/services/file.service";
 import { unlink } from "fs/promises";
 import { Branch } from "src/models/Branches.schema";
 import { MenuService } from "src/services/menu.service";
+import { CheckUnpaidInvoiceInSelectedBrand } from "src/guards/billExpiration.guard";
 
 @Controller("panel/menu-categories")
 export class MenuCategoriesController {
@@ -79,7 +80,7 @@ export class MenuCategoriesController {
 
     @Post("/")
     @SetPermissions("main-panel.menu.items")
-    @UseGuards(AuthorizeUserInSelectedBrand)
+    @UseGuards(AuthorizeUserInSelectedBrand, CheckUnpaidInvoiceInSelectedBrand)
     @UseInterceptors(FileInterceptor("uploadedIcon"))
     async addRecord(
         @UploadedFile() uploadedIcon: Express.Multer.File,
@@ -144,7 +145,7 @@ export class MenuCategoriesController {
 
     @Put("/:id")
     @SetPermissions("main-panel.menu.items")
-    @UseGuards(AuthorizeUserInSelectedBrand)
+    @UseGuards(AuthorizeUserInSelectedBrand, CheckUnpaidInvoiceInSelectedBrand)
     @UseInterceptors(FileInterceptor("uploadedIcon"))
     async editRecord(
         @UploadedFile() uploadedIcon: Express.Multer.File,

@@ -17,6 +17,7 @@ import { Invite, InviteDocument } from "src/models/Invites.schema";
 import { StaffRole, StaffRoleDocument } from "src/models/StaffRoles.schema";
 import { User, UserDocument } from "src/models/Users.schema";
 import { IdDto } from "src/dto/general.dto";
+import { CheckUnpaidInvoiceInSelectedBrand } from "src/guards/billExpiration.guard";
 
 @Controller("panel/staff")
 export class StaffController {
@@ -129,7 +130,7 @@ export class StaffController {
 
     @Post("/invite")
     @SetPermissions("main-panel.staff.invite")
-    @UseGuards(AuthorizeUserInSelectedBrand)
+    @UseGuards(AuthorizeUserInSelectedBrand, CheckUnpaidInvoiceInSelectedBrand)
     async sendAnInvite(@Body() body: SendInviteDto, @Req() req: Request, @Res() res: Response): Promise<void | Response> {
         const brandID = req.headers["brand"];
 

@@ -15,6 +15,7 @@ import { FileService } from "src/services/file.service";
 import { MenuService } from "src/services/menu.service";
 import { MenuSideGroupDocument } from "src/models/MenuSideGroups.schema";
 import { CreateNewSideGroupDto, EditSideGroupDto } from "src/dto/panel/sideGroup.dto";
+import { CheckUnpaidInvoiceInSelectedBrand } from "src/guards/billExpiration.guard";
 
 @Controller("panel/menu-sides")
 export class MenuSideGroupController {
@@ -62,7 +63,7 @@ export class MenuSideGroupController {
 
     @Post("/")
     @SetPermissions("main-panel.menu.items")
-    @UseGuards(AuthorizeUserInSelectedBrand)
+    @UseGuards(AuthorizeUserInSelectedBrand, CheckUnpaidInvoiceInSelectedBrand)
     @UseInterceptors(FileInterceptor("uploadedFile"))
     async addRecord(@Body() body: CreateNewSideGroupDto, @Req() req: Request, @Res() res: Response): Promise<void | Response> {
         const brandID = req.headers["brand"];
