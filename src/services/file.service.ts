@@ -20,7 +20,7 @@ export class FileService {
         for (let i = 0; i < files.length; i++) {
             const file = files[i];
             const ogName = file.originalname;
-            const extension = ogName.slice(((ogName.lastIndexOf(".") - 1) >>> 0) + 2);
+            const extension = ogName.slice(((ogName.lastIndexOf(".") - 1) >>> 0) + 2).toLowerCase();
             // check file size
             if (file.size > maxSize) {
                 throw new UnprocessableEntityException([
@@ -37,7 +37,7 @@ export class FileService {
                     {
                         index: i,
                         property: property,
-                        errors: [I18nContext.current().t("panel.formatError")],
+                        errors: [I18nContext.current().t("file.formatError")],
                     },
                 ]);
             }

@@ -120,7 +120,7 @@ export class MenuItemsController {
         }
 
         const menuItemCount = await this.MenuItemModel.countDocuments({ brand: brandID }).exec();
-        if (menuItemCount >= 500) {
+        if (menuItemCount >= 800) {
             throw new UnprocessableEntityException([{ property: "", errors: [I18nContext.current().t("panel.menu.noMoreMenuItemsAllowed")] }]);
         }
 
