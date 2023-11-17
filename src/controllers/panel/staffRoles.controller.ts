@@ -14,6 +14,7 @@ import { StaffRoleDocument } from "src/models/StaffRoles.schema";
 import { StaffPermissionDocument } from "src/models/StaffPermissions.schema";
 import { NewRoleDto } from "src/dto/panel/staffRole.dto";
 import { IdDto } from "src/dto/general.dto";
+import { CheckUnpaidInvoiceInSelectedBrand } from "src/guards/billExpiration.guard";
 
 @Controller("panel/staff-roles")
 export class StaffRolesController {
@@ -117,7 +118,7 @@ export class StaffRolesController {
 
     @Post("/")
     @SetPermissions("main-panel.staff.roles")
-    @UseGuards(AuthorizeUserInSelectedBrand)
+    @UseGuards(AuthorizeUserInSelectedBrand, CheckUnpaidInvoiceInSelectedBrand)
     async addRecord(@Body() body: NewRoleDto, @Req() req: Request, @Res() res: Response): Promise<void | Response> {
         const brandID = req.headers["brand"].toString();
 
@@ -147,7 +148,7 @@ export class StaffRolesController {
 
     @Put("/:id")
     @SetPermissions("main-panel.staff.roles")
-    @UseGuards(AuthorizeUserInSelectedBrand)
+    @UseGuards(AuthorizeUserInSelectedBrand, CheckUnpaidInvoiceInSelectedBrand)
     async editRecord(@Param() params: IdDto, @Body() body: NewRoleDto, @Req() req: Request, @Res() res: Response): Promise<void | Response> {
         const brandID = req.headers["brand"].toString();
 

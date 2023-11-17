@@ -14,6 +14,7 @@ import { BranchDocument } from "src/models/Branches.schema";
 import { SetPermissions } from "src/decorators/authorization.decorator";
 import { AuthorizeUserInSelectedBrand } from "src/guards/authorizeUser.guard";
 import { IdDto } from "src/dto/general.dto";
+import { CheckUnpaidInvoiceInSelectedBrand } from "src/guards/billExpiration.guard";
 
 @Controller("panel/branches")
 export class BranchController {
@@ -61,7 +62,7 @@ export class BranchController {
 
     @Post("/")
     @SetPermissions("main-panel.branches.add")
-    @UseGuards(AuthorizeUserInSelectedBrand)
+    @UseGuards(AuthorizeUserInSelectedBrand, CheckUnpaidInvoiceInSelectedBrand)
     @UseInterceptors(FilesInterceptor("gallery"))
     async addRecord(
         @UploadedFiles() gallery: Express.Multer.File[],
@@ -105,7 +106,7 @@ export class BranchController {
 
     @Put("/:id")
     @SetPermissions("main-panel.branches.edit")
-    @UseGuards(AuthorizeUserInSelectedBrand)
+    @UseGuards(AuthorizeUserInSelectedBrand, CheckUnpaidInvoiceInSelectedBrand)
     @UseInterceptors(FilesInterceptor("gallery"))
     async editRecord(
         @UploadedFiles() gallery: Express.Multer.File[],

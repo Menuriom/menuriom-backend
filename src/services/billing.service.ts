@@ -203,13 +203,14 @@ export class BillingService {
         // after successful payable downgrade/upgrade (that extends the invoice time) any renewal bill will be canceled
         if (bill.secondsAddedToInvoice > 0)
             await this.BillModel.updateOne({ brand: bill.brand, type: "renewal", status: { $in: ["notPaid", "pendingPayment"] } }, { status: "canceled" }).exec();
-
-        // TODO
-        // and also clear the brand lock if set
     }
 
-    async proccessTransactionForPlanRenewal() {
-        // TODO
+    async proccessTransactionForPlanRenewal(bill: Bill, nextInvoiceInSeconds: number) {
+        // update brand plan nextInvoice
+        await this.BrandsPlanModel.updateOne(
+            { brand: bill.brand },
+            { currentPlan: bill.plan, nextInvoice: new Date((nextInvoiceInSeconds + bill.secondsAddedToInvoice) * 1000) },
+        ).exec();
     }
 }
 

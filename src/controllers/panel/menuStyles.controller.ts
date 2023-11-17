@@ -13,6 +13,7 @@ import { FileService } from "src/services/file.service";
 import { MenuSytleDocument } from "src/models/MenuStyles.schema";
 import { FileFieldsInterceptor } from "@nestjs/platform-express";
 import { Plan } from "src/models/Plans.schema";
+import { CheckUnpaidInvoiceInSelectedBrand } from "src/guards/billExpiration.guard";
 
 @Controller("panel/menu-styles")
 export class MenuStylesController {
@@ -39,7 +40,7 @@ export class MenuStylesController {
 
     @Post("/")
     @SetPermissions("main-panel.menu.style")
-    @UseGuards(AuthorizeUserInSelectedBrand)
+    @UseGuards(AuthorizeUserInSelectedBrand, CheckUnpaidInvoiceInSelectedBrand)
     @UseInterceptors(
         FileFieldsInterceptor([
             { name: "headerBgImageFile" },

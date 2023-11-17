@@ -23,6 +23,7 @@ import { MenuService } from "src/services/menu.service";
 import { MenuItemDto, UpdateOrderDto } from "src/dto/panel/menuItems.dto";
 import { MenuItemDocument } from "src/models/MenuItems.schema";
 import { MenuSideGroup, MenuSideGroupDocument } from "src/models/MenuSideGroups.schema";
+import { CheckUnpaidInvoiceInSelectedBrand } from "src/guards/billExpiration.guard";
 
 @Controller("panel/menu-items")
 export class MenuItemsController {
@@ -100,7 +101,7 @@ export class MenuItemsController {
 
     @Post("/")
     @SetPermissions("main-panel.menu.items")
-    @UseGuards(AuthorizeUserInSelectedBrand)
+    @UseGuards(AuthorizeUserInSelectedBrand, CheckUnpaidInvoiceInSelectedBrand)
     @UseInterceptors(FilesInterceptor("gallery"))
     async addRecord(
         @UploadedFiles() gallery: Express.Multer.File[],
@@ -199,7 +200,7 @@ export class MenuItemsController {
 
     @Put("/:id")
     @SetPermissions("main-panel.menu.items")
-    @UseGuards(AuthorizeUserInSelectedBrand)
+    @UseGuards(AuthorizeUserInSelectedBrand, CheckUnpaidInvoiceInSelectedBrand)
     @UseInterceptors(FilesInterceptor("gallery"))
     async editRecord(
         @UploadedFiles() gallery: Express.Multer.File[],

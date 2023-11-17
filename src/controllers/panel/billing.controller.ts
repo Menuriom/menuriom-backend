@@ -30,6 +30,8 @@ export class BillingController {
         @InjectModel("Transaction") private readonly TransactionModel: Model<TransactionDocument>,
     ) {}
 
+    private timeLimitForBillGeneration = 60 * 60 * 24 * 4; // 4 days -> in seconds
+
     @Get("/current-plan")
     @SetPermissions("main-panel.billing.access")
     @UseGuards(AuthorizeUserInSelectedBrand)
@@ -39,6 +41,26 @@ export class BillingController {
             currentPlan: await this.billingService.getBrandsCurrentPlan(brandID),
             lastBill: await this.billingService.getLastBill(brandID),
         });
+    }
+
+    @Get("/subscription-check")
+    @SetPermissions("main-panel")
+    @UseGuards(AuthorizeUserInSelectedBrand)
+    async getBrandInvoiceCheck(@Req() req: Request, @Res() res: Response): Promise<void | Response> {
+        const brandID = req.headers["brand"].toString();
+
+        const brandCurrentPlan = await this.BrandsPlanModel.findOne({ brand: brandID }).exec();
+        if (!brandCurrentPlan || !brandCurrentPlan.nextInvoice) throw new ForbiddenException();
+
+        let alert: string = "";
+        if (brandCurrentPlan.nextInvoice < new Date(Date.now())) {
+            alert = "expire-bill";
+        } else if (brandCurrentPlan.nextInvoice < new Date(Date.now() + this.timeLimitForBillGeneration * 1000)) {
+            alert = "new-renewal-bill";
+        }
+        alert = "expire-bill";
+
+        return res.json({ alert });
     }
 
     // ===============================================
@@ -203,6 +225,9 @@ export class BillingController {
         return res.json({ type, url });
     }
 
+    @Post("/plan-renewal")
+    @SetPermissions("main-panel.billing.pay")
+    @UseGuards(AuthorizeUserInSelectedBrand)
     async planRenewal(@Body() body: planRenewalDto, @Req() req: Request, @Res() res: Response): Promise<void | Response> {
         const lastBill = await this.BillModel.findOne({ _id: body.lastBill }).exec();
         if (!lastBill) {
@@ -287,7 +312,7 @@ export class BillingController {
         const nextInvoiceInSeconds = brandCurrentPlan.nextInvoice ? brandCurrentPlan.nextInvoice.getTime() / 1000 : Date.now() / 1000;
 
         if (bill.type == "renewal") {
-            await this.billingService.proccessTransactionForPlanRenewal();
+            await this.billingService.proccessTransactionForPlanRenewal(bill, nextInvoiceInSeconds);
         } else if (bill.type == "planChange") {
             await this.billingService.proccessTransactionForPlanChange(bill, nextInvoiceInSeconds, req.session.userID, brandCurrentPlan);
         }
