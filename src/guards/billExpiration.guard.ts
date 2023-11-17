@@ -11,7 +11,7 @@ import { I18nContext } from "nestjs-i18n";
 export class CheckUnpaidInvoiceInSelectedBrand implements CanActivate {
     constructor(
         private reflector: Reflector,
-        @InjectModel("Brand") private readonly BrandModel: Model<BrandDocument>,
+        // @InjectModel("Brand") private readonly BrandModel: Model<BrandDocument>,
         @InjectModel("BrandsPlan") private readonly BrandsPlanModel: Model<BrandsPlanDocument>,
         @InjectModel("Bill") private readonly BillModel: Model<BillDocument>,
     ) {}
