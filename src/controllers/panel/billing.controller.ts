@@ -58,7 +58,6 @@ export class BillingController {
         } else if (brandCurrentPlan.nextInvoice < new Date(Date.now() + this.timeLimitForBillGeneration * 1000)) {
             alert = "new-renewal-bill";
         }
-        alert = "expire-bill";
 
         return res.json({ alert });
     }
