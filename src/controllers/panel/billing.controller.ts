@@ -16,12 +16,15 @@ import { I18nContext } from "nestjs-i18n";
 import { BillingService } from "src/services/billing.service";
 import { BillDocument } from "src/models/Bills.schema";
 import { TransactionDocument } from "src/models/Transactions.schema";
+import { AnalyticsService } from "src/services/analytics.service";
+import * as jalaali from "jalaali-js";
 
 @Controller("panel/billing")
 export class BillingController {
     constructor(
         // ...
         private readonly billingService: BillingService,
+        private readonly analyticService: AnalyticsService,
         @InjectModel("User") private readonly UserModel: Model<UserDocument>,
         @InjectModel("BrandsPlan") private readonly BrandsPlanModel: Model<BrandsPlanDocument>,
         @InjectModel("Plan") private readonly PlanModel: Model<PlanDocument>,
@@ -58,6 +61,13 @@ export class BillingController {
         } else if (brandCurrentPlan.nextInvoice < new Date(Date.now() + this.timeLimitForBillGeneration * 1000)) {
             alert = "new-renewal-bill";
         }
+
+        const date = new Date();
+        console.log({
+            date: date,
+            G2J: new Intl.DateTimeFormat("fa", { calendar: "persian", numberingSystem: "latn" }).format(date),
+            J2G: jalaali.toGregorian(1402, 11, 2),
+        });
 
         return res.json({ alert });
     }

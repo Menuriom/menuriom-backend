@@ -37,6 +37,8 @@ import { MenuSytleSchema } from "src/models/MenuStyles.schema";
 import { MenuStylesController } from "src/controllers/panel/menuStyles.controller";
 import { WorkingHourSchema } from "src/models/WorkingHours.schema";
 import { WorkingHoursController } from "src/controllers/panel/workingHours.controller";
+import { AnalyticsService } from "src/services/analytics.service";
+import { AnalyticSchema } from "src/models/Analytics.schema";
 
 @Module({
     imports: [
@@ -62,6 +64,7 @@ import { WorkingHoursController } from "src/controllers/panel/workingHours.contr
             { name: "QrCode", schema: QrCodeSchema },
             { name: "MenuStyle", schema: MenuSytleSchema },
             { name: "WorkingHour", schema: WorkingHourSchema },
+            { name: "Analytic", schema: AnalyticSchema },
         ]),
     ],
     controllers: [
@@ -79,7 +82,7 @@ import { WorkingHoursController } from "src/controllers/panel/workingHours.contr
         MenuStylesController,
         WorkingHoursController,
     ],
-    providers: [FileService, BillingService, PlanService, MenuService],
+    providers: [FileService, BillingService, PlanService, MenuService, AnalyticsService],
     exports: [],
 })
 export class BrandPanelModule {}
