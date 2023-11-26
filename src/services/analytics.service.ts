@@ -3,16 +3,29 @@ import { InjectModel } from "@nestjs/mongoose";
 import { Model } from "mongoose";
 import { Analytic, AnalyticDocument } from "src/models/Analytics.schema";
 
-type BaseUpdate = { brand: string; branch?: string; name: Analytic["name"]; type: Analytic["type"]; date: string };
+type BaseUpdate = {
+    brand: string;
+    branch?: string;
+    menuItem?: string;
+    name: Analytic["name"];
+    type: Analytic["type"] | "both";
+    date?: string;
+};
 
 interface UpdateCount extends BaseUpdate {
-    incrementCountBy?: number;
+    incrementCountBy: number;
+    incrementUniqueCountBy?: number;
+    incrementIncomeBy?: number;
 }
 interface UpdateUniqueCount extends BaseUpdate {
-    incrementUniqueCountBy?: number;
+    incrementCountBy?: number;
+    incrementUniqueCountBy: number;
+    incrementIncomeBy?: number;
 }
 interface UpdateIncome extends BaseUpdate {
-    incrementIncomeBy?: number;
+    incrementCountBy?: number;
+    incrementUniqueCountBy?: number;
+    incrementIncomeBy: number;
 }
 
 @Injectable()
@@ -34,13 +47,15 @@ export class AnalyticsService {
     }
 
     async analyticCountUp(
-        brand: string,
-        branch: string | null,
-        name: Analytic["name"],
-        type: "daily" | "monthly" | "both" = "both",
-        incrementCountBy: number | null,
-        incrementUniqueCountBy?: number | null,
-        incrementIncomeBy?: number | null,
+        // brand: string,
+        // branch: string | null,
+        // menuItem: string | null,
+        // name: Analytic["name"],
+        // type: "daily" | "monthly" | "both" = "both",
+        // incrementCountBy: number | null,
+        // incrementUniqueCountBy?: number | null,
+        // incrementIncomeBy?: number | null,
+        { brand, branch, menuItem, name, type, incrementCountBy, incrementUniqueCountBy, incrementIncomeBy }: UpdateCount | UpdateUniqueCount | UpdateIncome,
     ): Promise<void> {
         const date = new Intl.DateTimeFormat("en-UK").format(Date.now());
         const dateDigest = date.split("/");
@@ -50,12 +65,12 @@ export class AnalyticsService {
 
         if (type == "both") {
             await Promise.allSettled([
-                this.update({ brand, branch, name, incrementCountBy, incrementUniqueCountBy, incrementIncomeBy, type: "daily", date: today }),
-                this.update({ brand, branch, name, incrementCountBy, incrementUniqueCountBy, incrementIncomeBy, type: "monthly", date: thisMonth }),
+                this.update({ brand, branch, menuItem, name, incrementCountBy, incrementUniqueCountBy, incrementIncomeBy, type: "daily", date: today }),
+                this.update({ brand, branch, menuItem, name, incrementCountBy, incrementUniqueCountBy, incrementIncomeBy, type: "monthly", date: thisMonth }),
             ]);
         } else {
             const date = type == "daily" ? today : thisMonth;
-            await this.update({ brand, branch, name, incrementCountBy, incrementUniqueCountBy, incrementIncomeBy, type, date: date });
+            await this.update({ brand, branch, menuItem, name, incrementCountBy, incrementUniqueCountBy, incrementIncomeBy, type, date: date });
         }
     }
 
@@ -64,6 +79,7 @@ export class AnalyticsService {
     private async update({
         brand,
         branch,
+        menuItem,
         name,
         type,
         incrementCountBy,
@@ -77,7 +93,7 @@ export class AnalyticsService {
         if (incrementIncomeBy) inc["income"] = incrementIncomeBy;
 
         await this.AnalyticModel.updateOne(
-            { brand, branch, name, type, date },
+            { brand, branch, menuItem, name, type, date },
             { $inc: inc, $setOnInsert: { createdAt: new Date(Date.now()) } },
             { upsert: true },
         ).exec();

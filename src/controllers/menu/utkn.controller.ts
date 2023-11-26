@@ -88,15 +88,16 @@ export class UtknController {
             // means this scan is unique for this day
             if (!scn_d) {
                 scn_d = "1";
-                await this.analyticService.analyticCountUp(brand._id, null, "qrScans", "daily", 1, 1);
-            } else await this.analyticService.analyticCountUp(brand._id, null, "qrScans", "daily", 1, 0);
+                // await this.analyticService.analyticCountUp(brand._id, null, "qrScans", "daily", 1, 1);
+                await this.analyticService.analyticCountUp({ brand: brand._id, name: "qrScans", type: "daily", incrementCountBy: 1, incrementUniqueCountBy: 1 });
+            } else await this.analyticService.analyticCountUp({ brand: brand._id, name: "qrScans", type: "daily", incrementCountBy: 1 });
         }
 
         // means this scan is unique for this month
         if (!scn_m) {
             scn_m = "1";
-            await this.analyticService.analyticCountUp(brand._id, null, "qrScans", "monthly", 1, 1);
-        } else await this.analyticService.analyticCountUp(brand._id, null, "qrScans", "monthly", 1, 0);
+            await this.analyticService.analyticCountUp({ brand: brand._id, name: "qrScans", type: "monthly", incrementCountBy: 1, incrementUniqueCountBy: 1 });
+        } else await this.analyticService.analyticCountUp({ brand: brand._id, name: "qrScans", type: "monthly", incrementCountBy: 1 });
 
         return { scn_d, scn_m };
     }
