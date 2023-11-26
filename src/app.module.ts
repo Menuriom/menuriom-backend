@@ -50,6 +50,7 @@ import { PricingController } from "./controllers/pricing.controller";
 import { MenuInfoController } from "./controllers/menu/menuInfo.controller";
 import { ContactUsController } from "./controllers/contactUs.controller";
 import { UtknController } from "./controllers/menu/utkn.controller";
+import { AnalyticsService } from "./services/analytics.service";
 
 @Module({
     imports: [
@@ -101,7 +102,7 @@ import { UtknController } from "./controllers/menu/utkn.controller";
         ContactUsController,
         UtknController,
     ],
-    providers: [AppService, FileService, AccountService, MenuService],
+    providers: [AppService, FileService, AccountService, MenuService, AnalyticsService],
 })
 export class AppModule implements NestModule {
     configure(consumer: MiddlewareConsumer) {

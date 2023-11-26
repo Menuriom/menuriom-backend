@@ -28,6 +28,11 @@ export class LikeController {
     async checkLike(@Param() params: ItemIdDto, @Req() req: Request, @Res() res: Response): Promise<void | Response> {
         const session = req["utknSession"] || {};
 
+        // TODO : counters
+        // save likes and views monthly for every brand
+
+        // on every item view we check the likes... meaning we can count for views too
+
         const isUserLikedItem = await this.LikeModel.exists({ menuItem: params.itemID, utkn: session._id }).exec();
         return res.json({ liked: !!isUserLikedItem });
     }

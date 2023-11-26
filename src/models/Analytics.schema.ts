@@ -16,10 +16,10 @@ export const AnalyticSchema = new Schema({
         enum: ["daily", "monthly"],
         required: true,
     },
-    uniqueCount: { type: Number },
-    count: { type: Number },
-    income: { type: Number }, // Tomans
-    date: { type: Date },
+    uniqueCount: { type: Number, default: 0 },
+    count: { type: Number, default: 0 },
+    income: { type: Number, default: 0 }, // Tomans
+    date: { type: String },
     createdAt: {
         type: Date,
         default: new Date(Date.now()),
@@ -35,6 +35,6 @@ export interface Analytic {
     uniqueCount?: number;
     count: number;
     income?: number;
-    date: Date;
+    date: string;
     createdAt: Date;
 }

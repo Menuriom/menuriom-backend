@@ -1,52 +1,84 @@
 import { Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
-import { Request } from "src/interfaces/Request.interface";
 import { Model } from "mongoose";
-import { UserDocument } from "src/models/Users.schema";
-import { AnalyticDocument } from "src/models/Analytics.schema";
-import { BrandDocument } from "src/models/Brands.schema";
-import { BranchDocument } from "src/models/Branches.schema";
+import { Analytic, AnalyticDocument } from "src/models/Analytics.schema";
+
+type BaseUpdate = { brand: string; branch?: string; name: Analytic["name"]; type: Analytic["type"]; date: string };
+
+interface UpdateCount extends BaseUpdate {
+    incrementCountBy?: number;
+}
+interface UpdateUniqueCount extends BaseUpdate {
+    incrementUniqueCountBy?: number;
+}
+interface UpdateIncome extends BaseUpdate {
+    incrementIncomeBy?: number;
+}
 
 @Injectable()
 export class AnalyticsService {
     constructor(
-        @InjectModel("Brand") private readonly BrandModel: Model<BrandDocument>,
-        @InjectModel("Branch") private readonly BranchModel: Model<BranchDocument>,
+        // ...
         @InjectModel("Analytic") private readonly AnalyticModel: Model<AnalyticDocument>,
     ) {}
 
+    J2G(date: string) {
+        const [year, month, day] = date.split("-").map(Number);
+
+        const persianDateObj = new Date();
+        persianDateObj.setFullYear(year + 621);
+        persianDateObj.setMonth(month - 1 + 2);
+        persianDateObj.setDate(day + 20.5);
+
+        return new Intl.DateTimeFormat("en-UK", { year: "numeric", month: "2-digit", day: "2-digit" }).format(persianDateObj);
+    }
+
     async analyticCountUp(
-        marketer = null,
-        teacher = null,
-        incrementBy: number,
-        infoName: "income" | "new-users" | "sells" | "link-clicked",
-        forGroup: "total" | "marketer" | "teacher",
-        type: "both" | "daily" | "monthly" = "both",
+        brand: string,
+        branch: string | null,
+        name: Analytic["name"],
+        type: "daily" | "monthly" | "both" = "both",
+        incrementCountBy: number | null,
+        incrementUniqueCountBy?: number | null,
+        incrementIncomeBy?: number | null,
     ): Promise<void> {
-        // const today = moment().add(1, "day").format("YYYY-MM-DDT00:00:00");
-        // const thisMonth = moment().add(1, "day").format("YYYY-MM-01T00:00:00");
-        // if (type == "both") {
-        //     await this.update(marketer, teacher, incrementBy, infoName, forGroup, "daily", today);
-        //     await this.update(marketer, teacher, incrementBy, infoName, forGroup, "monthly", thisMonth);
-        // } else {
-        //     const date = type == "daily" ? today : thisMonth;
-        //     await this.update(marketer, teacher, incrementBy, infoName, forGroup, type, date);
-        // }
+        const date = new Intl.DateTimeFormat("en-UK").format(Date.now());
+        const dateDigest = date.split("/");
+
+        const today = `${dateDigest[2]}-${dateDigest[1]}-${dateDigest[0]}T12:00:00Z`;
+        const thisMonth = `${dateDigest[2]}-${dateDigest[1]}-01T12:00:00Z`;
+
+        if (type == "both") {
+            await Promise.allSettled([
+                this.update({ brand, branch, name, incrementCountBy, incrementUniqueCountBy, incrementIncomeBy, type: "daily", date: today }),
+                this.update({ brand, branch, name, incrementCountBy, incrementUniqueCountBy, incrementIncomeBy, type: "monthly", date: thisMonth }),
+            ]);
+        } else {
+            const date = type == "daily" ? today : thisMonth;
+            await this.update({ brand, branch, name, incrementCountBy, incrementUniqueCountBy, incrementIncomeBy, type, date: date });
+        }
     }
 
     // ========================================
 
-    private async update(marketer, teacher, incrementBy, infoName, forGroup, type, date) {
+    private async update({
+        brand,
+        branch,
+        name,
+        type,
+        incrementCountBy,
+        incrementUniqueCountBy,
+        incrementIncomeBy,
+        date,
+    }: UpdateCount & UpdateUniqueCount & UpdateIncome) {
+        const inc = {};
+        if (incrementCountBy) inc["count"] = incrementCountBy;
+        if (incrementUniqueCountBy) inc["uniqueCount"] = incrementUniqueCountBy;
+        if (incrementIncomeBy) inc["income"] = incrementIncomeBy;
+
         await this.AnalyticModel.updateOne(
-            {
-                marketer: marketer,
-                teacher: teacher,
-                infoName: infoName,
-                forGroup: forGroup,
-                type: type,
-                date: date,
-            },
-            { $inc: { count: incrementBy } },
+            { brand, branch, name, type, date },
+            { $inc: inc, $setOnInsert: { createdAt: new Date(Date.now()) } },
             { upsert: true },
         ).exec();
     }

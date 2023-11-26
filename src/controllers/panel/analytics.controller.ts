@@ -23,10 +23,6 @@ export class AnalyticsController {
         @InjectModel("Branch") private readonly BranchModel: Model<BranchDocument>,
     ) {}
 
-    // TOOD : scans
-    // save scans monthly for every tier
-    // save scans for standard above, daily
-
     // TODO : order
     // save the income and order count daily and monthly
 
@@ -49,6 +45,17 @@ export class AnalyticsController {
 
         // TODO : check if plans branch limit is passed or not
         const canCreateNewBranch = true;
+
+        const date = new Intl.DateTimeFormat("en-UK").format(Date.now());
+        const dateDigest = date.split("/");
+
+        console.log({
+            date: date,
+            today: `${dateDigest[2]}-${dateDigest[1]}-${dateDigest[0]}`,
+            thisMonth: `${dateDigest[2]}-${dateDigest[1]}-00`,
+            // G2J: new Intl.DateTimeFormat("fa", { calendar: "persian", numberingSystem: "latn" }).format(date),
+            // J2G: jalaali.toGregorian(1402, 10, 10),
+        });
 
         return res.json({ records: branches, canCreateNewBranch });
     }
