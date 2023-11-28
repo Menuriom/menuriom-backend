@@ -2,6 +2,7 @@ export const records = [
     {
         record: {
             icon: "/pricing/basic-g.png",
+            code: 0,
             name: "پلن پایه",
             desc: "برای اشخاص و رستوران / کافی شاپ های کوچک",
             limitations: [
@@ -59,6 +60,7 @@ export const records = [
     {
         record: {
             icon: "/pricing/standard-g.png",
+            code: 1,
             name: "پلن استاندارد",
             desc: "برای کسب و کار ها و رستوران هایی که بیش از یک شعبه دارند",
             limitations: [
@@ -114,6 +116,7 @@ export const records = [
     {
         record: {
             icon: "/pricing/pro-g.png",
+            code: 2,
             name: "پلن حرفه ای",
             desc: "برای کسب و کارهایی که به بیش از یک منو دیجیتال نیاز دارند",
             limitations: [

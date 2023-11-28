@@ -39,6 +39,7 @@ import { WorkingHourSchema } from "src/models/WorkingHours.schema";
 import { WorkingHoursController } from "src/controllers/panel/workingHours.controller";
 import { AnalyticsService } from "src/services/analytics.service";
 import { AnalyticSchema } from "src/models/Analytics.schema";
+import { AnalyticsController } from "src/controllers/panel/analytics.controller";
 
 @Module({
     imports: [
@@ -81,6 +82,7 @@ import { AnalyticSchema } from "src/models/Analytics.schema";
         MenuQRController,
         MenuStylesController,
         WorkingHoursController,
+        AnalyticsController,
     ],
     providers: [FileService, BillingService, PlanService, MenuService, AnalyticsService],
     exports: [],

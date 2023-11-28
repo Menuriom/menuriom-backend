@@ -21,7 +21,7 @@ export const AnalyticSchema = new Schema({
     uniqueCount: { type: Number, default: 0 },
     count: { type: Number, default: 0 },
     income: { type: Number, default: 0 }, // Tomans
-    date: { type: String },
+    date: { type: Date },
     createdAt: {
         type: Date,
         default: new Date(Date.now()),
@@ -38,6 +38,6 @@ export interface Analytic {
     uniqueCount?: number;
     count: number;
     income?: number;
-    date: string;
+    date: Date;
     createdAt: Date;
 }
