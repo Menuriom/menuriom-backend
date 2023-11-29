@@ -29,6 +29,7 @@ export const PlanSchema = new Schema({
 export interface Plan {
     _id: Types.ObjectId;
     icon: string;
+    code: number;
     name: string;
     desc?: string;
     limitations: Array<{

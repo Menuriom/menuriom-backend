@@ -11,11 +11,13 @@ import * as jalaali from "jalaali-js";
 import { StaffDocument } from "src/models/Staff.schema";
 import { MenuItemDocument } from "src/models/MenuItems.schema";
 import { AnalyticDocument } from "src/models/Analytics.schema";
+import { BillingService } from "src/services/billing.service";
 
 @Controller("panel/analytics")
 export class AnalyticsController {
     constructor(
         // ...
+        private readonly billingService: BillingService,
         @InjectModel("Analytic") private readonly AnalyticModel: Model<AnalyticDocument>,
         @InjectModel("Branch") private readonly BranchModel: Model<BranchDocument>,
         @InjectModel("MenuItem") private readonly MenuItemModel: Model<MenuItemDocument>,
@@ -83,8 +85,6 @@ export class AnalyticsController {
                 break;
         }
 
-        console.log({ brandID, name, periodStart, periodEnd });
-
         const AggQuery = this.AnalyticModel.aggregate();
         AggQuery.match({ brand: new Types.ObjectId(brandID), name: name, type: "monthly", date: { $gte: periodStart, $lte: periodEnd } });
         AggQuery.group({
@@ -112,9 +112,16 @@ export class AnalyticsController {
             delete row._id;
             return row;
         });
-        console.log({ formattedResults });
 
         return res.json([...formattedResults]);
+    }
+
+    @Get("/current-plan")
+    @SetPermissions("main-panel")
+    @UseGuards(AuthorizeUserInSelectedBrand)
+    async getCurrentPlan(@Req() req: Request, @Res() res: Response): Promise<void | Response> {
+        const brandID = req.headers["brand"].toString();
+        return res.json({ ...(await this.billingService.getBrandsCurrentPlan(brandID)) });
     }
 
     @Get("/")

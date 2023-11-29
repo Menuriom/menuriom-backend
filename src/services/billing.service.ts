@@ -66,7 +66,7 @@ export class BillingService {
 
     async getBrandsCurrentPlan(brandID: string): Promise<CurrentPlan> {
         const brandsPlan = await this.BrandsPlanModel.findOne({ brand: brandID })
-            .populate<{ currentPlan: Plan }>("currentPlan", "_id icon name limitations monthlyPrice yearlyPrice translation")
+            .populate<{ currentPlan: Plan }>("currentPlan", "_id icon name code limitations monthlyPrice yearlyPrice translation")
             .exec();
         if (!brandsPlan) throw new NotFoundException();
 
@@ -91,6 +91,7 @@ export class BillingService {
         return {
             plan: {
                 _id: brandsPlan.currentPlan._id,
+                code: brandsPlan.currentPlan.code,
                 icon: brandsPlan.currentPlan.icon,
                 name: brandsPlan.currentPlan.name,
                 monthlyPrice: brandsPlan.currentPlan.monthlyPrice,
@@ -218,6 +219,7 @@ interface CurrentPlan {
     plan: {
         _id: string | Types.ObjectId;
         icon: string;
+        code: number;
         name: string;
         monthlyPrice: number;
         yearlyPrice: number;
