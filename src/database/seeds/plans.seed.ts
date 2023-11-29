@@ -2,6 +2,7 @@ export const records = [
     {
         record: {
             icon: "/pricing/basic-g.png",
+            code: 0,
             name: "پلن پایه",
             desc: "برای اشخاص و رستوران / کافی شاپ های کوچک",
             limitations: [
@@ -11,7 +12,7 @@ export const records = [
                 { limit: "brand-details-in-menu", value: true, valueType: "Boolean" },
                 { limit: "multiple-language-limit", value: 2, valueType: "Number" },
                 { limit: "ticket-and-support", value: true, valueType: "Boolean" },
-                { limit: "menu-templates", value: false, valueType: "Boolean" },
+                { limit: "menu-templates", value: true, valueType: "Boolean" },
                 { limit: "branch-limit-count", value: 1, valueType: "Number" },
                 { limit: "staff-limit-count", value: 5, valueType: "Number" },
                 { limit: "customize-qr", value: false, valueType: "Boolean" },
@@ -32,6 +33,7 @@ export const records = [
                 "کاملا قابل شخصی سازی",
                 "افزودن دسته بندی و ایتم به صورت نامحدود",
                 "درج لوگو و نام برند در منو",
+                "دسترسی به قالب های مختلف منو",
                 "امکان ساخت منو چندزبانه",
                 "پشتیبانی رایگان",
             ],
@@ -48,6 +50,7 @@ export const records = [
                     "Fully customizable",
                     "Unlimited Category and menu items",
                     "Brand logo and name in the menu",
+                    "Multiple menu templates",
                     "Multiple language option",
                     "Ticketing and support system",
                 ],
@@ -57,6 +60,7 @@ export const records = [
     {
         record: {
             icon: "/pricing/standard-g.png",
+            code: 1,
             name: "پلن استاندارد",
             desc: "برای کسب و کار ها و رستوران هایی که بیش از یک شعبه دارند",
             limitations: [
@@ -83,7 +87,6 @@ export const records = [
                 { limit: "customer-review", value: false, valueType: "Boolean" },
             ],
             listings: [
-                "دسترسی به قالب های مختلف منو",
                 "امکان ساخت تا 5 شعبه",
                 "امکان شخصی سازی کد کیو ار",
                 "صفحه اختصاصی برای نمایش اطلاعات کامل رستوران",
@@ -100,7 +103,6 @@ export const records = [
                 name: "Standard Plan",
                 desc: "For businesses and restaurants with more than one branch",
                 listings: [
-                    "Multiple menu templates",
                     "Create up to 5 branches",
                     "Customizable QR code",
                     "Restaurant info at bottom of menu",
@@ -114,6 +116,7 @@ export const records = [
     {
         record: {
             icon: "/pricing/pro-g.png",
+            code: 2,
             name: "پلن حرفه ای",
             desc: "برای کسب و کارهایی که به بیش از یک منو دیجیتال نیاز دارند",
             limitations: [
@@ -124,8 +127,8 @@ export const records = [
                 { limit: "multiple-language-limit", value: 10, valueType: "Number" },
                 { limit: "ticket-and-support", value: true, valueType: "Boolean" },
                 { limit: "menu-templates", value: true, valueType: "Boolean" },
-                { limit: "branch-limit-count", value: 15, valueType: "Number" },
-                { limit: "staff-limit-count", value: 15, valueType: "Number" },
+                { limit: "branch-limit-count", value: Infinity, valueType: "Number" },
+                { limit: "staff-limit-count", value: 50, valueType: "Number" },
                 { limit: "customize-qr", value: true, valueType: "Boolean" },
                 { limit: "restaurant-detailed-info", value: true, valueType: "Boolean" },
                 { limit: "menu-item-like", value: true, valueType: "Boolean" },
@@ -141,7 +144,7 @@ export const records = [
             ],
             listings: [
                 "سیستم مدیریت سفارشات و سفارشگیری",
-                "امکان ساخت تا 15 شعبه",
+                "امکان ساخت نامحدود شعبه",
                 "دکمه درخواست گارسون",
                 "امکان درج لوگو رستوران در کد کیو ار",
                 "امکان زوج کردن ایتم های منو",
@@ -159,7 +162,7 @@ export const records = [
                 desc: "For businesses that need more than a digital menu",
                 listings: [
                     "Ordering system",
-                    "Create up to 15 branches",
+                    "Create unlimited branches",
                     "Server call button in the menu",
                     "Restaurant logo in the QR code",
                     "Menu item coupling",

@@ -34,6 +34,7 @@
     "express": "^4.18.2",
     "helmet": "^6.2.0",
     "humanize-duration": "^3.29.0",
+    "jalaali-js": "^1.2.6",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^6.12.0",
     "nestjs-i18n": "^10.3.6",

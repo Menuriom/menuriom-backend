@@ -5,6 +5,7 @@ export type PlanDocument = Plan & Document;
 
 export const PlanSchema = new Schema({
     icon: { type: String, required: true },
+    code: { type: Number, required: true },
     name: { type: String, required: true },
     desc: { type: String },
     limitations: [

@@ -1,18 +1,16 @@
 import { Document, PopulatedDoc, Schema, Types } from "mongoose";
 import { Branch } from "./Branches.schema";
 import { Brand } from "./Brands.schema";
+import { MenuItem } from "./MenuItems.schema";
 export type AnalyticDocument = Analytic & Document;
 
 export const AnalyticSchema = new Schema({
     brand: { type: Schema.Types.ObjectId, ref: "Brand", required: true },
-    branch: { type: Schema.Types.ObjectId, ref: "Branch", required: true },
+    branch: { type: Schema.Types.ObjectId, ref: "Branch" },
+    menuItem: { type: Schema.Types.ObjectId, ref: "MenuItem" },
     name: {
         type: String,
-        enum: ["QrScans", "orders", "likes"],
-    },
-    forGroup: {
-        type: String,
-        enum: ["total", "brand", "branch", "menu"],
+        enum: ["qrScans", "orders", "likes", "itemViews"],
         required: true,
     },
     type: {
@@ -20,7 +18,9 @@ export const AnalyticSchema = new Schema({
         enum: ["daily", "monthly"],
         required: true,
     },
-    count: { type: Number },
+    uniqueCount: { type: Number, default: 0 },
+    count: { type: Number, default: 0 },
+    income: { type: Number, default: 0 }, // Tomans
     date: { type: Date },
     createdAt: {
         type: Date,
@@ -30,12 +30,14 @@ export const AnalyticSchema = new Schema({
 
 export interface Analytic {
     _id: Types.ObjectId;
-    brand?: PopulatedDoc<Brand>;
+    brand: PopulatedDoc<Brand>;
     branch?: PopulatedDoc<Branch>;
-    name: "QrScans" | "orders" | "likes";
-    forGroup: "total" | "brand" | "branch" | "menu";
+    menuItem?: PopulatedDoc<MenuItem>;
+    name: "qrScans" | "orders" | "likes" | "itemViews";
     type: "daily" | "monthly";
+    uniqueCount?: number;
     count: number;
+    income?: number;
     date: Date;
     createdAt: Date;
 }
