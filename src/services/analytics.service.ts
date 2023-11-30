@@ -69,9 +69,7 @@ export class AnalyticsService {
         // incrementIncomeBy?: number | null,
         { brand, branch, menuItem, name, type, incrementCountBy, incrementUniqueCountBy, incrementIncomeBy }: UpdateCount | UpdateUniqueCount | UpdateIncome,
     ): Promise<void> {
-        const date = new Intl.DateTimeFormat("en-UK").format(Date.now());
-        const dateDigest = date.split("/");
-
+        const dateDigest = new Intl.DateTimeFormat("en-UK").format(Date.now()).split("/");
         const today = `${dateDigest[2]}-${dateDigest[1]}-${dateDigest[0]}T12:00:00Z`;
         const thisMonth = `${dateDigest[2]}-${dateDigest[1]}-01T12:00:00Z`;
 
