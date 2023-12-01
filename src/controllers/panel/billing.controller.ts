@@ -264,7 +264,7 @@ export class BillingController {
         const paymentGateway = this.billingService.getGateway(param.method);
         const transactionResponse = paymentGateway.getTransactionResponse(req);
         if (transactionResponse.identifier === "") {
-            // TODO : log the error
+            // LOGGER : log the error
             return res.json({ statusCode: "405", message: "MethodNotDefined" });
         }
 
@@ -297,7 +297,7 @@ export class BillingController {
             });
 
         if (!transactionVerified) {
-            // TODO : Log the error
+            // LOGGER : Log the error
             return res.json({ statusCode: "412", message: "TransactionFailedAndWillBounce", transactionID: transaction._id });
         }
 

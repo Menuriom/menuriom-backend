@@ -140,25 +140,29 @@ export class AnalyticsController {
 
         const lastMonth: any = (await this.AnalyticModel.findOne({ brand: brandID, type: "monthly", name: "qrScans", date: lastMonthDate }).exec()) || {};
         const thisMonth: any = (await this.AnalyticModel.findOne({ brand: brandID, type: "monthly", name: "qrScans", date: thisMonthDate }).exec()) || {};
+        const thisMonthUniqueCount = thisMonth.uniqueCount || 0;
+        const lastMonthUniqueCount = lastMonth.uniqueCount || 0;
+        const thisMonthCount = thisMonth.count || 0;
+        const lastMonthCount = lastMonth.count || 0;
 
-        const unqiueGrowth = lastMonth.uniqueCount ? (thisMonth.uniqueCount - lastMonth.uniqueCount) / lastMonth.uniqueCount : 0;
-        const totalGrowth = lastMonth.count ? (thisMonth.count - lastMonth.count) / lastMonth.count : 0;
+        const unqiueGrowth = lastMonthUniqueCount ? (thisMonthUniqueCount - lastMonthUniqueCount) / lastMonthUniqueCount : 0;
+        const totalGrowth = lastMonthCount ? (thisMonthCount - lastMonthCount) / lastMonthCount : 0;
 
         const monthlyTotalCounts = [];
-        const monthlyUniqueCount = [];
+        const monthlyUniqueCounts = [];
         const monthlyLabel = [];
         const dailyTotalCounts = [];
-        const dailyUniqueCount = [];
+        const dailyUniqueCounts = [];
         const dailyLabel = [];
         // if user is standard and above get the list of daily scans up to a month and monthly scans for past 12 months
         const brandsPlan = await this.BrandsPlanModel.findOne({ brand: brandID }).populate<{ currentPlan: Plan }>("currentPlan", "code name").exec();
         if (brandsPlan.currentPlan.code > 0) {
-            const monthlyDateDigest = new Intl.DateTimeFormat("en-UK").format(Date.now() - 3_600_000 * 24 * 30 * 12).split("/");
+            const monthlyDateDigest = new Intl.DateTimeFormat("en-UK").format(Date.now() - 3_600_000 * 24 * 356).split("/");
 
-            const monthlyPeriodStart = thisMonthDate;
-            const monthlyPeriodEnd = new Date(`${monthlyDateDigest[2]}-${monthlyDateDigest[1]}-01T12:00:00Z`);
-            const dailyPeriodStart = new Date(`${todayDateDigest[2]}-${todayDateDigest[1]}-${todayDateDigest[0]}T12:00:00Z`);
-            const dailyPeriodEnd = new Date(`${lastMonthDateDigest[2]}-${lastMonthDateDigest[1]}-${lastMonthDateDigest[0]}T12:00:00Z`);
+            const monthlyPeriodStart = new Date(`${monthlyDateDigest[2]}-${monthlyDateDigest[1]}-01T12:00:00Z`);
+            const monthlyPeriodEnd = thisMonthDate;
+            const dailyPeriodStart = new Date(`${lastMonthDateDigest[2]}-${lastMonthDateDigest[1]}-${lastMonthDateDigest[0]}T12:00:00Z`);
+            const dailyPeriodEnd = new Date(`${todayDateDigest[2]}-${todayDateDigest[1]}-${todayDateDigest[0]}T12:00:00Z`);
 
             const monthlyRecords = await this.AnalyticModel.find({
                 brand: brandID,
@@ -168,8 +172,8 @@ export class AnalyticsController {
             }).exec();
             monthlyRecords.forEach((record) => {
                 monthlyTotalCounts.push(record.count);
-                monthlyUniqueCount.push(record.uniqueCount);
-                monthlyLabel.push(new Intl.DateTimeFormat("fa", { calendar: "persian", numberingSystem: "latn" }).format(record.date));
+                monthlyUniqueCounts.push(record.uniqueCount);
+                monthlyLabel.push(new Intl.DateTimeFormat("fa", { calendar: "persian", year: "numeric", month: "short" }).format(record.date));
             });
 
             const dailyRecords = await this.AnalyticModel.find({
@@ -180,23 +184,23 @@ export class AnalyticsController {
             }).exec();
             dailyRecords.forEach((record) => {
                 dailyTotalCounts.push(record.count);
-                dailyUniqueCount.push(record.uniqueCount);
-                dailyLabel.push(new Intl.DateTimeFormat("fa", { calendar: "persian", numberingSystem: "latn" }).format(record.date));
+                dailyUniqueCounts.push(record.uniqueCount);
+                dailyLabel.push(new Intl.DateTimeFormat("fa", { calendar: "persian", year: "numeric", month: "short" }).format(record.date));
             });
         }
 
         return res.json({
-            thisMonthUniqueCount: thisMonth.uniqueCount || 0,
-            lastMonthUniqueCount: lastMonth.uniqueCount || 0,
-            thisMonthCount: thisMonth.count || 0,
-            lastMonthCount: lastMonth.count || 0,
+            thisMonthUniqueCount,
+            lastMonthUniqueCount,
+            thisMonthCount,
+            lastMonthCount,
             unqiueGrowth: (unqiueGrowth * 100).toFixed(Math.abs(unqiueGrowth * 100) > 1 ? 0 : 2),
             totalGrowth: (totalGrowth * 100).toFixed(Math.abs(totalGrowth * 100) > 1 ? 0 : 2),
             monthlyTotalCounts,
-            monthlyUniqueCount,
+            monthlyUniqueCounts,
             monthlyLabel,
             dailyTotalCounts,
-            dailyUniqueCount,
+            dailyUniqueCounts,
             dailyLabel,
         });
     }

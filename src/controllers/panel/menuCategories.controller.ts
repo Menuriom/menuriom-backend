@@ -22,6 +22,7 @@ import { unlink } from "fs/promises";
 import { Branch } from "src/models/Branches.schema";
 import { MenuService } from "src/services/menu.service";
 import { CheckUnpaidInvoiceInSelectedBrand } from "src/guards/billExpiration.guard";
+import { MenuItemDocument } from "src/models/MenuItems.schema";
 
 @Controller("panel/menu-categories")
 export class MenuCategoriesController {
@@ -34,10 +35,8 @@ export class MenuCategoriesController {
         @InjectModel("Brand") private readonly BrandModel: Model<BrandDocument>,
         @InjectModel("BrandsPlan") private readonly BrandsPlanModel: Model<BrandsPlanDocument>,
         @InjectModel("MenuCategory") private readonly MenuCategoryModel: Model<MenuCategoryDocument>,
+        @InjectModel("MenuItem") private readonly MenuItemModel: Model<MenuItemDocument>,
     ) {}
-
-    // TODO : add popular and best seller categories and allow use to activate them or not : for standard and above
-    // TODO : add offers section for pro members that can be a banner with image - text - timer - video background : offers can open a popup with text and image + links
 
     @Get("/")
     @SetPermissions("main-panel.menu.items")
@@ -210,6 +209,8 @@ export class MenuCategoriesController {
     @SetPermissions("main-panel.menu.items")
     @UseGuards(AuthorizeUserInSelectedBrand)
     async deleteSingleRecord(@Param() params: IdDto, @Req() req: Request, @Res() res: Response): Promise<void | Response> {
+        const brandID = req.headers["brand"].toString();
+
         const category = await this.MenuCategoryModel.findOne({ _id: params.id }).select("_id icon").exec();
         if (!category) {
             throw new UnprocessableEntityException([
@@ -217,7 +218,8 @@ export class MenuCategoriesController {
             ]);
         }
 
-        // TODO : delete all category items
+        // delete all category items
+        await this.MenuItemModel.deleteMany({ brand: brandID, category: params.id }).exec();
 
         // delete category custom image
         await this.MenuService.removeCategoryCustomIcons(category.icon);

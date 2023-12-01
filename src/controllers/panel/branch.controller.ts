@@ -15,6 +15,10 @@ import { SetPermissions } from "src/decorators/authorization.decorator";
 import { AuthorizeUserInSelectedBrand } from "src/guards/authorizeUser.guard";
 import { IdDto } from "src/dto/general.dto";
 import { CheckUnpaidInvoiceInSelectedBrand } from "src/guards/billExpiration.guard";
+import { StaffDocument } from "src/models/Staff.schema";
+import { MenuItemDocument } from "src/models/MenuItems.schema";
+import { MenuCategoryDocument } from "src/models/MenuCategories.schema";
+import { InviteDocument } from "src/models/Invites.schema";
 
 @Controller("panel/branches")
 export class BranchController {
@@ -22,6 +26,10 @@ export class BranchController {
         // ...
         private readonly fileService: FileService,
         @InjectModel("Branch") private readonly BranchModel: Model<BranchDocument>,
+        @InjectModel("Staff") private readonly StaffModel: Model<StaffDocument>,
+        @InjectModel("MenuItem") private readonly MenuItemModel: Model<MenuItemDocument>,
+        @InjectModel("MenuCategory") private readonly MenuCategoryModel: Model<MenuCategoryDocument>,
+        @InjectModel("Invite") private readonly InviteModel: Model<InviteDocument>,
     ) {}
 
     @Get("/")
@@ -169,22 +177,40 @@ export class BranchController {
     @SetPermissions("main-panel.branches.delete")
     @UseGuards(AuthorizeUserInSelectedBrand)
     async deleteSingleRecord(@Param() params: IdDto, @Req() req: Request, @Res() res: Response): Promise<void | Response> {
-        const branch = await this.BranchModel.findOne({ _id: params.id }).select("logo name slogan").exec();
+        const brandID = req.headers["brand"].toString();
 
+        const branchCount = await this.BranchModel.countDocuments({ brand: brandID }).exec();
+        if (branchCount <= 1) {
+            throw new UnprocessableEntityException([{ property: "", errors: [I18nContext.current().t("panel.brand.you cant delete your last branch")] }]);
+        }
+
+        const branch = await this.BranchModel.findOne({ _id: params.id }).select("logo name slogan").exec();
         if (!branch) {
             throw new UnprocessableEntityException([
                 { property: "", errors: [I18nContext.current().t("panel.brand.no record was found, or you are not authorized to do this action")] },
             ]);
         }
 
-        // TODO : get the branch
-        // check if =? does user has access to brand and can user delete branches in this brand
-
-        // delete branch
         await this.BranchModel.deleteOne({ _id: params.id }).exec();
-        // TODO : delete branch images
-        // TODO : delete branch staff
-        // TODO : delete branch custom menu
+
+        // clean all connected models to this branch
+        await this.StaffModel.updateMany({ brand: brandID }, { $pull: { branches: new Types.ObjectId(params.id) } })
+            .exec()
+            .catch((e) => console.log({ e }));
+        await this.MenuItemModel.updateMany({ brand: brandID }, { $pull: { branches: new Types.ObjectId(params.id) } })
+            .exec()
+            .catch((e) => console.log({ e }));
+        await this.MenuCategoryModel.updateMany({ brand: brandID }, { $pull: { branches: new Types.ObjectId(params.id) } })
+            .exec()
+            .catch((e) => console.log({ e }));
+        await this.InviteModel.updateMany({ brand: brandID }, { $pull: { branches: new Types.ObjectId(params.id) } })
+            .exec()
+            .catch((e) => console.log({ e }));
+
+        // delete branch images
+        branch.gallery.forEach(async (img) => {
+            await unlink(img.replace("/file/", "storage/public/")).catch((e) => {});
+        });
 
         return res.end();
     }

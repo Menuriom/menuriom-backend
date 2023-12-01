@@ -27,7 +27,7 @@ export class ZarinpalGateway implements GatewayInterface {
             })
             .catch((error) => {
                 throw new Error(error);
-                // TODO : log the error in logger
+                // LOGGER : log the error in logger
             });
         return identifier;
     }
@@ -63,7 +63,7 @@ export class ZarinpalGateway implements GatewayInterface {
             })
             .catch((error) => {
                 throw new Error(error);
-                // TODO : log the error in logger
+                // LOGGER : log the error in logger
             });
 
         return verficationResponse;
