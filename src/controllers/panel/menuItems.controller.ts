@@ -318,6 +318,8 @@ export class MenuItemsController {
     @SetPermissions("main-panel.menu.items")
     @UseGuards(AuthorizeUserInSelectedBrand)
     async deleteSingleRecord(@Param() params: IdDto, @Req() req: Request, @Res() res: Response): Promise<void | Response> {
+        const brandID = req.headers["brand"].toString();
+
         const menuItem = await this.MenuItemModel.findOne({ _id: params.id }).select("_id images").exec();
         if (!menuItem) {
             throw new UnprocessableEntityException([
@@ -329,11 +331,12 @@ export class MenuItemsController {
         for (let i = 0; i < menuItem.images.length; i++) {
             await unlink(menuItem.images[i].replace("/file/", "storage/public/")).catch((e) => {});
         }
-
         // delete menu item
         await this.MenuItemModel.deleteOne({ _id: params.id }).exec();
 
-        return res.end();
+        const canCreateNewDish = await this.MenuItemModel.countDocuments({ brand: brandID }).exec();
+        
+        return res.json({ canCreateNewDish: canCreateNewDish < 800 });
     }
 
     @Post("/toggle-hidden/:id")

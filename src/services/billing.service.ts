@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from "@nestjs/common";
+import { Injectable, NotFoundException, UnprocessableEntityException } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { Model, Types } from "mongoose";
 import { StaffDocument } from "src/models/Staff.schema";
@@ -13,12 +13,14 @@ import { WalletGateway } from "src/paymentGateways/wallet.payment";
 import { Bill, BillDocument } from "src/models/Bills.schema";
 import { TransactionDocument } from "src/models/Transactions.schema";
 import { PlanChangeRecordDocument } from "src/models/PlanChangeRecords.schema";
+import { BrandDocument } from "src/models/Brands.schema";
 
 @Injectable()
 export class BillingService {
     constructor(
         // ...
         @InjectModel("Staff") private readonly StaffModel: Model<StaffDocument>,
+        @InjectModel("Brand") private readonly BrandModel: Model<BrandDocument>,
         @InjectModel("BrandsPlan") private readonly BrandsPlanModel: Model<BrandsPlanDocument>,
         @InjectModel("Branch") private readonly BranchModel: Model<BranchDocument>,
         @InjectModel("Plan") private readonly PlanModel: Model<PlanDocument>,
@@ -62,6 +64,35 @@ export class BillingService {
         }
 
         return { calculatedPrice, extraSeconds };
+    }
+
+    async downgradeLimitCheck(brandID: string, selectedPlan: Plan): Promise<void> {
+        let langLimit: number;
+        let branchLimit: number;
+        let staffLimit: number;
+        selectedPlan.limitations.forEach((item) => {
+            if (item.limit == "multiple-language-limit") langLimit = Number(item.value);
+            if (item.limit == "branch-limit-count") branchLimit = Number(item.value);
+            if (item.limit == "staff-limit-count") staffLimit = Number(item.value);
+        });
+        staffLimit = staffLimit * branchLimit;
+
+        const langCount = (await this.BrandModel.findOne({ _id: brandID }).select("languages").exec()).languages.length;
+        const branchCount = await this.BranchModel.countDocuments({ brand: brandID }).exec();
+        const staffCount = await this.StaffModel.countDocuments({ brand: brandID }).exec();
+
+        if (langCount > langLimit) {
+            const n = langCount - langLimit;
+            throw new UnprocessableEntityException([{ property: "", errors: [I18nContext.current().t("panel.billing.tooMuchLangs", { args: { n } })] }]);
+        }
+        if (branchCount > branchLimit) {
+            const n = branchCount - branchLimit;
+            throw new UnprocessableEntityException([{ property: "", errors: [I18nContext.current().t("panel.billing.tooMuchBranch", { args: { n } })] }]);
+        }
+        if (staffCount > staffLimit) {
+            const n = staffCount - staffLimit;
+            throw new UnprocessableEntityException([{ property: "", errors: [I18nContext.current().t("panel.billing.tooMuchStaff", { args: { n } })] }]);
+        }
     }
 
     async getBrandsCurrentPlan(brandID: string): Promise<CurrentPlan> {
@@ -110,8 +141,8 @@ export class BillingService {
     }
 
     async getLastBill(brandID: string): Promise<any> {
-        const query = (filter: {}) => {
-            return this.BillModel.findOne(filter).sort({ _id: "descending" }).populate<{ plan: Plan }>("plan", "_id icon name translation").exec();
+        const query = async (filter: {}) => {
+            return await this.BillModel.findOne(filter).sort({ _id: "descending" }).populate<{ plan: Plan }>("plan", "_id icon name translation").exec();
         };
 
         let bill = await query({ brand: brandID, type: "renewal", status: { $in: ["notPaid", "pendingPayment"] } });

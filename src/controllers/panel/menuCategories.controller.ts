@@ -220,14 +220,14 @@ export class MenuCategoriesController {
 
         // delete all category items
         await this.MenuItemModel.deleteMany({ brand: brandID, category: params.id }).exec();
-
         // delete category custom image
         await this.MenuService.removeCategoryCustomIcons(category.icon);
-
-        // delete branch
+        // delete category
         await this.MenuCategoryModel.deleteOne({ _id: params.id }).exec();
 
-        return res.end();
+        const categoryCount = await this.MenuCategoryModel.countDocuments({ brand: brandID }).exec();
+
+        return res.json({ canCreateNewCategory: categoryCount < 100 });
     }
 
     @Post("/hide/:id")

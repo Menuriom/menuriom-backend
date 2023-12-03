@@ -5,5 +5,7 @@
     "You can only create 1 brand!": "درحال حاضر امکان ساخت فقط یک برند وجود دارد!",
     "You can join three brands at a max!": "حداکثر می توانید به سه برند بپیوندید!",
     "this username is already taken":"این نام کاربری استفاده شده",
-    "you cant delete your last branch": "حداقل یک شعبه برای هر برند الزامیست"
+    "you cant delete your last branch": "حداقل یک شعبه برای هر برند الزامیست",
+    "You have reached your branch creation limit": "امکان ساخت شعبه بیشتر برای حساب شما وجود ندارد. لطفا برای رفع محدودیت، اشتراک خود را ارتقا دهید",
+    "You have reached your staff limit": "امکان دعوت خدمه بیشتر برای حساب شما وجود ندارد. لطفا برای رفع محدودیت، اشتراک خود را ارتقا دهید"
 }

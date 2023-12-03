@@ -18,12 +18,14 @@ import { StaffRole, StaffRoleDocument } from "src/models/StaffRoles.schema";
 import { User, UserDocument } from "src/models/Users.schema";
 import { IdDto } from "src/dto/general.dto";
 import { CheckUnpaidInvoiceInSelectedBrand } from "src/guards/billExpiration.guard";
+import { PlanService } from "src/services/plan.service";
 
 @Controller("panel/staff")
 export class StaffController {
     constructor(
         // ...
         private readonly fileService: FileService,
+        private readonly planService: PlanService,
         @InjectModel("User") private readonly UserModel: Model<UserDocument>,
         @InjectModel("Branch") private readonly BranchModel: Model<BranchDocument>,
         @InjectModel("Staff") private readonly StaffModel: Model<StaffDocument>,
@@ -122,8 +124,8 @@ export class StaffController {
 
         const total = await this.StaffModel.countDocuments({ brand: brandID }).exec();
 
-        // TODO : check if plans staff limit is passed or not this is per branch
-        const canInviteNewMembers = true;
+        const staffLimit = await this.planService.checkLimitCounts<number>(brandID, "staff-limit-count");
+        const canInviteNewMembers = total < staffLimit;
 
         return res.json({ records: staff, total: total, canInviteNewMembers });
     }
@@ -132,7 +134,7 @@ export class StaffController {
     @SetPermissions("main-panel.staff.invite")
     @UseGuards(AuthorizeUserInSelectedBrand, CheckUnpaidInvoiceInSelectedBrand)
     async sendAnInvite(@Body() body: SendInviteDto, @Req() req: Request, @Res() res: Response): Promise<void | Response> {
-        const brandID = req.headers["brand"];
+        const brandID = req.headers["brand"].toString();
 
         // check if the user is already in brand or not
         const user = await this.UserModel.findOne({ email: body.email }).exec();
@@ -161,9 +163,12 @@ export class StaffController {
             ]);
         }
 
-        // TODO : check if plans total staff limit is passed or not
-        // if the limit is passed then return an error stating that we cannot send an invite
-        const canInviteNewMembers = true || false;
+        const staffLimit = await this.planService.checkLimitCounts<number>(brandID, "staff-limit-count");
+        const staffCount = await this.StaffModel.countDocuments({ brand: brandID }).exec();
+        const inviteCount = await this.InviteModel.countDocuments({ brand: brandID, status: "sent" }).exec();
+        if (staffCount + inviteCount >= staffLimit) {
+            throw new UnprocessableEntityException([{ property: "", errors: [I18nContext.current().t("panel.brand.You have reached your staff limit")] }]);
+        }
 
         await this.InviteModel.updateOne(
             { email: body.email, brand: brandID },
@@ -218,7 +223,7 @@ export class StaffController {
     @SetPermissions("main-panel.staff.delete")
     @UseGuards(AuthorizeUserInSelectedBrand)
     async deleteSingleStaff(@Param() params: IdDto, @Req() req: Request, @Res() res: Response): Promise<void | Response> {
-        const brandID = req.headers["brand"];
+        const brandID = req.headers["brand"].toString();
         const staff = await this.StaffModel.findOne({ _id: params.id, brand: brandID }).exec();
         if (!staff) {
             throw new UnprocessableEntityException([
@@ -226,7 +231,11 @@ export class StaffController {
             ]);
         }
         await this.StaffModel.deleteOne({ _id: params.id, brand: brandID }).exec();
-        return res.end();
+
+        const staffCount = await this.StaffModel.countDocuments({ brand: brandID }).exec();
+        const staffLimit = await this.planService.checkLimitCounts<number>(brandID, "staff-limit-count");
+
+        return res.json({ canInviteNewMembers: staffCount < staffLimit });
     }
 
     @Delete("/invite/:id")

@@ -141,10 +141,6 @@ export class BillingController {
         let type = "";
         let url = "";
 
-        // TODO
-        // check if user is downgrading and dont allow until the limit is reached
-        // any limitation with numbers must be lower or equal to destination plan
-
         const plan = await this.PlanModel.findOne({ _id: selectedPlan }).exec();
         if (!plan) {
             throw new UnprocessableEntityException([
@@ -157,6 +153,8 @@ export class BillingController {
 
         const user = await this.UserModel.findOne({ _id: req.session.userID }).exec();
         const selectedPlanRecord = await this.PlanModel.findOne({ _id: selectedPlan }).exec();
+
+        await this.billingService.downgradeLimitCheck(brandID, selectedPlanRecord);
 
         const fromPlan_fa = currentPlan.plan.translation?.["fa"]?.name || currentPlan.plan.name;
         const fromPlan_en = currentPlan.plan.translation?.["en"]?.name || currentPlan.plan.name;

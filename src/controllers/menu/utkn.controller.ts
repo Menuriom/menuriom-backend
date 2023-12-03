@@ -40,18 +40,30 @@ export class UtknController {
 
     // ======================================================================
 
-    private async generateAndSaveToken(ip: string | null, userAgent: string) {
+    private async generateAndSaveToken(ip: string | null, userAgent: string, oldToken?: string) {
         const payload = { ip: ip, userAgent: userAgent, iat: Date.now() };
         const token = sign(payload, process.env.JWT_SECRET, { algorithm: "HS512", expiresIn: 2_592_000 });
 
-        await this.UtknModel.create({
-            ip,
-            userAgent,
-            token,
-            status: "active",
-            expireAt: new Date(Date.now() + 2_592_000 * 1000),
-            createdAt: new Date(Date.now()),
-        });
+        const tokenRecord = oldToken ? (await this.UtknModel.findOne({ token: oldToken }).exec()) || null : null;
+
+        if (!tokenRecord) {
+            await this.UtknModel.create({
+                ip,
+                userAgent,
+                token,
+                status: "active",
+                expireAt: new Date(Date.now() + 2_592_000 * 1000),
+                createdAt: new Date(Date.now()),
+            });
+        } else {
+            await this.UtknModel.updateOne(
+                { _id: tokenRecord._id },
+                {
+                    $set: { ip, userAgent, token, status: "active", expireAt: new Date(Date.now() + 2_592_000 * 1000) },
+                    $setOnInsert: { createdAt: new Date(Date.now()) },
+                },
+            );
+        }
 
         return token;
     }
@@ -70,12 +82,14 @@ export class UtknController {
         }
 
         if (typeof payload["ip"] === "undefined" || typeof payload["userAgent"] === "undefined") {
-            const token = await this.generateAndSaveToken(ip, userAgent);
+            const token = await this.generateAndSaveToken(ip, userAgent, utkn);
             return token;
         }
 
-        // TODO
-        // update the token if more than a day passed from its creation
+        if (payload["iat"] && payload["iat"] < Date.now() - 3_600_000 * 24 * 7) {
+            const token = await this.generateAndSaveToken(ip, userAgent, utkn);
+            return token;
+        }
     }
 
     private async handleScans(brandUsername: string, scn_d: any, scn_m: any): Promise<{ scn_d: string; scn_m: string }> {

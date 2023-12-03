@@ -19,11 +19,13 @@ import { StaffDocument } from "src/models/Staff.schema";
 import { MenuItemDocument } from "src/models/MenuItems.schema";
 import { MenuCategoryDocument } from "src/models/MenuCategories.schema";
 import { InviteDocument } from "src/models/Invites.schema";
+import { PlanService } from "src/services/plan.service";
 
 @Controller("panel/branches")
 export class BranchController {
     constructor(
         // ...
+        private readonly planService: PlanService,
         private readonly fileService: FileService,
         @InjectModel("Branch") private readonly BranchModel: Model<BranchDocument>,
         @InjectModel("Staff") private readonly StaffModel: Model<StaffDocument>,
@@ -36,11 +38,12 @@ export class BranchController {
     @SetPermissions("main-panel.branches.view")
     @UseGuards(AuthorizeUserInSelectedBrand)
     async getList(@Req() req: Request, @Res() res: Response): Promise<void | Response> {
-        const brandID = req.headers["brand"];
+        const brandID = req.headers["brand"].toString();
         const branches = await this.BranchModel.find({ brand: brandID }).select("name address telephoneNumbers postalCode gallery translation").exec();
 
-        // TODO : check if plans branch limit is passed or not
-        const canCreateNewBranch = true;
+        const branchLimit = await this.planService.checkLimitCounts<number>(brandID, "branch-limit-count");
+        const branchCount = await this.BranchModel.countDocuments({ brand: brandID }).exec();
+        const canCreateNewBranch = branchCount < branchLimit;
 
         return res.json({ records: branches, canCreateNewBranch });
     }
@@ -78,14 +81,18 @@ export class BranchController {
         @Req() req: Request,
         @Res() res: Response,
     ): Promise<void | Response> {
-        // TODO : check brand limit for creating branches
+        const brandID = req.headers["brand"].toString();
+
+        const branchLimit = await this.planService.checkLimitCounts<number>(brandID, "branch-limit-count");
+        const branchCount = await this.BranchModel.countDocuments({ brand: brandID }).exec();
+        if (branchCount >= branchLimit) {
+            throw new UnprocessableEntityException([{ property: "", errors: [I18nContext.current().t("panel.brand.You have reached your branch creation limit")] }]);
+        }
 
         // limit user to upload at max 5 images
         if (gallery.length > 5) {
             throw new UnprocessableEntityException([{ property: "", errors: [I18nContext.current().t("file.max file count is n", { args: { count: 5 } })] }]);
         }
-
-        const brandID = req.headers["brand"];
         const galleryLinks = await this.fileService.saveUploadedImages(gallery, "gallery", 2 * 1_048_576, ["png", "jpeg", "jpg", "webp"], 768, "public", "/gallery");
 
         const translation = {};
@@ -212,6 +219,8 @@ export class BranchController {
             await unlink(img.replace("/file/", "storage/public/")).catch((e) => {});
         });
 
-        return res.end();
+        const branchLimit = await this.planService.checkLimitCounts<number>(brandID, "branch-limit-count");
+
+        return res.json({ canCreateNewBranch: branchCount < branchLimit });
     }
 }
