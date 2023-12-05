@@ -43,25 +43,27 @@ export class MenuService {
         const workingHours = await this.WorkingHourModel.findOne({ brand: brandID }).select("workingHours").lean();
 
         const orderedHours = {};
-        for (const branch in workingHours.workingHours || {}) {
-            const days = workingHours.workingHours[branch];
-            if (!orderedHours[branch]) orderedHours[branch] = {};
+        if (workingHours) {
+            for (const branch in workingHours.workingHours || {}) {
+                const days = workingHours.workingHours[branch];
+                if (!orderedHours[branch]) orderedHours[branch] = {};
 
-            let branchHoursSet = false;
+                let branchHoursSet = false;
 
-            for (const dayName in days) {
-                const day = days[dayName];
-                const clock = day.from && day.to ? `${day.from} -> ${day.to}` : "";
-                if (day.open) branchHoursSet = true;
+                for (const dayName in days) {
+                    const day = days[dayName];
+                    const clock = day.from && day.to ? `${day.from} -> ${day.to}` : "";
+                    if (day.open) branchHoursSet = true;
 
-                if (!orderedHours[branch][`${clock} - ${day.open}`]) {
-                    orderedHours[branch][`${clock} - ${day.open}`] = { days: [dayName], clock: clock, open: day.open };
-                } else {
-                    orderedHours[branch][`${clock} - ${day.open}`].days.push(dayName);
+                    if (!orderedHours[branch][`${clock} - ${day.open}`]) {
+                        orderedHours[branch][`${clock} - ${day.open}`] = { days: [dayName], clock: clock, open: day.open };
+                    } else {
+                        orderedHours[branch][`${clock} - ${day.open}`].days.push(dayName);
+                    }
                 }
-            }
 
-            if (!branchHoursSet && branch !== "all") delete orderedHours[branch];
+                if (!branchHoursSet && branch !== "all") delete orderedHours[branch];
+            }
         }
 
         return { branches, workingHours: orderedHours };

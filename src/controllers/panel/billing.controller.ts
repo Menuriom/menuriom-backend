@@ -148,6 +148,9 @@ export class BillingController {
             ]);
         }
 
+        // TODO : after downgrade to lower plan we need to reverese any changes that is not allowed in current plan
+        // example: remove all tags when user downgrades to basic plan
+
         const currentPlan = await this.billingService.getBrandsCurrentPlan(brandID);
         const { calculatedPrice: price, extraSeconds } = await this.billingService.calculatePriceAndExtraSeconds(currentPlan, plan, selectedPaymentPeriod);
 

@@ -191,7 +191,7 @@ export class BranchController {
             throw new UnprocessableEntityException([{ property: "", errors: [I18nContext.current().t("panel.brand.you cant delete your last branch")] }]);
         }
 
-        const branch = await this.BranchModel.findOne({ _id: params.id }).select("logo name slogan").exec();
+        const branch = await this.BranchModel.findOne({ _id: params.id }).exec();
         if (!branch) {
             throw new UnprocessableEntityException([
                 { property: "", errors: [I18nContext.current().t("panel.brand.no record was found, or you are not authorized to do this action")] },

@@ -14,11 +14,13 @@ import { SetPermissions } from "src/decorators/authorization.decorator";
 import { IdDto } from "src/dto/general.dto";
 import { WorkingHoursDto } from "src/dto/panel/workingHours.dto";
 import { WorkingHourDocument } from "src/models/WorkingHours.schema";
+import { PlanService } from "src/services/plan.service";
 
 @Controller("panel/working-hours")
 export class WorkingHoursController {
     constructor(
         // ...
+        private readonly planService: PlanService,
         @InjectModel("WorkingHour") private readonly WorkingHourModel: Model<WorkingHourDocument>,
     ) {}
 
@@ -31,9 +33,6 @@ export class WorkingHoursController {
         const workingHours = await this.WorkingHourModel.findOne({ brand: brandID }).select("workingHours").exec();
         if (!workingHours) {
             return res.end();
-            // throw new UnprocessableEntityException([
-            //     { property: "", errors: [I18nContext.current().t("panel.brand.no record was found, or you are not authorized to do this action")] },
-            // ]);
         }
 
         return res.json({ workingHours: workingHours.workingHours });
@@ -43,7 +42,10 @@ export class WorkingHoursController {
     @SetPermissions("main-panel.branches.edit")
     @UseGuards(AuthorizeUserInSelectedBrand)
     async saveWorkingHours(@Body() body: WorkingHoursDto, @Req() req: Request, @Res() res: Response): Promise<void | Response> {
-        const brandID = req.headers["brand"];
+        const brandID = req.headers["brand"].toString();
+
+        const canHaveWorkingHours = await this.planService.checkLimitCounts<boolean>(brandID, "restaurant-detailed-info");
+        if (!canHaveWorkingHours) return res.end();
 
         await this.WorkingHourModel.updateOne({ brand: brandID }, { workingHours: body.workingHours, createdAt: new Date(Date.now()) }, { upsert: true });
         return res.end();
