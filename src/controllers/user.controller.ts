@@ -37,8 +37,6 @@ export class UserController {
 
         const userBrands = {};
 
-        // TODO : add brand plan limitation for each brand so that front middleware can check for them
-
         // get brands that user owns
         const brands = await this.BrandModel.find({ creator: user.id, $or: [{ deletedAt: { $exists: false } }, { deletedAt: null }] })
             .select("logo username name slogan")
@@ -56,7 +54,6 @@ export class UserController {
         for (let i = 0; i < staff.length; i++) {
             const member = staff[i];
             if (!!member.brand.deletedAt) continue;
-            // TODO : get list of roles from branches in staffModel
             userBrands[member.brand._id.toString()] = {
                 logo: member.brand.logo,
                 username: member.brand.username,
@@ -195,12 +192,14 @@ export class UserController {
         ).exec();
 
         // TODO : remove this when email and sms tempaltes are ok
-        return res.json({ code, expireIn: this.verficationCodeExpireTime });
+        // return res.json({ code, expireIn: this.verficationCodeExpireTime });
 
-        // TODO : do the templates and subject and stuff
+        // TODO : do the templates and stuff
         await Sms("verify", inputs.mobile, null, [code.toString()], "menuriom")
             .then(async () => await this.UserModel.updateOne({ mobile: inputs.mobile }, { verficationCodeSentAt: new Date(Date.now()) }).exec())
             .catch((e) => console.log(e));
+
+        return res.json({ expireIn: this.verficationCodeExpireTime });
     }
 
     @Post("verify-mobile")

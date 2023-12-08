@@ -18,13 +18,18 @@ import { SetPermissions } from "src/decorators/authorization.decorator";
 import { languages } from "src/interfaces/Translation.interface";
 import { StaffRole } from "src/models/StaffRoles.schema";
 import { IdDto } from "src/dto/general.dto";
+import { PlanService } from "src/services/plan.service";
+import { BranchDocument } from "src/models/Branches.schema";
+import { User } from "src/models/Users.schema";
 
 @Controller("panel/brands")
 export class BrandController {
     constructor(
         // ...
         private readonly fileService: FileService,
+        private readonly planService: PlanService,
         @InjectModel("Brand") private readonly BrandModel: Model<BrandDocument>,
+        @InjectModel("Branch") private readonly BranchModel: Model<BranchDocument>,
         @InjectModel("Staff") private readonly StaffModel: Model<StaffDocument>,
     ) {}
 
@@ -38,11 +43,12 @@ export class BrandController {
                 { property: "", errors: [I18nContext.current().t("panel.brand.no record was found, or you are not authorized to do this action")] },
             ]);
         }
-        // TODO : get lang limit from the brand's purchased plan
+
+        const langLimit = await this.planService.checkLimitCounts<number>(brand._id, "multiple-language-limit");
         return res.json({
             languages: brand.languages,
             currency: brand.currency,
-            languageLimit: 2,
+            languageLimit: langLimit,
         });
     }
 
@@ -56,7 +62,10 @@ export class BrandController {
                 { property: "", errors: [I18nContext.current().t("panel.brand.no record was found, or you are not authorized to do this action")] },
             ]);
         }
-        // TODO : get lang limit from the brand's purchased plan and make sure user only is sending currect limit
+
+        const langLimit = await this.planService.checkLimitCounts<number>(brand._id, "multiple-language-limit");
+        if (body.languages.length > langLimit) body.languages.length = langLimit;
+
         await this.BrandModel.updateOne({ _id: params.id }, { languages: body.languages, currency: body.currency }).exec();
         return res.end();
     }
@@ -73,7 +82,21 @@ export class BrandController {
             .exec();
         for (let i = 0; i < brands.length; i++) {
             const brand = brands[i];
-            userBrands[brand.id] = { _id: brand.id, logo: brand.logo, name: brand.name, slogan: brand.slogan, role: "owner", permissions: [] };
+
+            const branchCount = await this.BranchModel.countDocuments({ brand: brand._id }).exec();
+            const staff = await this.StaffModel.find({ brand: brand._id }).populate<{ user: User }>("user", "avatar name family").exec();
+            const staffList = staff.map((staff) => ({ avatar: staff.user.avatar, fullName: `${staff.user.name} ${staff.user.family}` }));
+
+            userBrands[brand.id] = {
+                _id: brand.id,
+                logo: brand.logo,
+                name: brand.name,
+                slogan: brand.slogan,
+                role: "owner",
+                permissions: [],
+                branchCount: branchCount,
+                staffList: staffList,
+            };
         }
 
         // from staff document get brands that user is part of
@@ -94,8 +117,6 @@ export class BrandController {
                 permissions: member.role.permissions || [],
             };
         }
-
-        // TODO : get the branch count for each brands
 
         const canCreateNewBrand = brands.length > 0 ? false : true;
 

@@ -208,10 +208,6 @@ export class AuthController {
     async refresh(@Req() req: Request, @Res() res: Response): Promise<void | Response> {
         /* 
             TODO : if the family lenth reaches the limit then revoke the session and create new one
-
-            TODO
-            old sessions can be stored up to 3 months (could change) then we delete them from database make a job for this
-            a session is deletable when the expire time is passed or status of it is not active
         */
 
         /*

@@ -3,7 +3,7 @@ import { NotFoundException, UnprocessableEntityException, InternalServerErrorExc
 import { Response, query } from "express";
 import { Request } from "src/interfaces/Request.interface";
 import { InjectModel } from "@nestjs/mongoose";
-import { Model } from "mongoose";
+import { Model, Types } from "mongoose";
 import { I18nContext } from "nestjs-i18n";
 import { languages } from "src/interfaces/Translation.interface";
 import { IdDto } from "src/dto/general.dto";
@@ -16,6 +16,7 @@ import { MenuService } from "src/services/menu.service";
 import { MenuSideGroupDocument } from "src/models/MenuSideGroups.schema";
 import { CreateNewSideGroupDto, EditSideGroupDto } from "src/dto/panel/sideGroup.dto";
 import { CheckUnpaidInvoiceInSelectedBrand } from "src/guards/billExpiration.guard";
+import { MenuItemDocument } from "src/models/MenuItems.schema";
 
 @Controller("panel/menu-sides")
 export class MenuSideGroupController {
@@ -25,6 +26,7 @@ export class MenuSideGroupController {
         readonly FileService: FileService,
         readonly MenuService: MenuService,
         @InjectModel("MenuSideGroup") private readonly MenuSideGroupModel: Model<MenuSideGroupDocument>,
+        @InjectModel("MenuItem") private readonly MenuItemModel: Model<MenuItemDocument>,
     ) {}
 
     @Get("/")
@@ -158,6 +160,8 @@ export class MenuSideGroupController {
     @SetPermissions("main-panel.menu.items")
     @UseGuards(AuthorizeUserInSelectedBrand)
     async deleteSingleRecord(@Param() params: IdDto, @Req() req: Request, @Res() res: Response): Promise<void | Response> {
+        const brandID = req.headers["brand"].toString();
+
         const group = await this.MenuSideGroupModel.findOne({ _id: params.id }).select("_id icon").exec();
         if (!group) {
             throw new UnprocessableEntityException([
@@ -165,9 +169,12 @@ export class MenuSideGroupController {
             ]);
         }
 
-        // TODO : also delete group from all menu items that has it
-
         await this.MenuSideGroupModel.deleteOne({ _id: params.id }).exec();
+
+        // also delete group from all menu items that has it
+        await this.MenuItemModel.updateMany({ brand: brandID }, { $pull: { sideItems: new Types.ObjectId(params.id) } })
+            .exec()
+            .catch((e) => console.log({ e }));
 
         return res.end();
     }

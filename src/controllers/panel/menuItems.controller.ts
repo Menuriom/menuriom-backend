@@ -318,6 +318,8 @@ export class MenuItemsController {
     @SetPermissions("main-panel.menu.items")
     @UseGuards(AuthorizeUserInSelectedBrand)
     async deleteSingleRecord(@Param() params: IdDto, @Req() req: Request, @Res() res: Response): Promise<void | Response> {
+        const brandID = req.headers["brand"].toString();
+
         const menuItem = await this.MenuItemModel.findOne({ _id: params.id }).select("_id images").exec();
         if (!menuItem) {
             throw new UnprocessableEntityException([
@@ -329,11 +331,12 @@ export class MenuItemsController {
         for (let i = 0; i < menuItem.images.length; i++) {
             await unlink(menuItem.images[i].replace("/file/", "storage/public/")).catch((e) => {});
         }
-
         // delete menu item
         await this.MenuItemModel.deleteOne({ _id: params.id }).exec();
 
-        return res.end();
+        const canCreateNewDish = await this.MenuItemModel.countDocuments({ brand: brandID }).exec();
+
+        return res.json({ canCreateNewDish: canCreateNewDish < 800 });
     }
 
     @Post("/toggle-hidden/:id")
@@ -386,6 +389,28 @@ export class MenuItemsController {
 
         const pinned = Has_itemHighlighting ? !menuItem.pinned : false;
         await this.MenuItemModel.updateOne({ _id: param.id }, { pinned: pinned }).exec();
+
+        return res.end();
+    }
+
+    @Post("/toggle-showAsNew/:id")
+    @SetPermissions("main-panel.menu.items")
+    @UseGuards(AuthorizeUserInSelectedBrand)
+    async toggleItemNewStatus(@Param() param: IdDto, @Req() req: Request, @Res() res: Response): Promise<void | Response> {
+        const brandID = req.headers["brand"];
+        const menuItem = await this.MenuItemModel.findOne({ _id: param.id }).select("_id showAsNew").exec();
+        if (!menuItem) {
+            throw new UnprocessableEntityException([
+                { property: "", errors: [I18nContext.current().t("panel.brand.no record was found, or you are not authorized to do this action")] },
+            ]);
+        }
+
+        let Has_itemHighlighting = false;
+        const brandsPlan = await this.BrandsPlanModel.findOne({ brand: brandID }).populate<{ currentPlan: Plan }>("currentPlan", "_id limitations").exec();
+        if (this.PlanService.checkLimitations([["item-highlighting", true]], brandsPlan.currentPlan.limitations)) Has_itemHighlighting = true;
+
+        const showAsNew = Has_itemHighlighting ? !menuItem.showAsNew : false;
+        await this.MenuItemModel.updateOne({ _id: param.id }, { showAsNew: showAsNew }).exec();
 
         return res.end();
     }

@@ -25,8 +25,6 @@ export class MenuStylesController {
         @InjectModel("MenuStyle") private readonly MenuStyleModel: Model<MenuSytleDocument>,
     ) {}
 
-    // TODO : we could have a secret menu section in menus that users can access somehow
-
     @Get("/")
     @SetPermissions("main-panel.menu.style")
     @UseGuards(AuthorizeUserInSelectedBrand)

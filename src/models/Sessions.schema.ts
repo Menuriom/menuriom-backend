@@ -13,7 +13,7 @@ export const SessionSchema = new Schema({
     currentlyInUseToken: { type: String },
     status: {
         type: String,
-        enum: ["active", "revoked", "ready-to-delete"],
+        enum: ["active", "revoked"],
         default: "active",
     },
     expireAt: {
@@ -37,7 +37,7 @@ export interface Session {
     ip: string;
     accessTokenFamily?: string[];
     currentlyInUseToken?: string;
-    status: "active" | "revoked" | "ready-to-delete";
+    status: "active" | "revoked";
     expireAt: Date;
     createdAt: Date;
     updatedAt: Date;

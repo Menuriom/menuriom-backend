@@ -141,10 +141,6 @@ export class BillingController {
         let type = "";
         let url = "";
 
-        // TODO
-        // check if user is downgrading and dont allow until the limit is reached
-        // any limitation with numbers must be lower or equal to destination plan
-
         const plan = await this.PlanModel.findOne({ _id: selectedPlan }).exec();
         if (!plan) {
             throw new UnprocessableEntityException([
@@ -152,11 +148,16 @@ export class BillingController {
             ]);
         }
 
+        // TODO : after downgrade to lower plan we need to reverese any changes that is not allowed in current plan
+        // example: remove all tags when user downgrades to basic plan
+
         const currentPlan = await this.billingService.getBrandsCurrentPlan(brandID);
         const { calculatedPrice: price, extraSeconds } = await this.billingService.calculatePriceAndExtraSeconds(currentPlan, plan, selectedPaymentPeriod);
 
         const user = await this.UserModel.findOne({ _id: req.session.userID }).exec();
         const selectedPlanRecord = await this.PlanModel.findOne({ _id: selectedPlan }).exec();
+
+        await this.billingService.downgradeLimitCheck(brandID, selectedPlanRecord);
 
         const fromPlan_fa = currentPlan.plan.translation?.["fa"]?.name || currentPlan.plan.name;
         const fromPlan_en = currentPlan.plan.translation?.["en"]?.name || currentPlan.plan.name;
@@ -264,7 +265,7 @@ export class BillingController {
         const paymentGateway = this.billingService.getGateway(param.method);
         const transactionResponse = paymentGateway.getTransactionResponse(req);
         if (transactionResponse.identifier === "") {
-            // TODO : log the error
+            // LOGGER : log the error
             return res.json({ statusCode: "405", message: "MethodNotDefined" });
         }
 
@@ -297,7 +298,7 @@ export class BillingController {
             });
 
         if (!transactionVerified) {
-            // TODO : Log the error
+            // LOGGER : Log the error
             return res.json({ statusCode: "412", message: "TransactionFailedAndWillBounce", transactionID: transaction._id });
         }
 

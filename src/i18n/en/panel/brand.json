@@ -4,5 +4,8 @@
     "no record was found, or you are not authorized to do this action": "no record was found, or you are not authorized to do this action",
     "You can only create 1 brand!": "You can only create 1 brand!",
     "You can join three brands at a max!": "You can join three brands at a max!",
-    "this username is already taken": "this username is already taken"
+    "this username is already taken": "this username is already taken",
+    "you cant delete your last branch": "you can't delete your last branch",
+    "You have reached your branch creation limit": "You have reached your branch creation limit. Please upgrade your plan to create more branches",
+    "You have reached your staff limit": "You have reached your staff limit. Please upgrade your plan to remove this limit"
 }
