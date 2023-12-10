@@ -23,6 +23,7 @@ import { SessionDocument } from "src/models/Sessions.schema";
 import * as UAParser from "ua-parser-js";
 import * as humanizeDuration from "humanize-duration";
 import { AccountService } from "src/services/account.service";
+import { NotifsService } from "src/services/notifs.service";
 
 @Controller("account")
 export class AccountController {
@@ -30,6 +31,7 @@ export class AccountController {
         // ...
         private readonly fileService: FileService,
         private readonly AccountService: AccountService,
+        private readonly notifsService: NotifsService,
         @InjectModel("User") private readonly UserModel: Model<UserDocument>,
         @InjectModel("Session") private readonly SessionModel: Model<SessionDocument>,
         @InjectModel("Invite") private readonly InviteModel: Model<InviteDocument>,
@@ -102,6 +104,13 @@ export class AccountController {
             const invite = invites[i];
             brands[invite.brand._id.toString()] = { logo: invite.brand.logo, name: invite.brand.name, role: invite.role.name, permissions: invite.role.permissions };
             staffInsert.push({ user: user._id, brand: invite.brand, role: invite.role, branches: invite.branches });
+            await this.notifsService.notif({
+                brand: invite.brand._id.toString(),
+                type: "invite-update",
+                data: { status: "accepted" },
+                sendAsEmail: true,
+                showInSys: true,
+            });
         }
         await this.StaffModel.insertMany(staffInsert);
 
@@ -123,6 +132,17 @@ export class AccountController {
     async rejectInvites(@Body() body: acceptInvitesDto, @Req() req: Request, @Res() res: Response): Promise<void | Response> {
         const user = await this.UserModel.findOne({ _id: req.session.userID }).select("_id email").exec();
         if (!user) throw new ForbiddenException();
+
+        const invites = await this.InviteModel.find({ _id: { $in: body.invites }, email: user.email, status: "sent" }).exec();
+        invites.forEach(async (invite) => {
+            await this.notifsService.notif({
+                brand: invite.brand.toString(),
+                type: "invite-update",
+                data: { status: "rejected" },
+                sendAsEmail: true,
+                showInSys: true,
+            });
+        });
 
         // change status of invites
         await this.InviteModel.updateMany({ _id: { $in: body.invites }, email: user.email, status: "sent" }, { status: "rejected" }).exec();

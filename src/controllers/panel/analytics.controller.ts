@@ -185,7 +185,7 @@ export class AnalyticsController {
             dailyRecords.forEach((record) => {
                 dailyTotalCounts.push(record.count);
                 dailyUniqueCounts.push(record.uniqueCount);
-                dailyLabel.push(new Intl.DateTimeFormat("fa", { calendar: "persian", year: "numeric", month: "short" }).format(record.date));
+                dailyLabel.push(new Intl.DateTimeFormat("fa", { calendar: "persian", month: "short", day: "2-digit" }).format(record.date));
             });
         }
 
@@ -203,23 +203,5 @@ export class AnalyticsController {
             dailyUniqueCounts,
             dailyLabel,
         });
-    }
-
-    @Get("/")
-    @SetPermissions("main-panel")
-    @UseGuards(AuthorizeUserInSelectedBrand)
-    async get2(@Req() req: Request, @Res() res: Response): Promise<void | Response> {
-        const date = new Intl.DateTimeFormat("en-UK").format(Date.now());
-        const dateDigest = date.split("/");
-
-        console.log({
-            date: date,
-            today: `${dateDigest[2]}-${dateDigest[1]}-${dateDigest[0]}`,
-            thisMonth: `${dateDigest[2]}-${dateDigest[1]}-00`,
-            // G2J: new Intl.DateTimeFormat("fa", { calendar: "persian", numberingSystem: "latn" }).format(date),
-            // J2G: jalaali.toGregorian(1402, 10, 10),
-        });
-
-        return res.json({});
     }
 }

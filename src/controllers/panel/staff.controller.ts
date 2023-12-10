@@ -19,6 +19,7 @@ import { User, UserDocument } from "src/models/Users.schema";
 import { IdDto } from "src/dto/general.dto";
 import { CheckUnpaidInvoiceInSelectedBrand } from "src/guards/billExpiration.guard";
 import { PlanService } from "src/services/plan.service";
+import { NotifsService } from "src/services/notifs.service";
 
 @Controller("panel/staff")
 export class StaffController {
@@ -26,6 +27,7 @@ export class StaffController {
         // ...
         private readonly fileService: FileService,
         private readonly planService: PlanService,
+        private readonly notifsService: NotifsService,
         @InjectModel("User") private readonly UserModel: Model<UserDocument>,
         @InjectModel("Branch") private readonly BranchModel: Model<BranchDocument>,
         @InjectModel("Staff") private readonly StaffModel: Model<StaffDocument>,
@@ -175,6 +177,8 @@ export class StaffController {
             { role: body.selectedRole, branches: body.selectedBranches, status: "sent", createdAt: new Date(Date.now()) },
             { upsert: true },
         ).exec();
+
+        if (user) await this.notifsService.notif({ brand: null, type: "new-invite", sendAsEmail: true, showInSys: false });
 
         return res.json({ userExists: !!user });
     }
