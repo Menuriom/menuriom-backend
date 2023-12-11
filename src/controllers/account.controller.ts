@@ -107,7 +107,7 @@ export class AccountController {
             await this.notifsService.notif({
                 brand: invite.brand._id.toString(),
                 type: "invite-update",
-                data: { status: "accepted" },
+                data: { userEmail: user.email, status: "accepted" },
                 sendAsEmail: true,
                 showInSys: true,
             });
@@ -138,7 +138,7 @@ export class AccountController {
             await this.notifsService.notif({
                 brand: invite.brand.toString(),
                 type: "invite-update",
-                data: { status: "rejected" },
+                data: { userEmail: user.email, status: "rejected" },
                 sendAsEmail: true,
                 showInSys: true,
             });

@@ -7,16 +7,20 @@ import { Model, Types } from "mongoose";
 import { SetPermissions } from "src/decorators/authorization.decorator";
 import { AuthorizeUserInSelectedBrand } from "src/guards/authorizeUser.guard";
 import { NotificationDocument } from "src/models/Notifications.schema";
+import { NotifsService } from "src/services/notifs.service";
+import { BrandDocument } from "src/models/Brands.schema";
+import { StaffDocument } from "src/models/Staff.schema";
+import { StaffRole } from "src/models/StaffRoles.schema";
 
 @Controller("panel/notifications")
 export class NotificationsController {
     constructor(
         // ...
+        private readonly notifsService: NotifsService,
         @InjectModel("Notification") private readonly NotificationModel: Model<NotificationDocument>,
+        @InjectModel("Brand") private readonly BrandModel: Model<BrandDocument>,
+        @InjectModel("Staff") private readonly StaffModel: Model<StaffDocument>,
     ) {}
-
-    // TODO
-    // cronjob to cleanup notifs that createdAt of them passed 6 month
 
     @Get("/")
     @SetPermissions("main-panel")
@@ -24,11 +28,32 @@ export class NotificationsController {
     async getNotifs(@Req() req: Request, @Res() res: Response): Promise<void | Response> {
         const brandID = req.headers["brand"].toString();
 
-        // TODO
-        // get current user
-        // if owner of brand show all notifs
-        // if staff memeber check permission and base on permission show list of notifs
-        const notifs = await this.NotificationModel.find({ brand: brandID, showInSys: true }).select("viewedInSysAt type title text createdAt").limit(25).exec();
+        const isUserOwner = await this.BrandModel.exists({ _id: brandID, creator: req.session.userID }).exec();
+
+        const query: any = {};
+        const type = ["new-invite", "welcome-new-user"];
+        if (!isUserOwner) {
+            const staff = await this.StaffModel.findOne({ brand: brandID, user: req.session.userID })
+                .populate<{ role: StaffRole }>("role", "name permissions")
+                .exec();
+            if (staff && staff.role.permissions.includes("main-panel.billing.access")) {
+                type.push("bill-reminder");
+                type.push("new-bill");
+                type.push("new-transaction");
+            }
+            if (staff && staff.role.permissions.includes("main-panel.staff.invite")) {
+                type.push("invite-update");
+            }
+            if (staff && staff.role.permissions.includes("main-panel.settings")) {
+                type.push("brand-username-change");
+            }
+            query.type = { $in: type };
+        }
+
+        const notifs = await this.NotificationModel.find({ $or: [{ user: req.session.userID }, { brand: brandID }], showInSys: true, ...query })
+            .select("viewedInSysAt type title text createdAt translation")
+            .limit(25)
+            .exec();
 
         return res.json({ notifs });
     }
@@ -40,9 +65,15 @@ export class NotificationsController {
         const brandID = req.headers["brand"].toString();
 
         const newNotifs = await this.NotificationModel.exists({
-            brand: brandID,
+            $and: [
+                {
+                    $or: [{ user: req.session.userID }, { brand: brandID }],
+                },
+                {
+                    $or: [{ viewedInSysAt: null }, { viewedInSysAt: { $exists: false } }],
+                },
+            ],
             showInSys: true,
-            $or: [{ viewedInSysAt: null }, { viewedInSysAt: { $exists: false } }],
         }).exec();
 
         return res.json({ newNotifs });
@@ -55,7 +86,17 @@ export class NotificationsController {
         const brandID = req.headers["brand"].toString();
 
         await this.NotificationModel.updateMany(
-            { brand: brandID, showInSys: true, $or: [{ viewedInSysAt: null }, { viewedInSysAt: { $exists: false } }] },
+            {
+                $and: [
+                    {
+                        $or: [{ user: req.session.userID }, { brand: brandID }],
+                    },
+                    {
+                        $or: [{ viewedInSysAt: null }, { viewedInSysAt: { $exists: false } }],
+                    },
+                ],
+                showInSys: true,
+            },
             { viewedInSysAt: new Date(Date.now()) },
         ).exec();
 

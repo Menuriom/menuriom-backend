@@ -6,7 +6,7 @@ export type NotificationDocument = Notification & Document;
 
 export const NotificationSchema = new Schema({
     user: { type: Schema.Types.ObjectId, ref: "User" },
-    brand: { type: Schema.Types.ObjectId, ref: "Brand", required: true },
+    brand: { type: Schema.Types.ObjectId, ref: "Brand" },
 
     showInSys: { type: Boolean },
     viewedInSysAt: { type: Date },
@@ -31,18 +31,18 @@ export interface Notification {
     _id: Types.ObjectId;
     user: PopulatedDoc<User>;
     brand: PopulatedDoc<Brand>;
-    
+
     showInSys: boolean;
     viewedInSysAt: Date;
-    
+
     sendAsEmail: boolean;
     emailSentAt: Date;
-    
+
     type: "bill-reminder" | "new-bill" | "new-transaction" | "new-invite" | "invite-update" | "welcome-new-user" | "brand-username-change";
     title: string;
     text?: string;
     data: Object;
-    
+
     createdAt: Date;
     translation: Translation;
 }

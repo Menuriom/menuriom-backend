@@ -20,6 +20,7 @@ import { IdDto } from "src/dto/general.dto";
 import { CheckUnpaidInvoiceInSelectedBrand } from "src/guards/billExpiration.guard";
 import { PlanService } from "src/services/plan.service";
 import { NotifsService } from "src/services/notifs.service";
+import { BrandDocument } from "src/models/Brands.schema";
 
 @Controller("panel/staff")
 export class StaffController {
@@ -29,6 +30,7 @@ export class StaffController {
         private readonly planService: PlanService,
         private readonly notifsService: NotifsService,
         @InjectModel("User") private readonly UserModel: Model<UserDocument>,
+        @InjectModel("Brand") private readonly BrandModel: Model<BrandDocument>,
         @InjectModel("Branch") private readonly BranchModel: Model<BranchDocument>,
         @InjectModel("Staff") private readonly StaffModel: Model<StaffDocument>,
         @InjectModel("StaffRole") private readonly StaffRoleModel: Model<StaffRoleDocument>,
@@ -178,7 +180,8 @@ export class StaffController {
             { upsert: true },
         ).exec();
 
-        if (user) await this.notifsService.notif({ brand: null, type: "new-invite", sendAsEmail: true, showInSys: false });
+        const brand = await this.BrandModel.findOne({ _id: brandID }).exec();
+        if (user) await this.notifsService.notif({ user: user._id, type: "new-invite", data: { brandName: brand.name }, sendAsEmail: true, showInSys: false });
 
         return res.json({ userExists: !!user });
     }
