@@ -13,7 +13,7 @@ export const NotificationSchema = new Schema({
 
     sendAsEmail: { type: Boolean },
     emailSentAt: { type: Date },
-    
+
     type: {
         type: String,
         enum: ["bill-reminder", "new-bill", "new-transaction", "new-invite", "invite-update", "welcome-new-user", "brand-username-change"],
@@ -22,7 +22,8 @@ export const NotificationSchema = new Schema({
     title: { type: String },
     text: { type: String },
     data: { type: Object },
-    
+    lang: { type: String },
+
     createdAt: { type: Date, default: new Date(Date.now()) },
     translation: TranslationSchema,
 });
@@ -42,6 +43,7 @@ export interface Notification {
     title: string;
     text?: string;
     data: Object;
+    lang?: string;
 
     createdAt: Date;
     translation: Translation;

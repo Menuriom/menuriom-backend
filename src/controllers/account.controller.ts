@@ -110,6 +110,7 @@ export class AccountController {
                 data: { userEmail: user.email, status: "accepted" },
                 sendAsEmail: true,
                 showInSys: true,
+                lang: I18nContext.current().lang,
             });
         }
         await this.StaffModel.insertMany(staffInsert);
@@ -141,6 +142,7 @@ export class AccountController {
                 data: { userEmail: user.email, status: "rejected" },
                 sendAsEmail: true,
                 showInSys: true,
+                lang: I18nContext.current().lang,
             });
         });
 

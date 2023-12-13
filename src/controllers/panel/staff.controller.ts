@@ -150,8 +150,8 @@ export class StaffController {
         }
 
         // check if the role belong to the brand
-        const isRoleBlongToBrand = await this.StaffRoleModel.exists({ _id: body.selectedRole, brand: brandID }).exec();
-        if (!isRoleBlongToBrand) {
+        const selectedRole = await this.StaffRoleModel.findOne({ _id: body.selectedRole, brand: brandID }).exec();
+        if (!selectedRole) {
             throw new ForbiddenException([
                 { property: "", errors: [I18nContext.current().t("panel.staff.The role you've chosen is not in your brand's role list")] },
             ]);
@@ -181,7 +181,14 @@ export class StaffController {
         ).exec();
 
         const brand = await this.BrandModel.findOne({ _id: brandID }).exec();
-        if (user) await this.notifsService.notif({ user: user._id, type: "new-invite", data: { brandName: brand.name }, sendAsEmail: true, showInSys: false });
+        if (user) await this.notifsService.notif({
+            user: user._id,
+            type: "new-invite",
+            data: { brandName: brand.name, roleName: selectedRole.name },
+            sendAsEmail: true,
+            showInSys: false,
+            lang: I18nContext.current().lang,
+        });
 
         return res.json({ userExists: !!user });
     }

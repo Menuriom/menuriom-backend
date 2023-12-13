@@ -204,7 +204,14 @@ export class BrandController {
         ).exec();
 
         if (body.username != brand.username) {
-            await this.notifsService.notif({ brand: brand._id, type: "brand-username-change", sendAsEmail: true, showInSys: true });
+            await this.notifsService.notif({
+                brand: brand._id,
+                type: "brand-username-change",
+                data: { oldUsername: brand.username, newUsername: body.username },
+                sendAsEmail: true,
+                showInSys: true,
+                lang: I18nContext.current().lang,
+            });
         }
 
         return res.json({ logo: logoLink, username: body.username, name: body["name.default"], slogan: body["slogan.default"] });

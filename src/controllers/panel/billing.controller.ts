@@ -208,6 +208,7 @@ export class BillingController {
                 data: { bill: bill._id, billNumber: bill.billNumber, type: bill.type },
                 sendAsEmail: true,
                 showInSys: true,
+                lang: I18nContext.current().lang,
             });
             type = "withPayment";
             url = paymentGateway.getGatewayUrl(identifier);
@@ -332,6 +333,7 @@ export class BillingController {
             data: { bill: bill._id, billNumber: bill.billNumber, transaction: transaction._id },
             sendAsEmail: true,
             showInSys: true,
+            lang: I18nContext.current().lang,
         });
 
         return res.json({ statusCode: "200", message: "SuccessfulPayment", transactionID: transaction._id });

@@ -10,6 +10,7 @@ type BaseInput = {
     sendAsEmail?: boolean;
     type: Notification["type"];
     data?: any;
+    lang?: string;
 };
 
 @Injectable()
@@ -19,10 +20,10 @@ export class NotifsService {
         @InjectModel("Notification") private readonly NotificationModel: Model<NotificationDocument>,
     ) {}
 
-    async notif({ user, brand, showInSys, sendAsEmail, type, data }: BaseInput) {
+    async notif({ user, brand, showInSys, sendAsEmail, type, data, lang }: BaseInput) {
         const { title, text, translation } = this.getTitleAndText(type, data);
 
-        await this.NotificationModel.create({ user, brand, showInSys, sendAsEmail, type, title, text, data, translation, createdAt: new Date(Date.now()) });
+        await this.NotificationModel.create({ user, brand, showInSys, sendAsEmail, type, title, text, data, lang, translation, createdAt: new Date(Date.now()) });
     }
 
     // ========================================
