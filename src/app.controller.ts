@@ -37,8 +37,8 @@ export class AppController {
 
     @Get("/templ")
     async viewTempl(@Req() req: Request, @Res() res: Response): Promise<void | Response> {
-        const lang = "fa";
-        const emailTemplate = "newInviteEmail";
+        const lang = "en";
+        const emailTemplate = "newBillEmail";
         const vals: { k: string; v: string }[] = [
             { k: "code", v: "623123" },
             { k: "url", v: "http://localhost:3000" },
@@ -49,6 +49,23 @@ export class AppController {
             // newInvite -> data.brandName data.roleName
             { k: "brandName", v: "dasda" },
             { k: "roleName", v: "dasda" },
+
+            // inviteUpdate -> data.userEmail data.status(accepted-rejected)
+            { k: "userEmail", v: "kasrakeshvardoost@gmail.com" },
+            { k: "backgroundColor", v: "#bbf7d0" }, // #bbf7d0 | #fecaca
+            { k: "color", v: "#15803d" }, // #15803d | #b91c1c
+            { k: "status", v: "تایید شد" },
+            { k: "img", v: "img6.png" }, // img6.png | img5.png
+
+            // newBill -> data.userEmail data.status(accepted-rejected)
+            { k: "type", v: "Renewal" },
+            { k: "description", v: "subscribtion renwal for your menuriom plan" },
+            { k: "billNumber", v: "#42342" },
+            { k: "issueDate", v: "1399/09/01 13:58" },
+            { k: "payablePrice", v: "135,000 Toman" },
+            { k: "planIcon", v: "standard-g.png" },
+            { k: "planName", v: "Standard plan" },
+            { k: "planPeriod", v: "yearly" },
         ];
 
         let html: string = await readFile(`./src/notifications/templates/${lang}/${emailTemplate}.html`).then((buffer) => buffer.toString());

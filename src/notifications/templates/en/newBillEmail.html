@@ -12,7 +12,7 @@
 
         .body {
             font-family: 'vazir', 'roboto' !important;
-            direction: rtl;
+            direction: ltr;
             display: block;
             background-color: #fff;
             margin: 0;
@@ -112,7 +112,7 @@
     </style>
 </head>
 
-<body class="body" dir="rtl">
+<body class="body" dir="ltr">
     <table class="card">
         <tbody style="display: block; margin: auto;">
             <tr style="display: block;">
@@ -125,16 +125,16 @@
                     </a>
                     <main class="main">
                         <h1 class="h1" style="width: 100%; text-align: start; color: #9c85b2;">
-                            صورت حساب {{type}} اشتراک پلن منوریوم
+                            New Invoice For Your Menuriom Plan {{type}}
                         </h1>
                         <br>
 
                         <p style="margin: 0; text-align: start;">{{description}}</p>
                         <p style="margin: 0; text-align: start; font-size: 1.25rem;">
-                            <span style="color: #98c7d0;">شماره فاکتور</span> <span>{{billNumber}}</span>
+                            <span style="color: #98c7d0;">Invoice Number</span> <span>{{billNumber}}</span>
                         </p>
 
-                        <h4 class="" style="margin-bottom: 4px; text-align: start;">اشتراک:</h4>
+                        <h4 class="" style="margin-bottom: 4px; text-align: start;">Plan:</h4>
                         <table style="width: 100%; background-color: #393939; border-radius: 10px; padding: 6px;">
                             <tr>
                                 <td>
@@ -145,7 +145,7 @@
                                         <b class="text-lg">{{planName}}</b>
                                         <span style="color: #98c7d0;">{{planPeriod}}</span>
                                     </span>
-                                    <b class="text-lg" style="color:#bbf7d0; float: left;">{{payablePrice}}</b>
+                                    <b class="text-lg" style="color:#bbf7d0; float: right;">{{payablePrice}}</b>
                                 </td>
                             </tr>
                         </table>
@@ -153,11 +153,11 @@
                         <table style="width: 100%;">
                             <tr style="width: 100%;">
                                 <td style="width: 50%;">
-                                    <h4 class="" style="margin-bottom: 4px; text-align: start;">تاریخ صدور:</h4>
+                                    <h4 class="" style="margin-bottom: 4px; text-align: start;">Issued Date:</h4>
                                     <p style="margin: 0; text-align: start;">{{issueDate}}</p>
                                 </td>
                                 <td style="width: 50%;">
-                                    <h4 class="" style="margin-bottom: 4px; text-align: start;">مبلغ قابل پرداخت:</h4>
+                                    <h4 class="" style="margin-bottom: 4px; text-align: start;">Payable Price:</h4>
                                     <p style="margin: 0; text-align: start; color: #bbf7d0;">{{payablePrice}}</p>
                                 </td>
                             </tr>
@@ -165,9 +165,9 @@
 
                         <hr class="hr">
 
-                        <h3 class="h1" style="width: 100%; text-align: start; line-height: 2.25rem;">
-                            برای <a href="{{url}}" style="color: #9c85b2;">پرداخت صورتحساب</a> لطفا از طریق پنل منوریوم
-                            بخش صورتحساب ها اقدام فرمایید
+                        <h3 class="h1" style="width: 100%; text-align: start; line-height: 2rem;">
+                            To <a href="{{url}}" style="color: #9c85b2;">pay this bill</a>, please proceed through the
+                            billing section of your Menuriom panel
                         </h3>
                     </main>
                 </td>
