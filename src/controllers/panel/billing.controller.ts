@@ -205,7 +205,7 @@ export class BillingController {
             await this.notifsService.notif({
                 brand: brandID,
                 type: "new-bill",
-                data: { bill: bill._id, billNumber: bill.billNumber, type: bill.type },
+                data: { billID: bill._id, billNumber: bill.billNumber.toString(), type: bill.type },
                 sendAsEmail: true,
                 showInSys: true,
                 lang: I18nContext.current().lang,
@@ -330,7 +330,7 @@ export class BillingController {
         await this.notifsService.notif({
             brand: bill.brand.toString(),
             type: "new-transaction",
-            data: { bill: bill._id, billNumber: bill.billNumber, transaction: transaction._id },
+            data: { billID: bill._id, billNumber: bill.billNumber.toString(), transactionID: transaction._id },
             sendAsEmail: true,
             showInSys: true,
             lang: I18nContext.current().lang,

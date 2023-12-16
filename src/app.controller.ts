@@ -38,7 +38,7 @@ export class AppController {
     @Get("/templ")
     async viewTempl(@Req() req: Request, @Res() res: Response): Promise<void | Response> {
         const lang = "en";
-        const emailTemplate = "newBillEmail";
+        const emailTemplate = "billTransactionEmail";
         const vals: { k: string; v: string }[] = [
             { k: "code", v: "623123" },
             { k: "url", v: "http://localhost:3000" },
@@ -57,7 +57,7 @@ export class AppController {
             { k: "status", v: "تایید شد" },
             { k: "img", v: "img6.png" }, // img6.png | img5.png
 
-            // newBill -> data.userEmail data.status(accepted-rejected)
+            // newBill
             { k: "type", v: "Renewal" },
             { k: "description", v: "subscribtion renwal for your menuriom plan" },
             { k: "billNumber", v: "#42342" },
@@ -66,6 +66,11 @@ export class AppController {
             { k: "planIcon", v: "standard-g.png" },
             { k: "planName", v: "Standard plan" },
             { k: "planPeriod", v: "yearly" },
+
+            // billTransaction
+            { k: "paidPrice", v: "135,000 Toman" },
+            { k: "date", v: "1399/09/01 13:58" },
+            { k: "transactionCode", v: "423j4hj23" },
         ];
 
         let html: string = await readFile(`./src/notifications/templates/${lang}/${emailTemplate}.html`).then((buffer) => buffer.toString());

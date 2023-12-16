@@ -1,17 +1,41 @@
 import { Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { Model } from "mongoose";
-import { Notification, NotificationDocument } from "src/models/Notifications.schema";
+import {
+    BillReminderData,
+    BrandUsernameChangeData,
+    InviteUpdateData,
+    NewBillData,
+    NewInviteData,
+    NewTransactionData,
+    NotificationDocument,
+    WelcomeNewUserData,
+} from "src/models/Notifications.schema";
 
-type BaseInput = {
+interface BaseInput {
     user?: string;
     brand?: string;
     showInSys?: boolean;
     sendAsEmail?: boolean;
-    type: Notification["type"];
-    data?: any;
     lang?: string;
-};
+}
+
+interface BillReminder_Input extends BaseInput, BillReminderData {}
+interface NewBill_Input extends BaseInput, NewBillData {}
+interface NewTransaction_Input extends BaseInput, NewTransactionData {}
+interface NewInvite_Input extends BaseInput, NewInviteData {}
+interface InviteUpdate_Input extends BaseInput, InviteUpdateData {}
+interface WelcomeNewUser_Input extends BaseInput, WelcomeNewUserData {}
+interface BrandUsernameChange_Input extends BaseInput, BrandUsernameChangeData {}
+
+export type Input =
+    | BillReminder_Input
+    | NewBill_Input
+    | NewTransaction_Input
+    | NewInvite_Input
+    | InviteUpdate_Input
+    | WelcomeNewUser_Input
+    | BrandUsernameChange_Input;
 
 @Injectable()
 export class NotifsService {
@@ -20,15 +44,22 @@ export class NotifsService {
         @InjectModel("Notification") private readonly NotificationModel: Model<NotificationDocument>,
     ) {}
 
-    async notif({ user, brand, showInSys, sendAsEmail, type, data, lang }: BaseInput) {
-        const { title, text, translation } = this.getTitleAndText(type, data);
+    async notif({ user, brand, showInSys, sendAsEmail, type, data, lang }: Input) {
+        let title, text, translation;
+        if (type == "bill-reminder") ({ title, text, translation } = this.getTitleAndText({ type, data }));
+        if (type == "new-bill") ({ title, text, translation } = this.getTitleAndText({ type, data }));
+        if (type == "new-transaction") ({ title, text, translation } = this.getTitleAndText({ type, data }));
+        if (type == "new-invite") ({ title, text, translation } = this.getTitleAndText({ type, data }));
+        if (type == "invite-update") ({ title, text, translation } = this.getTitleAndText({ type, data }));
+        if (type == "welcome-new-user") ({ title, text, translation } = this.getTitleAndText({ type, data }));
+        if (type == "brand-username-change") ({ title, text, translation } = this.getTitleAndText({ type, data }));
 
         await this.NotificationModel.create({ user, brand, showInSys, sendAsEmail, type, title, text, data, lang, translation, createdAt: new Date(Date.now()) });
     }
 
     // ========================================
 
-    private getTitleAndText(type: Notification["type"], data: any): { title: string; text: string; translation: any } {
+    private getTitleAndText({ type, data }: Input): { title: string; text: string; translation: any } {
         let title: string;
         let text: string;
         let translation: {};

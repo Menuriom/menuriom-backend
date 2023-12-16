@@ -166,7 +166,7 @@ export class AuthController {
         const token = await this.authService.generateToken(req, sessionID, user.id);
         await this.authService.updateSession(req, sessionID, token);
 
-        await this.notifsService.notif({ user: user._id, type: "welcome-new-user", sendAsEmail: true, showInSys: true, lang: I18nContext.current().lang });
+        await this.notifsService.notif({ user: user._id, type: "welcome-new-user", data: {}, sendAsEmail: true, showInSys: true, lang: I18nContext.current().lang });
 
         return res.json({ token });
     }
@@ -199,7 +199,14 @@ export class AuthController {
                 createdAt: new Date(Date.now()),
             });
 
-            await this.notifsService.notif({ user: user._id, type: "welcome-new-user", sendAsEmail: true, showInSys: true, lang: I18nContext.current().lang });
+            await this.notifsService.notif({
+                user: user._id,
+                type: "welcome-new-user",
+                data: {},
+                sendAsEmail: true,
+                showInSys: true,
+                lang: I18nContext.current().lang,
+            });
         }
 
         // generate token

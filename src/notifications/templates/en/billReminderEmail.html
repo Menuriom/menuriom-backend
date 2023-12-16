@@ -12,7 +12,7 @@
 
         .body {
             font-family: 'vazir', system-ui !important;
-            direction: rtl;
+            direction: ltr;
             display: block;
             background-color: #fff;
             margin: 0;
@@ -42,7 +42,7 @@
             border: 1px solid #aaa;
             opacity: 0.5;
             width: 100%;
-            margin: 2rem auto;
+            margin: 1rem auto;
         }
 
         .card {
@@ -112,7 +112,7 @@
     </style>
 </head>
 
-<body class="body" dir="rtl">
+<body class="body" dir="ltr">
     <table class="card">
         <tbody style="display: block; margin: auto;">
             <tr style="display: block;">
@@ -124,19 +124,61 @@
                         </header>
                     </a>
                     <main class="main">
-                        <h1 class="h1" style="width: 100%; text-align: center; color: #9c85b2;">
-                            پاسخ دعوت به همکاری
+                        <h1 class="h1" style="width: 100%; text-align: start; color: #9c85b2; line-height: 2.5rem;">
+                            New Invoice For Your Menuriom Plan {{type}}
                         </h1>
-                        <h3 class="h1" style="width: 100%; text-align: center; line-height: 2.25rem;">
-                            دعوت به همکاری ارسالی به کاربر <span style="color: #98c7d0;">{{userEmail}}</span>
-                            <br>
-                            <span
-                                style="display: inline-block; padding: 0px 10px; background-color: {{backgroundColor}}; color: {{color}}; border-radius: 8px;">
-                                {{status}}
-                            </span>
+
+                        <p style=" text-align: start;">
+                            This message has been sent to remind you to pay the invoice with the following details. To
+                            maintain
+                            your services in the Menuriom plan please pay this bill.
+                        </p>
+                        <p style="text-align: start; opacity: 0.75;">
+                            If you do not pay this bill, your services in the Menuriom panel might be suspended
+                        </p>
+
+                        <hr class="hr">
+
+                        <p style="margin: 0; text-align: start; font-size: 1.25rem;">
+                            <span style="color: #98c7d0;">Invoice Number</span> <span>{{billNumber}}</span>
+                        </p>
+                        <p style="margin: 0; text-align: start;">{{description}}</p>
+
+                        <h4 class="" style="margin-bottom: 4px; text-align: start;">Plan:</h4>
+                        <table style="width: 100%; background-color: #393939; border-radius: 10px; padding: 6px;">
+                            <tr>
+                                <td>
+                                    <img width="30px" src="{{url}}/pricing/{{planIcon}}">
+                                </td>
+                                <td style="width: 100%; text-align: start;">
+                                    <span style="display: inline-block; text-align: start;">
+                                        <b class="text-lg">{{planName}}</b>
+                                        <span style="color: #98c7d0;">{{planPeriod}}</span>
+                                    </span>
+                                    <b class="text-lg" style="color:#bbf7d0; float: inline-end;">{{payablePrice}}</b>
+                                </td>
+                            </tr>
+                        </table>
+
+                        <table style="width: 100%;">
+                            <tr style="width: 100%;">
+                                <td style="width: 50%;">
+                                    <h4 class="" style="margin-bottom: 4px; text-align: start;">Issued Date:</h4>
+                                    <p style="margin: 0; text-align: start;">{{issueDate}}</p>
+                                </td>
+                                <td style="width: 50%;">
+                                    <h4 class="" style="margin-bottom: 4px; text-align: start;">Payable Price:</h4>
+                                    <p style="margin: 0; text-align: start; color: #bbf7d0;">{{payablePrice}}</p>
+                                </td>
+                            </tr>
+                        </table>
+
+                        <hr class="hr">
+
+                        <h3 style="width: 100%; margin: 0; text-align: start; line-height: 2rem;">
+                            To <a href="{{url}}" style="color: #9c85b2;">pay this bill</a>, please proceed through the
+                            billing section of your Menuriom panel
                         </h3>
-                        <img style="display: block; width: 40%; margin: auto; margin-bottom: -6rem;" width="40%"
-                            src="{{url}}/email/{{img}}" alt="">
                     </main>
                 </td>
             </tr>

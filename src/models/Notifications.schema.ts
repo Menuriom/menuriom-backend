@@ -42,9 +42,38 @@ export interface Notification {
     type: "bill-reminder" | "new-bill" | "new-transaction" | "new-invite" | "invite-update" | "welcome-new-user" | "brand-username-change";
     title: string;
     text?: string;
-    data: Object;
+    data: any;
     lang?: string;
 
     createdAt: Date;
     translation: Translation;
+}
+
+export interface BillReminderData {
+    type: "bill-reminder";
+    data: { billID: string; billNumber: string; type: "planChange" | "renewal" };
+}
+export interface NewBillData {
+    type: "new-bill";
+    data: { billID: string; billNumber: string; type: "planChange" | "renewal" };
+}
+export interface NewTransactionData {
+    type: "new-transaction";
+    data: { billID: string; transactionID: string; billNumber: string };
+}
+export interface NewInviteData {
+    type: "new-invite";
+    data: { brandName: string; roleName: string };
+}
+export interface InviteUpdateData {
+    type: "invite-update";
+    data: { userEmail: string; status: "accepted" | "rejected" };
+}
+export interface WelcomeNewUserData {
+    type: "welcome-new-user";
+    data: Object;
+}
+export interface BrandUsernameChangeData {
+    type: "brand-username-change";
+    data: { oldUsername: string; newUsername: string };
 }
