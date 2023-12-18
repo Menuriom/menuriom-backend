@@ -51,6 +51,8 @@ import { MenuInfoController } from "./controllers/menu/menuInfo.controller";
 import { ContactUsController } from "./controllers/contactUs.controller";
 import { UtknController } from "./controllers/menu/utkn.controller";
 import { AnalyticsService } from "./services/analytics.service";
+import { NotificationSchema } from "./models/Notifications.schema";
+import { NotifsService } from "./services/notifs.service";
 
 @Module({
     imports: [
@@ -86,6 +88,7 @@ import { AnalyticsService } from "./services/analytics.service";
             { name: "ContactUs", schema: ContactUsSchema },
             { name: "WorkingHour", schema: WorkingHourSchema },
             { name: "Utkn", schema: UtknSchema },
+            { name: "Notification", schema: NotificationSchema },
         ]),
         AuthModule,
         BrandPanelModule,
@@ -102,7 +105,7 @@ import { AnalyticsService } from "./services/analytics.service";
         ContactUsController,
         UtknController,
     ],
-    providers: [AppService, FileService, AccountService, MenuService, AnalyticsService],
+    providers: [AppService, FileService, AccountService, MenuService, AnalyticsService, NotifsService],
 })
 export class AppModule implements NestModule {
     configure(consumer: MiddlewareConsumer) {

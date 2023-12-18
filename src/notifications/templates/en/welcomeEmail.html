@@ -6,9 +6,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <style>
+        .gradient {
+            background-image: linear-gradient(90deg, #98c7d0 0%, #9c85b2 100%);
+        }
+
         .body {
             font-family: 'vazir', system-ui !important;
-            direction: rtl;
+            direction: ltr;
             display: block;
             background-color: #fff;
             margin: 0;
@@ -48,7 +52,7 @@
             color: #fff;
             border-radius: 1rem;
             width: 100%;
-            max-width: 480px;
+            max-width: 512px;
             padding: 2rem;
         }
 
@@ -95,17 +99,7 @@
             width: 100%;
             display: block;
             margin: auto;
-        }
-
-        .code {
-            background-color: #333;
-            padding: 1rem 0;
-            border-radius: 0.75rem;
-            width: 100%;
-            margin-top: 1rem;
             text-align: center;
-            color: #9c85b2;
-            font-size: 2rem;
         }
 
         .footer {
@@ -118,11 +112,11 @@
     </style>
 </head>
 
-<body class="body" dir="rtl">
+<body class="body" dir="ltr">
     <table class="card">
-        <tbody>
-            <tr>
-                <td>
+        <tbody style="display: block; margin: auto;">
+            <tr style="display: block;">
+                <td style="display: block;">
                     <a href="{{url}}" alt="Menuriom" title="Menuriom">
                         <header class="header">
                             <img class="img-logo" src="{{url}}/logos/logo9-dark.webp" alt="Menuriom">
@@ -130,23 +124,39 @@
                         </header>
                     </a>
                     <main class="main">
-                        <h1 class="h1">تایید ایمیل برای ورود به حساب کاربری</h1>
-                        <p class="p text-md">برای ایجاد حساب کاربری یا ورود به حساب خود لطفا ایمیل خود را از طریق کد زیر
-                            تایید کنید.</p>
-                        <p class="p text-md">لطفا کد زیر را برای تایید ایمیل خود وارد کنید:</p>
-                        <div class="code">{{code}}</div>
+                        <h1 class="h1" style="width: 100%; text-align: center; color: #9c85b2;">Welcome To Menuriom</h1>
+                        <h3 class="h1" style="width: 100%; text-align: center;">It's time to build your restaurant menu
+                        </h3>
+                        <p class="p text-lg">Start by <a class="a" href="{{url}}/panel">creating your brand</a> or join
+                            an existing restaurant as a crew member</p>
+                        <img style="display: block; width: 100%; margin-bottom: -10rem;" width="100%"
+                            src="{{url}}/email/img1.png" alt="">
                     </main>
-                    <hr class="hr">
-                    <footer class="footer">
-                        <p class="text-sm">اگر شما سعی نکرده اید که وارد حساب کاربری خود شوید اما این ایمیل را دریافت
-                            کرده اید، لطفاً این ایمیل را نادیده بگیرید</p>
-                        <br><br>
-                        <a class="a text-sm" href="{{url}}">Menuriom Team</a>
-                    </footer>
                 </td>
             </tr>
         </tbody>
     </table>
+    <footer class="footer" style="width: 100%; margin: auto;">
+        <table class="card" style="padding: 16px; margin-top: 1rem;">
+            <tr>
+                <td>
+                    <a class="a text-sm" href="{{url}}" style="float: inline-start;">
+                        <img src="{{url}}/logos/logo-text-en-light2.svg" alt="Menuriom" style="height: 1.5rem;">
+                    </a>
+                </td>
+                <td style="width: 100%;">
+                    <a class="a text-sm" href="{{url}}"
+                        style="float: inline-end; margin: 0 4px; border-radius: 12px; padding: 6px; width: 25px; height: 25px; background-color: #fff;">
+                        <img src="{{url}}/icons/telegram.svg" alt="">
+                    </a>
+                    <a class="a text-sm" href="https://instagram.com/menuriom"
+                        style="float: inline-end; margin: 0 4px; border-radius: 12px; padding: 6px; width: 25px; height: 25px; background-color: #fff;">
+                        <img src="{{url}}/icons/instagram.svg" alt="">
+                    </a>
+                </td>
+            </tr>
+        </table>
+    </footer>
 </body>
 
 </html>

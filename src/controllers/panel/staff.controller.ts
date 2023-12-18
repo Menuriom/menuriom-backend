@@ -19,6 +19,8 @@ import { User, UserDocument } from "src/models/Users.schema";
 import { IdDto } from "src/dto/general.dto";
 import { CheckUnpaidInvoiceInSelectedBrand } from "src/guards/billExpiration.guard";
 import { PlanService } from "src/services/plan.service";
+import { NotifsService } from "src/services/notifs.service";
+import { BrandDocument } from "src/models/Brands.schema";
 
 @Controller("panel/staff")
 export class StaffController {
@@ -26,7 +28,9 @@ export class StaffController {
         // ...
         private readonly fileService: FileService,
         private readonly planService: PlanService,
+        private readonly notifsService: NotifsService,
         @InjectModel("User") private readonly UserModel: Model<UserDocument>,
+        @InjectModel("Brand") private readonly BrandModel: Model<BrandDocument>,
         @InjectModel("Branch") private readonly BranchModel: Model<BranchDocument>,
         @InjectModel("Staff") private readonly StaffModel: Model<StaffDocument>,
         @InjectModel("StaffRole") private readonly StaffRoleModel: Model<StaffRoleDocument>,
@@ -146,8 +150,8 @@ export class StaffController {
         }
 
         // check if the role belong to the brand
-        const isRoleBlongToBrand = await this.StaffRoleModel.exists({ _id: body.selectedRole, brand: brandID }).exec();
-        if (!isRoleBlongToBrand) {
+        const selectedRole = await this.StaffRoleModel.findOne({ _id: body.selectedRole, brand: brandID }).exec();
+        if (!selectedRole) {
             throw new ForbiddenException([
                 { property: "", errors: [I18nContext.current().t("panel.staff.The role you've chosen is not in your brand's role list")] },
             ]);
@@ -175,6 +179,16 @@ export class StaffController {
             { role: body.selectedRole, branches: body.selectedBranches, status: "sent", createdAt: new Date(Date.now()) },
             { upsert: true },
         ).exec();
+
+        const brand = await this.BrandModel.findOne({ _id: brandID }).exec();
+        if (user) await this.notifsService.notif({
+            user: user._id,
+            type: "new-invite",
+            data: { brandName: brand.name, roleName: selectedRole.name },
+            sendAsEmail: true,
+            showInSys: false,
+            lang: I18nContext.current().lang,
+        });
 
         return res.json({ userExists: !!user });
     }

@@ -3,6 +3,7 @@ import { Response } from "express";
 import { Request } from "src/interfaces/Request.interface";
 import { AppService } from "./app.service";
 import { languages } from "./interfaces/Translation.interface";
+import { readFile } from "fs/promises";
 
 @Controller("general")
 export class AppController {
@@ -23,7 +24,7 @@ export class AppController {
             // Euro: "Euro - EUR", // €
             // Lira: "Lira - YTL", // ₺
             // Dirham: "Dirham - AED", // د.إ
-            
+
             تومان: "Toman - IRT", // تومان
             "﷼": "Rial - IRR", // ﷼
             $: "Dollar - USD", // $

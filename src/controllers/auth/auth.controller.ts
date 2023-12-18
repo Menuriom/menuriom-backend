@@ -13,6 +13,7 @@ import { UserDocument } from "src/models/Users.schema";
 import { SessionDocument } from "src/models/Sessions.schema";
 import Email from "src/notifications/channels/Email";
 import Sms from "src/notifications/channels/Sms";
+import { NotifsService } from "src/services/notifs.service";
 
 @Controller("auth")
 export class AuthController {
@@ -20,6 +21,7 @@ export class AuthController {
 
     constructor(
         private readonly authService: AuthService,
+        private readonly notifsService: NotifsService,
         @InjectModel("User") private readonly UserModel: Model<UserDocument>,
         @InjectModel("Session") private readonly SessionModel: Model<SessionDocument>,
     ) {}
@@ -164,6 +166,8 @@ export class AuthController {
         const token = await this.authService.generateToken(req, sessionID, user.id);
         await this.authService.updateSession(req, sessionID, token);
 
+        await this.notifsService.notif({ user: user._id, type: "welcome-new-user", data: {}, sendAsEmail: true, showInSys: true, lang: I18nContext.current().lang });
+
         return res.json({ token });
     }
 
@@ -193,6 +197,15 @@ export class AuthController {
                 role: "user",
                 status: "active",
                 createdAt: new Date(Date.now()),
+            });
+
+            await this.notifsService.notif({
+                user: user._id,
+                type: "welcome-new-user",
+                data: {},
+                sendAsEmail: true,
+                showInSys: true,
+                lang: I18nContext.current().lang,
             });
         }
 

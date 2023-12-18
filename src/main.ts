@@ -36,7 +36,7 @@ async function bootstrap() {
     app.use(cookieParser());
 
     // setup helmet for http headers
-    app.use(helmet());
+    // app.use(helmet());
 
     // make CORS happen
     app.enableCors({ origin: process.env.FRONT_URL });

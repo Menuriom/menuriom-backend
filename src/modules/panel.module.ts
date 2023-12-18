@@ -40,6 +40,9 @@ import { WorkingHoursController } from "src/controllers/panel/workingHours.contr
 import { AnalyticsService } from "src/services/analytics.service";
 import { AnalyticSchema } from "src/models/Analytics.schema";
 import { AnalyticsController } from "src/controllers/panel/analytics.controller";
+import { NotificationsController } from "src/controllers/panel/notifications.controller";
+import { NotificationSchema } from "src/models/Notifications.schema";
+import { NotifsService } from "src/services/notifs.service";
 
 @Module({
     imports: [
@@ -66,6 +69,7 @@ import { AnalyticsController } from "src/controllers/panel/analytics.controller"
             { name: "MenuStyle", schema: MenuSytleSchema },
             { name: "WorkingHour", schema: WorkingHourSchema },
             { name: "Analytic", schema: AnalyticSchema },
+            { name: "Notification", schema: NotificationSchema },
         ]),
     ],
     controllers: [
@@ -83,8 +87,9 @@ import { AnalyticsController } from "src/controllers/panel/analytics.controller"
         MenuStylesController,
         WorkingHoursController,
         AnalyticsController,
+        NotificationsController,
     ],
-    providers: [FileService, BillingService, PlanService, MenuService, AnalyticsService],
+    providers: [FileService, BillingService, PlanService, MenuService, AnalyticsService, NotifsService],
     exports: [],
 })
 export class BrandPanelModule {}

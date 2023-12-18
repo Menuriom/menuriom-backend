@@ -16,12 +16,14 @@ import { I18nContext } from "nestjs-i18n";
 import { BillingService } from "src/services/billing.service";
 import { BillDocument } from "src/models/Bills.schema";
 import { TransactionDocument } from "src/models/Transactions.schema";
+import { NotifsService } from "src/services/notifs.service";
 
 @Controller("panel/billing")
 export class BillingController {
     constructor(
         // ...
         private readonly billingService: BillingService,
+        private readonly notifsService: NotifsService,
         @InjectModel("User") private readonly UserModel: Model<UserDocument>,
         @InjectModel("BrandsPlan") private readonly BrandsPlanModel: Model<BrandsPlanDocument>,
         @InjectModel("Plan") private readonly PlanModel: Model<PlanDocument>,
@@ -200,6 +202,14 @@ export class BillingController {
                 createdAt: new Date(Date.now()),
             });
 
+            await this.notifsService.notif({
+                brand: brandID,
+                type: "new-bill",
+                data: { billID: bill._id, billNumber: bill.billNumber.toString(), type: bill.type },
+                sendAsEmail: true,
+                showInSys: true,
+                lang: I18nContext.current().lang,
+            });
             type = "withPayment";
             url = paymentGateway.getGatewayUrl(identifier);
         } else {
@@ -316,6 +326,15 @@ export class BillingController {
         } else if (bill.type == "planChange") {
             await this.billingService.proccessTransactionForPlanChange(bill, nextInvoiceInSeconds, req.session.userID, brandCurrentPlan);
         }
+
+        await this.notifsService.notif({
+            brand: bill.brand.toString(),
+            type: "new-transaction",
+            data: { billID: bill._id, billNumber: bill.billNumber.toString(), transactionID: transaction._id },
+            sendAsEmail: true,
+            showInSys: true,
+            lang: I18nContext.current().lang,
+        });
 
         return res.json({ statusCode: "200", message: "SuccessfulPayment", transactionID: transaction._id });
     }

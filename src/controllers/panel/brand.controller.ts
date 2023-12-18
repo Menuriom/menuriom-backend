@@ -21,6 +21,7 @@ import { IdDto } from "src/dto/general.dto";
 import { PlanService } from "src/services/plan.service";
 import { BranchDocument } from "src/models/Branches.schema";
 import { User } from "src/models/Users.schema";
+import { NotifsService } from "src/services/notifs.service";
 
 @Controller("panel/brands")
 export class BrandController {
@@ -28,6 +29,7 @@ export class BrandController {
         // ...
         private readonly fileService: FileService,
         private readonly planService: PlanService,
+        private readonly notifsService: NotifsService,
         @InjectModel("Brand") private readonly BrandModel: Model<BrandDocument>,
         @InjectModel("Branch") private readonly BranchModel: Model<BranchDocument>,
         @InjectModel("Staff") private readonly StaffModel: Model<StaffDocument>,
@@ -200,6 +202,17 @@ export class BrandController {
                 translation: translation,
             },
         ).exec();
+
+        if (body.username != brand.username) {
+            await this.notifsService.notif({
+                brand: brand._id,
+                type: "brand-username-change",
+                data: { oldUsername: brand.username, newUsername: body.username },
+                sendAsEmail: true,
+                showInSys: true,
+                lang: I18nContext.current().lang,
+            });
+        }
 
         return res.json({ logo: logoLink, username: body.username, name: body["name.default"], slogan: body["slogan.default"] });
     }
