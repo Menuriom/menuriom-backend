@@ -109,7 +109,7 @@ import { NotifsService } from "./services/notifs.service";
 })
 export class AppModule implements NestModule {
     configure(consumer: MiddlewareConsumer) {
-        // consumer.apply(serverOnly).forRoutes({ path: "*", method: RequestMethod.ALL });
+        consumer.apply(serverOnly).forRoutes({ path: "*", method: RequestMethod.ALL });
 
         consumer.apply(AuthCheckMiddleware).forRoutes(
             // ...
