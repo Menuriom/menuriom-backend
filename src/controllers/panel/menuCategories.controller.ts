@@ -13,7 +13,7 @@ import { AuthorizeUserInSelectedBrand } from "src/guards/authorizeUser.guard";
 import { MenuCategoryDocument } from "src/models/MenuCategories.schema";
 import { FileInterceptor, FilesInterceptor } from "@nestjs/platform-express";
 import { CreateNewCategoryDto, EditCategoryDto, updateOrderDto } from "src/dto/panel/menuCategory.dto";
-import { BrandDocument } from "src/models/Brands.schema";
+import { Brand, BrandDocument } from "src/models/Brands.schema";
 import { BrandsPlanDocument } from "src/models/BrandsPlans.schema";
 import { Plan } from "src/models/Plans.schema";
 import { PlanService } from "src/services/plan.service";
@@ -46,10 +46,11 @@ export class MenuCategoriesController {
         const categories = await this.MenuCategoryModel.find({ brand: brandID })
             .select("_id icon name description order branches hidden showAsNew translation")
             .sort({ order: "ascending" })
+            .populate<{ brand: Brand }>("brand", "currency")
             .exec();
         const categoryCount = await this.MenuCategoryModel.countDocuments({ brand: brandID }).exec();
 
-        return res.json({ records: categories, canCreateNewCategory: categoryCount < 100 });
+        return res.json({ records: categories, canCreateNewCategory: categoryCount < 100, currency: categories[0]?.brand?.currency || "?" });
     }
 
     @Get("/:id")

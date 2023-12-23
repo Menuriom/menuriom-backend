@@ -12,7 +12,7 @@ import { SetPermissions } from "src/decorators/authorization.decorator";
 import { AuthorizeUserInSelectedBrand } from "src/guards/authorizeUser.guard";
 import { MenuCategory, MenuCategoryDocument } from "src/models/MenuCategories.schema";
 import { FileInterceptor, FilesInterceptor } from "@nestjs/platform-express";
-import { BrandDocument } from "src/models/Brands.schema";
+import { Brand, BrandDocument } from "src/models/Brands.schema";
 import { BrandsPlanDocument } from "src/models/BrandsPlans.schema";
 import { Plan } from "src/models/Plans.schema";
 import { PlanService } from "src/services/plan.service";
@@ -46,7 +46,11 @@ export class MenuItemsController {
     async getList(@Req() req: Request, @Res() res: Response): Promise<void | Response> {
         const brandID = req.headers["brand"];
 
-        const categories = await this.MenuCategoryModel.find({ brand: brandID }).select("_id icon name order translation").sort({ order: "ascending" }).exec();
+        const categories = await this.MenuCategoryModel.find({ brand: brandID })
+            .select("_id icon name order translation")
+            .sort({ order: "ascending" })
+            .populate<{ brand: Brand }>("brand", "languages currency")
+            .exec();
         const items = await this.MenuItemModel.find({ brand: brandID })
             .sort({ order: "ascending" })
             .populate<{ category: MenuCategory }>("category", "_id icon name translation")
@@ -59,7 +63,7 @@ export class MenuItemsController {
 
         const itemsCount = await this.MenuItemModel.countDocuments({ brand: brandID }).exec();
 
-        return res.json({ records: Object.values(groupedItems), canCreateNewItem: itemsCount < 500 });
+        return res.json({ records: Object.values(groupedItems), canCreateNewItem: itemsCount < 500, currency: categories[0]?.brand?.currency || "" });
     }
 
     @Get("/:id")
@@ -69,6 +73,7 @@ export class MenuItemsController {
         const brandID = req.headers["brand"].toString();
         const menuItem = await this.MenuItemModel.findOne({ _id: params.id, brand: brandID })
             .sort({ order: "ascending" })
+            .populate<{ brand: Brand }>("brand", "currency")
             .populate<{ branches: Branch[] }>("branches", "_id name")
             .populate<{ category: MenuCategory }>("category", "_id name icon")
             .populate<{ sideItems: MenuSideGroup[] }>("sideItems", "_id name items maxNumberUserCanChoose description translation")
