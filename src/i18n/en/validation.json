@@ -67,6 +67,7 @@
     "IsIn": "Selected value is not valid",
     "IsJSON": "This set is not in valid format",
     "IsBoolean": "Selected value must be true or false",
-    "IsAlphanumeric": "This field can be only numbers and letters"
+    "IsAlphanumeric": "This field can be only numbers and letters",
+    "IsUsername": "This field must be a valid username"
     
 }
