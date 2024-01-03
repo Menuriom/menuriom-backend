@@ -186,7 +186,7 @@ export class MenuItemsController {
             hidden: body.hidden === "true" ? true : false,
             pinned: body.pinned === "true" && Has_itemHighlighting ? true : false,
             soldOut: body.soldOut === "true" ? true : false,
-            showAsNew: body.showAsNew === "true" && Has_menuTagOption ? true : false,
+            // showAsNew: body.showAsNew === "true" && Has_menuTagOption ? true : false,
 
             specialDaysActive: body.specialDaysActive === "true" && Has_itemHighlighting ? true : false,
             specialDaysList: body.specialDaysList || [],
@@ -302,7 +302,7 @@ export class MenuItemsController {
                 hidden: body.hidden === "true" ? true : false,
                 pinned: body.pinned === "true" && Has_itemHighlighting ? true : false,
                 soldOut: body.soldOut === "true" ? true : false,
-                showAsNew: body.showAsNew === "true" && Has_menuTagOption ? true : false,
+                // showAsNew: body.showAsNew === "true" && Has_menuTagOption ? true : false,
 
                 specialDaysActive: body.specialDaysActive === "true" && Has_itemHighlighting ? true : false,
                 specialDaysList: body.specialDaysList || [],
