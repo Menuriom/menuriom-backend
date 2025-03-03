@@ -286,7 +286,7 @@ export class BillingController {
         if (!transaction) return res.json({ statusCode: "406", message: "IncorrectIdentifier" });
 
         const bill = await this.BillModel.findOne({ _id: transaction.bill }).exec();
-        if (!transaction) return res.json({ statusCode: "408", message: "IncorrectTransaction", transactionID: transaction._id });
+        if (!bill) return res.json({ statusCode: "408", message: "IncorrectTransaction", transactionID: transaction._id });
 
         if (transactionResponse.status !== "OK") {
             await this.billingService.updateBillTransactionRecord(bill.id, transaction._id, "canceled", ip);
@@ -325,6 +325,58 @@ export class BillingController {
             await this.billingService.proccessTransactionForPlanRenewal(bill, nextInvoiceInSeconds);
         } else if (bill.type == "planChange") {
             await this.billingService.proccessTransactionForPlanChange(bill, nextInvoiceInSeconds, req.session.userID, brandCurrentPlan);
+        }
+
+        await this.notifsService.notif({
+            brand: bill.brand.toString(),
+            type: "new-transaction",
+            data: { billID: bill._id, billNumber: bill.billNumber.toString(), transactionID: transaction._id },
+            sendAsEmail: true,
+            showInSys: true,
+            lang: I18nContext.current().lang,
+        });
+
+        return res.json({ statusCode: "200", message: "SuccessfulPayment", transactionID: transaction._id });
+    }
+
+    @Get("bill-manual-activation/:billId/:aa")
+    async billManualActivation(@Param() param: { billId: string; aa: string }, @Req() req: Request, @Res() res: Response): Promise<void | Response> {
+        if (param.aa !== process.env.SERVER_SECRET) throw new ForbiddenException("AA");
+        const ip: string = req.headers["x-forwarded-for"].toString() || "";
+
+        // find bill
+        let bill = await this.BillModel.findOne({ _id: param.billId }).exec();
+        if (!bill) {
+            throw new UnprocessableEntityException([{ property: "", errors: [I18nContext.current().t("panel.billing.we cannot find the bill you tring to pay!")] }]);
+        }
+
+        // check if bill has transaction or not
+        let transaction = await this.TransactionModel.findOne({ bill: bill.id }).exec();
+        if (!transaction) {
+            transaction = await this.TransactionModel.create({
+                brand: bill.brand,
+                bill: bill._id,
+                user: bill.creator,
+                method: "manual",
+                authority: "0",
+                status: "pending",
+                createdAt: new Date(Date.now()),
+            });
+        }
+
+        // mark the bill as paid and transaction record
+        await Promise.all([
+            this.BillModel.updateOne({ _id: bill.id }, { status: "paid" }).exec(),
+            this.billingService.updateBillTransactionRecord(bill.id, transaction._id, "ok", ip, "", "0", bill.payablePrice),
+        ]);
+
+        const brandCurrentPlan = await this.BrandsPlanModel.findOne({ brand: bill.brand }).exec();
+        const nextInvoiceInSeconds = brandCurrentPlan.nextInvoice ? brandCurrentPlan.nextInvoice.getTime() / 1000 : Date.now() / 1000;
+
+        if (bill.type == "renewal") {
+            await this.billingService.proccessTransactionForPlanRenewal(bill, nextInvoiceInSeconds);
+        } else if (bill.type == "planChange") {
+            await this.billingService.proccessTransactionForPlanChange(bill, nextInvoiceInSeconds, bill.creator.toString(), brandCurrentPlan);
         }
 
         await this.notifsService.notif({
